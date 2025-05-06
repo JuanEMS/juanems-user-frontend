@@ -1,0 +1,59 @@
+/* CreateAccounts.css */
+
+.container-columns {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.column {
+  flex: 1;
+  padding: 20px;
+  box-sizing: border-box;
+  min-width: 300px;
+  justify-content: left;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.avatar-uploader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fafafa;
+  transition: border-color 0.3s;
+}
+
+/* Set min-height only when there's no image */
+.avatar-uploader.placeholder {
+  min-height: 300px;
+}
+
+.avatar-uploader:hover {
+  border-color: #1890ff;
+}
+
+.avatar-preview {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.section-title {
+  margin: 0px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 1rem;
+}

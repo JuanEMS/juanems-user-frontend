@@ -1,0 +1,424 @@
+.scope-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Header Styles */
+.juan-register-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #00245A;
+  color: white;
+  height: 80px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+}
+
+.juan-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.juan-logo-register {
+  height: 60px;
+  margin-right: 1rem;
+}
+
+.juan-header-text h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.hamburger-menu {
+  display: none;
+}
+
+.hamburger-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+/* Main Layout */
+.scope-dashboard-content {
+  display: flex;
+  flex: 1;
+  margin-top: 80px;
+}
+
+/* Main Content Styles */
+.scope-main-content {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: #f5f5f5;
+  overflow-y: auto;
+  margin-left: 280px;
+}
+
+.dashboard-background-container {
+  background-image: url('../../images/dashboard background.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px;
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-content {
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.scope-top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.scope-date-time-container {
+  display: flex;
+  align-items: center;
+  background-color: rgba(66, 133, 244, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  color: white;
+  gap: 0.5rem;
+}
+
+.date-icon {
+  font-size: 0.9rem;
+}
+
+.scope-date-time {
+  font-size: 0.8rem;
+}
+
+.announcement-button-container {
+  position: relative;
+}
+
+.scope-announcement-button {
+  background: white;
+  border: none;
+  color: #00245A;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scope-announcement-button:hover {
+  transform: scale(1.1);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #d32f2f;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 1.2rem;
+  height: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* User Info Row */
+.user-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.scope-welcome-section {
+  flex: 1;
+  margin-bottom: 0;
+  margin-top: 0.5rem;
+}
+
+.welcome-heading {
+  color: #F6F6F6;
+  margin-bottom: 0.2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.scope-welcome-message {
+  color: #F6F6F6;
+  font-size: 0.9rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Applicant Info */
+.scope-applicant-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0.8rem 1.2rem;
+  border-radius: 10px;
+  width: fit-content;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-right: 1rem;
+}
+
+.scope-applicant-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #00245A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFD601;
+}
+
+.scope-id-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.scope-applicant-id {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #00245A;
+}
+
+.scope-applicant-label {
+  color: #666;
+  font-size: 0.7rem;
+}
+
+/* Loading and Error States */
+.scope-loading,
+.scope-error {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.scope-error {
+  color: #d32f2f;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  display: none;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .user-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .scope-applicant-info {
+    margin-top: 1rem;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .hamburger-menu {
+    display: block;
+  }
+  
+  .scope-main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .sidebar-overlay.active {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+    display: block;
+  }
+  
+  .dashboard-background-container {
+    height: auto;
+    min-height: 270px;
+  }
+  
+  .scope-top-section {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .user-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .scope-welcome-section {
+    margin-bottom: 1rem;
+  }
+  
+  .scope-applicant-info {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .scope-top-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .scope-date-time-container {
+    width: 100%;
+  }
+
+  .announcement-button-container {
+    align-self: flex-end;
+  }
+
+  .welcome-heading {
+    font-size: 1.3rem;
+  }
+  
+  .dashboard-background-container {
+    min-height: 300px;
+  }
+  
+  .scope-applicant-info {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .juan-header-text h1 {
+    font-size: 1.2rem;
+  }
+  
+  .juan-logo-register {
+    height: 50px;
+  }
+}
+
+/* Dashboard Panels */
+.dashboard-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.dashboard-panel {
+  background-color: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.dashboard-panel h3 {
+  color: #00245A;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.status-indicator {
+  margin-bottom: 1rem;
+}
+
+.status-bar {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.status-progress {
+  height: 100%;
+  background-color: #FFD601;
+  border-radius: 4px;
+}
+
+.status-text {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.next-steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.next-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.step-number {
+  background-color: #00245A;
+  color: #FFD601;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #00245A;
+  font-size: 1rem;
+}
+
+.step-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}

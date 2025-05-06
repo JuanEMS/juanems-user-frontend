@@ -1,0 +1,947 @@
+.home-container {
+    font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+}
+
+.homepage-header {
+    background-color: #00245A;
+    border-bottom: 4px solid #C68A00;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    flex-wrap: wrap;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 250px;
+}
+
+.logohome {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: scale-down;
+}
+
+.header-text h1 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.header-text p.motto {
+    font-size: 0.7rem;
+    color: #dddddd;
+    font-weight: 400;
+    margin: 0.15rem 0 0 0;
+    font-style: italic;
+}
+
+.header-right {
+    color: #fff;
+    font-size: 0.9rem;
+    text-align: right;
+    min-width: 180px;
+}
+
+.header-right p {
+    color: #fff;
+}
+
+.header-right strong {
+    font-weight: bold;
+    color: #fff;
+}
+
+.header-right .icon {
+    margin-left: 0.3rem;
+    color: #C68A00;
+    font-size: 1rem;
+}
+
+/* Gradient and Carousel Styles */
+.gradient-carousel-container {
+    position: relative;
+    height: 450px;
+    /* Increased overall container height */
+    margin-bottom: 40px;
+}
+
+.gradient-background {
+    position: absolute;
+    opacity: 0.8;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    background: linear-gradient(to right, #C68A00, #16366F);
+}
+
+.carousel-wrapper {
+    position: relative;
+    width: 95%;
+    max-width: 1200px;
+    height: 380px;
+    /* Significantly increased carousel height */
+    margin: 0 auto;
+    top: 40px;
+    /* Space between header and carousel */
+    z-index: 1;
+}
+
+.carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    background-color: #16366F;
+    /* White background during transition */
+}
+
+.carousel-slide.active {
+    opacity: 1;
+    z-index: 1;
+}
+
+.carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Changed to contain to show full image without cropping */
+    object-position: center;
+}
+
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    /* Ensure buttons are above slides */
+    transition: background 0.3s;
+}
+
+.carousel-button:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.carousel-button:focus {
+    outline: 2px solid #C68A00;
+    outline-offset: 2px;
+}
+
+.carousel-button.prev {
+    left: 15px;
+}
+
+.carousel-button.next {
+    right: 15px;
+}
+
+/* Heading Section Styles */
+.heading-section {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+}
+
+.heading-title {
+    font-size: 2rem;
+    color: #00245A;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.heading-description {
+    font-size: 1rem;
+    color: #212121;
+    line-height: 1.6;
+}
+
+.homepage-main {
+    background-color: #fff;
+    color: #222;
+}
+
+/* Cards Section Styles */
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    padding: 0 15px;
+    max-width: 1200px;
+    margin: 0 auto 40px;
+}
+
+.card-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 300px;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.number-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #C68A00;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    z-index: 2;
+}
+
+.number-text {
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.card {
+    background-color: #FFF0C6;
+    border-radius: 20px;
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Updated Card Title Styles */
+.card-title-container {
+    background-color: #00245A;
+    border-radius: 14px 14px 0 0;
+    padding: 15px 0px;
+    width: 100%;
+    margin: 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+.title-with-image-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.title-image-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.letter-image {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.card-body {
+    padding: 20px;
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-description {
+    font-size: 13px;
+    color: #212121;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+}
+
+.single-button-container {
+    justify-content: center;
+}
+
+.login-button,
+.register-button {
+    border: none;
+    border-radius: 14px;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.login-button {
+    background-color: #046315;
+    color: white;
+    margin-right: 10px;
+}
+
+.login-button:hover {
+    background-color: #034a11;
+}
+
+.register-button {
+    background-color: #2A67D5;
+    color: white;
+    margin-left: 10px;
+}
+
+.register-button:hover {
+    background-color: #1e56c0;
+}
+
+.single-button {
+    margin-left: 0;
+    margin-right: 0;
+    width: 60%;
+    flex: 0;
+}
+
+.teleprompter-container {
+    width: 100%;
+    overflow: hidden;
+    background: linear-gradient(to right, #00245A 0%, #C68A00 100%);
+    height: 80px;
+    display: flex;
+    align-items: center;
+    margin-top: 3rem;
+    position: relative;
+}
+
+.teleprompter-track {
+    white-space: nowrap;
+    display: inline-block;
+    animation: scrollText 20s linear infinite;
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: white;
+    padding-left: 100%;
+}
+
+.teleprompter-track span {
+    display: inline-block;
+    padding-right: 4rem;
+}
+
+@keyframes scrollText {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* About JuanEMS Section Styles */
+.about-section-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 2rem auto 2rem;
+    padding: 0 2rem;
+}
+
+.about-section {
+    background-color: #00245A;
+    border-radius: 15px;
+    padding: 1.5rem 2rem;
+    flex: 1;
+    color: white;
+}
+
+
+.about-title {
+    font-size: 2.0rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.about-description {
+    color: white;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.2rem;
+}
+
+.sjdefi-button {
+    display: inline-block;
+    background-color: #C68A00;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 5px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.sjdefi-button:hover {
+    background-color: #e09e00;
+}
+
+.about-logo-external {
+    width: 35%;
+    max-width: 350px;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Footer Styles */
+.homepage-footer {
+    background-color: #00245A;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem 2rem;
+    color: white;
+    flex-wrap: wrap;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex: 0 0 auto;
+    margin-right: 2rem;
+}
+
+.footer-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.footer-text h1 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.footer-motto {
+    font-size: 0.65rem;
+    color: #dddddd;
+    margin: 0.15rem 0 0 0;
+    font-style: italic;
+}
+
+/* New CSS for the reorganized footer */
+.footer-content {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.footer-links {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    margin-left: 80px;
+}
+
+.footer-link {
+    color: white;
+    text-decoration: none;
+    font-size: 0.75rem;
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+
+.footer-link:hover {
+    color: #C68A00;
+}
+
+.footer-link-separator {
+    color: white;
+    font-size: 0.75rem;
+}
+
+.footer-social-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s;
+    white-space: nowrap;
+    margin: 0 2rem;
+}
+
+.footer-social-link:hover {
+    color: #C68A00;
+}
+
+.social-icon {
+    font-size: 1.3rem;
+    color: inherit;
+}
+
+.social-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.social-find {
+    font-size: 0.65rem;
+    line-height: 1.2;
+}
+
+.social-platform {
+    font-weight: bold;
+    font-size: 0.75rem;
+    color: inherit;
+}
+
+.footer-contact-container {
+    flex: 0 0 auto;
+    min-width: 300px;
+}
+
+.contact-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.contact-title svg {
+    width: 0.9em;
+    height: 0.9em;
+}
+
+.contact-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    line-height: 1.3;
+}
+
+.contact-item svg {
+    width: 0.8em;
+    height: 0.8em;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+/* Animation Styles */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Add these to elements you want to animate with a delay */
+.heading-section {
+    opacity: 0;
+}
+
+.cards-container {
+    opacity: 0;
+}
+
+.teleprompter-container {
+    opacity: 0;
+}
+
+.about-section-container {
+    opacity: 0;
+}
+
+.homepage-footer {
+    opacity: 0;
+}
+
+/* Optional: Add staggered animations for cards */
+.card-wrapper {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Delay each card's animation */
+.card-wrapper:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.card-wrapper:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.card-wrapper:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .footer-content {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .footer-links,
+    .footer-social-link,
+    .footer-contact-container {
+        margin: 0.5rem 1rem;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .card-wrapper {
+        min-width: 280px;
+    }
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .about-section-container {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .about-logo-external {
+        width: 60%;
+        order: -1;
+        /* Move image above on mobile */
+    }
+
+    .about-section {
+        width: 100%;
+    }
+
+    .homepage-footer {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-left {
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+        justify-content: center;
+    }
+
+    .footer-content {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .footer-links,
+    .footer-social-link {
+        margin-bottom: 1rem;
+    }
+
+    .footer-contact-container {
+        width: auto;
+        min-width: unset;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .contact-items {
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .homepage-header {
+        padding: 0.4rem 0.8rem;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-left {
+        width: 100%;
+        margin-bottom: 0.3rem;
+    }
+
+    .header-right {
+        width: 100%;
+        text-align: left;
+        padding-top: 0;
+    }
+
+    .header-text h1 {
+        font-size: 0.9rem;
+    }
+
+    .header-text p.motto {
+        font-size: 0.65rem;
+    }
+
+    .gradient-carousel-container {
+        height: 350px;
+    }
+
+    .carousel-wrapper {
+        height: 280px;
+        top: 30px;
+    }
+
+    .heading-title {
+        font-size: 1.5rem;
+    }
+
+    .cards-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+    }
+
+    .card-wrapper {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .card-title {
+        font-size: 18px;
+    }
+
+    .card-description {
+        font-size: 12px;
+    }
+
+    .login-button,
+    .register-button {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .about-section {
+        padding: 1.2rem;
+    }
+
+    .about-content {
+        flex-direction: column;
+    }
+
+    .about-logo {
+        width: 80%;
+        max-width: 100%;
+        margin-top: 1rem;
+    }
+
+    .about-title {
+        font-size: 1.3rem;
+    }
+
+    .about-description {
+        font-size: 0.85rem;
+    }
+
+    .sjdefi-button {
+        padding: 0.5rem 0.8rem;
+    }
+
+    .homepage-footer {
+        padding: 1rem;
+    }
+
+    /* Reduce animation distance on mobile */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Remove delays on mobile for cards */
+    .card-wrapper {
+        animation-delay: 0s !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    .header-text h1 {
+        font-size: 0.8rem;
+    }
+
+    .header-right {
+        font-size: 0.8rem;
+    }
+
+    .header-right .icon {
+        font-size: 0.9rem;
+    }
+
+    .gradient-carousel-container {
+        height: 280px;
+    }
+
+    .carousel-wrapper {
+        height: 220px;
+        top: 20px;
+    }
+
+    .carousel-button {
+        width: 35px;
+        height: 35px;
+    }
+
+    .heading-title {
+        font-size: 1.3rem;
+    }
+
+    .heading-description {
+        font-size: 0.9rem;
+    }
+
+    .card-wrapper {
+        min-width: unset;
+        width: 95%;
+    }
+
+    .card-title-container {
+        padding: 12px 15px;
+    }
+
+    .card-title {
+        font-size: 16px;
+    }
+
+    .letter-image {
+        width: 20px;
+        height: 20px;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    .login-button,
+    .register-button {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .single-button {
+        width: 80%;
+    }
+
+    .about-section {
+        padding: 1.2rem;
+    }
+
+    .about-title {
+        font-size: 1.3rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .about-description {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .sjdefi-button {
+        padding: 0.5rem 1rem;
+    }
+
+    .about-logo-external {
+        width: 80%;
+    }
+
+    .footer-links {
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .footer-social-link {
+        margin: 0.8rem 0;
+    }
+
+    .contact-item {
+        font-size: 0.65rem;
+        text-align: left;
+    }
+
+    .about-section-container {
+        padding: 0 0.8rem;
+    }
+
+    .about-section {
+        padding: 1rem 1.2rem;
+    }
+}

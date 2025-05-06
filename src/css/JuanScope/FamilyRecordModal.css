@@ -1,0 +1,427 @@
+.family-record-modal {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 800px;
+    width: 95%;
+    text-align: left;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+.family-record-modal h3 {
+    color: #34A853;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 10px;
+}
+
+.modal-divider {
+    height: 1px;
+    background-color: #A2A2A2;
+    margin-bottom: 15px;
+}
+
+.modal-content {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.modal-section {
+    flex: 1;
+    min-width: 300px;
+}
+
+.form-section {
+    margin-bottom: 1rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.section-title h4 {
+    color: #212121;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.section-title svg {
+    font-size: 16px;
+    color: #2A67D5;
+}
+
+.section-title .phone-icon {
+    transform: rotate(90deg);
+}
+
+.section-title .phone-icon1 {
+    transform: rotate(90deg);
+    color: #333;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+    width: 100%;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 0.2rem;
+    font-size: 12px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+    box-sizing: border-box;
+    height: 34px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #00245A;
+}
+
+.disabled-input {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.input-error {
+    border-color: #880D0C !important;
+}
+
+.error-message {
+    color: #880D0C;
+    font-size: 10px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.required-asterisk {
+    color: #880D0C;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.checkbox-container input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.checkbox-container label {
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.radio-group input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.scope-modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.button-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.scope-modal-cancel,
+.scope-modal-reset,
+.scope-modal-confirm {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+    height: 36px;
+    box-sizing: border-box;
+    align-self: center;
+    margin: 0;
+    flex: 1;
+    max-width: 120px;
+}
+
+.scope-modal-cancel {
+    background-color: #ccc;
+    color: #333;
+}
+
+.scope-modal-reset {
+    background-color: #C68A00;
+    color: white;
+}
+
+.scope-modal-confirm {
+    background-color: #00245A;
+    color: white;
+}
+
+.scope-modal-cancel:hover {
+    background-color: #bbb;
+}
+
+.scope-modal-reset:hover {
+    background-color: #a67000;
+}
+
+.scope-modal-confirm:hover {
+    background-color: #001d48;
+}
+
+/* Custom styles for react-select */
+.react-select-container .react-select__control {
+    height: 34px;
+    min-height: 34px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.react-select-container .react-select__control--is-focused {
+    border-color: #00245A;
+    box-shadow: 0 0 0 1px #00245A;
+}
+
+.react-select-container .react-select__control--is-disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.react-select-container .react-select__value-container {
+    padding: 0 8px;
+    height: 34px;
+}
+
+.react-select-container .react-select__input {
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+}
+
+.react-select-container .react-select__indicators {
+    height: 34px;
+}
+
+.react-select-container .react-select__placeholder {
+    font-size: 12px;
+    color: #666;
+}
+
+.react-select-container .react-select__single-value {
+    font-size: 12px;
+}
+
+.react-select-container .react-select__option {
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+.react-select-container .react-select__option--is-selected {
+    background-color: #00245A;
+}
+
+.react-select-container .react-select__option--is-focused {
+    background-color: #f0f0f0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .modal-content {
+        flex-direction: column;
+    }
+
+    .modal-section {
+        min-width: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .family-record-modal {
+        padding: 15px;
+        max-height: 85vh;
+        width: 90%;
+    }
+
+    .modal-section {
+        min-width: 100%;
+    }
+
+    .form-group label {
+        font-size: 11px;
+    }
+
+    .form-group input,
+    .form-group select {
+        font-size: 11px;
+    }
+
+    .error-message {
+        font-size: 9px;
+    }
+
+    .checkbox-container label {
+        font-size: 11px;
+    }
+
+    .radio-group label {
+        font-size: 11px;
+    }
+
+    .scope-modal-buttons {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .button-group {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .scope-modal-cancel,
+    .scope-modal-reset,
+    .scope-modal-confirm {
+        max-width: none;
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 13px;
+        height: 34px;
+        margin: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .family-record-modal {
+        padding: 10px;
+        max-height: 90vh;
+    }
+
+    .family-record-modal h3 {
+        font-size: 16px;
+    }
+
+    .section-title h4 {
+        font-size: 13px;
+    }
+
+    .form-group label {
+        font-size: 10px;
+    }
+
+    .form-group input,
+    .form-group select {
+        font-size: 10px;
+    }
+
+    .error-message {
+        font-size: 8px;
+    }
+
+    .checkbox-container label {
+        font-size: 10px;
+    }
+
+    .radio-group label {
+        font-size: 10px;
+    }
+
+    .scope-modal-cancel,
+    .scope-modal-reset,
+    .scope-modal-confirm {
+        font-size: 12px;
+        padding: 6px 10px;
+        height: 32px;
+        margin: 0;
+    }
+
+    .button-group {
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+    }
+}
+
+/* Existing styles remain unchanged, adding styles for mobile input */
+.mobile-input-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mobile-input-container .country-code {
+    padding: 8px;
+    background-color: #f5f5f5;
+    border-right: 1px solid #ccc;
+    font-size: 12px;
+}
+
+.mobile-input-container input {
+    flex: 1;
+    border: none;
+    padding: 8px;
+    font-size: 12px;
+    outline: none;
+}
+
+.mobile-input-container input.input-error {
+    border: none;
+    background-color: #fff1f1;
+}

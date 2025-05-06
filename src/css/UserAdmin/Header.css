@@ -1,0 +1,295 @@
+/* Enhanced Header Styling */
+.header-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-blue {
+  background-color: #00245A;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 30px;
+  font-size: 1rem;
+  flex-wrap: wrap;
+  height: 50px;
+}
+
+.header-yellow {
+  height: 8px;
+  width: 100%;
+  background: #C68A00;
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.user-profile {
+  cursor: pointer;
+  padding: 6px 20px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.active-profile {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.menu-icon {
+  font-size: 24px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.menu-icon:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-text {
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.juan-logo-register {
+  height: 40px;
+  max-width: 100px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.relative {
+  position: relative;
+}
+
+/* Profile Avatar Styling */
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #C68A00;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-avatar-large {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #C68A00;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  margin-right: 15px;
+}
+
+.profile-avatar svg, .profile-avatar-large svg {
+  font-size: 24px;
+  fill: white;
+}
+
+.profile-avatar-large svg {
+  font-size: 36px;
+}
+
+/* Enhanced Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  width: 240px;
+  z-index: 100;
+  margin-top: 12px;
+  overflow: hidden;
+  animation: dropdownFade 0.2s ease;
+  transform-origin: top right;
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Arrow pointing to profile */
+.dropdown-menu::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 20px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dropdown-name {
+  font-weight: 600;
+  color: #00245A;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-role {
+  font-size: 0.8rem;
+  color: #707070;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #eaeaea;
+  margin: 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f7fa;
+}
+
+.dropdown-icon {
+  font-size: 18px;
+  color: #555;
+}
+
+.logout-item {
+  color: #d9534f;
+}
+
+.logout-item .dropdown-icon {
+  color: #d9534f;
+}
+
+.logout-item:hover {
+  background-color: #ffeeee;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .header-blue {
+    padding: 10px 15px;
+  }
+  
+  .header-text {
+    font-size: 0.85rem;
+  }
+  
+  .profile-avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .dropdown-menu {
+    width: 220px;
+    right: -10px;
+  }
+  
+  .user-profile {
+    padding: 4px 8px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .juan-logo-register {
+    height: 32px;
+  }
+  
+  .menu-icon {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-blue {
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .header-section {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .dropdown-menu {
+    width: 90%;
+    right: 5%;
+    left: 5%;
+  }
+  
+  .dropdown-menu::before {
+    display: none;
+  }
+}

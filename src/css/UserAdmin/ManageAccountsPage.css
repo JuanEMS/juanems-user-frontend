@@ -1,0 +1,43 @@
+.table-functions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 20px;
+  margin-top: 15px;
+}
+
+.left-tools,
+.right-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.table-functions .ant-btn {
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* adjust column headers */
+.main-content .ant-table-thead>tr>th {
+  font-weight: 700 !important;
+  text-align: center;
+}
+
+/* hover effect for table headers */
+.main-content .ant-table-thead>tr>th:hover {
+  cursor: pointer;
+}
+
+.main-content .ant-table-tbody>tr>td {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+

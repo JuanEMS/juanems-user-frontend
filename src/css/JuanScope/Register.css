@@ -1,0 +1,802 @@
+/* General container styling */
+.juan-register-container {
+  font-family: 'Segoe UI', sans-serif;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Styles for react-select */
+.juan-select-wrapper {
+  font-family: 'Segoe UI', sans-serif;
+  width: 100%;
+}
+
+/* Header Styles */
+.juan-register-header {
+  background-color: #00245A;
+  border-bottom: 4px solid #C68A00;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.juan-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.juan-logo-register {
+  width: 40px;
+  height: 40px;
+  object-fit: scale-down;
+}
+
+.juan-header-text h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+/* Main Content Styles */
+.juan-main-content {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 60px; /* Space for fixed header */
+}
+
+/* Left Side with Gradient and Image */
+.juan-left-side {
+  width: 40%;
+  position: relative;
+  overflow: hidden;
+}
+
+.juan-gradient-background {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 3rem;
+  z-index: 0;
+}
+
+.juan-gradient-background::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #C68A00 0%, #00245A 100%);
+  opacity: 0.7;
+  z-index: -1;
+}
+
+.juan-registration-title {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.juan-registration-image {
+  max-width: 80%;
+  height: auto;
+}
+
+/* Right Side with Form */
+.juan-right-side {
+  width: 60%;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.juan-form-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 1rem auto;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.juan-registration-form {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+/* Reminder Box */
+.juan-reminder-box {
+  background-color: #C68A00;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 0.5rem 0;
+  color: white;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+}
+
+.juan-reminder-box p {
+  color: white;
+  margin: 0;
+  font-size: 12px; /* Reduced from 13px */
+}
+
+.juan-reminder-box strong {
+  font-weight: bold;
+}
+
+.juan-required-asterisk {
+  color: #880D0C;
+}
+
+/* Form Grid Layout */
+.juan-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.8rem;
+  width: 100%;
+}
+
+/* Step Indicator */
+.juan-step-indicator {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+  width: 100%;
+}
+
+.juan-step-circles {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.juan-step-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #D8D8D8;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.juan-step-circle.active {
+  background-color: #64676C;
+}
+
+.juan-step-line {
+  height: 2px;
+  background-color: #D8D8D8;
+  flex: 1;
+}
+
+.juan-step-text {
+  margin-left: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+/* Form Title */
+.juan-form-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 3px;
+  width: 100%;
+}
+
+.juan-title-underline {
+  height: 1px;
+  background-color: #A2A2A2;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+/* Form Note */
+.juan-form-note {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.juan-form-note p {
+  margin: 0;
+  font-size: 11px;
+  color: #880D0C;
+}
+
+.juan-note-icon {
+  color: #880D0C;
+  margin-right: 8px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Form Groups */
+.juan-form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+  width: 100%;
+}
+
+.juan-form-group label {
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  font-size: 12px; /* Reduced from 13px */
+  white-space: nowrap;
+}
+
+.juan-form-group input,
+.react-country-dropdown {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 12px; /* Reduced from 13px */
+  height: 34px;
+  box-sizing: border-box;
+}
+
+.juan-form-group input:focus {
+  outline: none;
+  border-color: #00245A;
+}
+
+.juan-input-error {
+  border-color: #880D0C !important;
+}
+
+.juan-error-message {
+  color: #880D0C;
+  font-size: 10px; /* Reduced from 11px */
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.juan-error-message svg {
+  font-size: 0.8rem; /* Slightly reduced for proportionality */
+}
+
+/* Email Status */
+.juan-email-status {
+  font-size: 0.7rem; /* Reduced from 0.8rem */
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.juan-email-status svg {
+  font-size: 0.8rem; /* Reduced from 0.9rem */
+}
+
+.juan-email-taken {
+  color: #880D0C;
+}
+
+/* Character Count */
+.juan-character-count {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.juan-character-count.warning {
+  color: #880D0C;
+}
+
+/* Form Buttons */
+.juan-form-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 15px;
+  margin-top: 1rem;
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.juan-cancel-button {
+  background-color: #880D0C;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.juan-next-button {
+  background-color: #046315;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modal Styles */
+.juan-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.juan-confirm-modal {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-sizing: border-box;
+}
+
+.juan-confirm-modal h3 {
+  margin-top: 0;
+  color: #00245A;
+}
+
+.juan-confirm-modal p {
+  margin-bottom: 20px;
+}
+
+.juan-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.juan-modal-cancel {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.juan-modal-confirm {
+  background-color: #880D0C;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Footer Styles */
+.juan-register-footer {
+  background-color: #00245A;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem 2rem;
+  color: white;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.juan-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 0 0 auto;
+  margin-right: 2rem;
+}
+
+.juan-footer-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.juan-footer-text h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.juan-footer-motto {
+  font-size: 0.65rem;
+  color: #dddddd;
+  margin: 0.15rem 0 0 0;
+}
+
+.juan-footer-content {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.juan-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  margin-left: 80px;
+}
+
+.juan-footer-link {
+  color: white;
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: color 0.3s;
+  white-space: nowrap;
+}
+
+.juan-footer-link:hover {
+  color: #C68A00;
+}
+
+.juan-footer-link-separator {
+  color: white;
+  font-size: 0.75rem;
+}
+
+.juan-footer-social-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s;
+  white-space: nowrap;
+  margin: 0 2rem;
+}
+
+.juan-footer-social-link:hover {
+  color: #C68A00;
+}
+
+.juan-social-icon {
+  font-size: 1.3rem;
+  color: inherit;
+}
+
+.juan-social-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.juan-social-find {
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
+.juan-social-platform {
+  font-weight: bold;
+  font-size: 0.75rem;
+  color: inherit;
+}
+
+.juan-footer-contact-container {
+  flex: 0 0 auto;
+  min-width: 300px;
+}
+
+.juan-contact-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.juan-contact-title svg {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.juan-contact-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.juan-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.juan-contact-item svg {
+  width: 0.8em;
+  height: 0.8em;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+/* Placeholder Styling */
+::placeholder {
+  font-size: 12px; /* Reduced from 13px */
+  color: #999;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+  .juan-footer-content {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .juan-footer-links,
+  .juan-footer-social-link,
+  .juan-footer-contact-container {
+    margin: 0.5rem 1rem;
+  }
+
+  .juan-footer-links {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .juan-main-content {
+    flex-direction: column;
+  }
+
+  .juan-left-side,
+  .juan-right-side {
+    width: 100%;
+  }
+
+  .juan-left-side {
+    min-height: 300px;
+  }
+
+  .juan-registration-title {
+    font-size: 2rem;
+    padding-top: 1rem;
+  }
+
+  .juan-registration-image {
+    max-width: 60%;
+  }
+
+  .juan-right-side {
+    padding: 0.5rem;
+  }
+
+  .juan-form-container {
+    padding: 1rem;
+    max-width: 100%;
+    margin-top: 1.5rem;
+  }
+
+  .juan-reminder-box {
+    padding: 12px;
+    margin: 0.8rem 0;
+    font-size: 11px; /* Reduced from 12px */
+  }
+
+  .juan-register-footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .juan-footer-left {
+    margin-right: 0;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+  }
+
+  .juan-footer-content {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .juan-footer-links,
+  .juan-footer-social-link {
+    margin-bottom: 1rem;
+    margin-left: 0;
+  }
+
+  .juan-footer-contact-container {
+    width: 100%;
+    min-width: unset;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .juan-contact-items {
+    align-items: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .juan-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .juan-form-group input,
+  .juan-select__control {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .juan-form-container {
+    padding: 1rem 0.8rem;
+  }
+
+  .juan-reminder-box {
+    padding: 10px;
+    font-size: 10px; /* Reduced from 11px */
+  }
+
+  .juan-error-message {
+    font-size: 9px; /* Reduced from 10px */
+  }
+
+  .juan-email-status {
+    font-size: 0.65rem; /* Reduced from 0.7rem */
+  }
+
+  .juan-form-group label {
+    font-size: 11px; /* Reduced from 12px */
+  }
+
+  .juan-form-group input,
+  ::placeholder {
+    font-size: 11px; /* Reduced from 12px */
+  }
+
+  .juan-step-line {
+    width: 40px;
+  }
+
+  .juan-step-text {
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .juan-register-container {
+    width: 100%;
+  }
+
+  .juan-form-group input,
+  .react-country-dropdown {
+    height: 34px;
+    font-size: 11px; /* Reduced from 12px */
+    width: 100%;
+  }
+
+  .juan-register-header {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .juan-header-text h1 {
+    font-size: 1rem;
+  }
+
+  .juan-registration-title {
+    font-size: 1.5rem;
+  }
+
+  .juan-form-container {
+    padding: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .juan-reminder-box {
+    padding: 8px;
+    font-size: 9px; /* Reduced from 10px */
+    margin: 0.5rem 0;
+  }
+
+  .juan-error-message {
+    font-size: 8px; /* Reduced from 9px */
+  }
+
+  .juan-email-status {
+    font-size: 0.6rem; /* Reduced from 0.65rem */
+  }
+
+  .juan-form-group label {
+    font-size: 10px; /* Reduced from 11px */
+  }
+
+  .juan-step-line {
+    width: 30px;
+  }
+
+  .juan-step-text {
+    font-size: 14px;
+    margin-left: 10px;
+    min-width: 65px;
+  }
+
+  .juan-footer-links {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-left: 0;
+  }
+
+  .juan-footer-social-link {
+    margin: 0.8rem 0;
+  }
+
+  .juan-contact-item {
+    font-size: 0.65rem;
+    text-align: left;
+    width: 100%;
+  }
+
+  .juan-form-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .juan-cancel-button,
+  .juan-next-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,42 @@
+.content-announcement {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.announcement-left {
+  width: 25%;
+}
+
+.announcement-right {
+  width: 80%;
+  box-sizing: border-box;
+}
+
+.content-process {
+  display: flex;
+  flex-direction: row;
+  height: auto;
+  width: 100%;
+  padding-top: .8rem;
+}
+
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 5%;
+  }
+
+  .content-announcement {
+    flex-direction: column;
+  }
+
+  .announcement-left,
+  .announcement-right {
+    width: 100%;
+  }
+}
+
+

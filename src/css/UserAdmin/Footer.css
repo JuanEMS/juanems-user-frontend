@@ -1,0 +1,19 @@
+.footer-container {
+    width: 100%;
+}
+
+.footer-yellow {
+    height: 5px;
+    width: 100%;
+    background-color: #C68A00;
+}
+
+.footer-blue {
+    min-height: 12px;
+    padding: 10px;
+    padding-left: 5%;
+    width: 100%;
+    color: white;
+    background-color: #00245A;
+    font-size: 0.8rem; 
+}

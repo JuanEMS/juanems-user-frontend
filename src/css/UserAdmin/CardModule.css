@@ -1,0 +1,197 @@
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+}
+
+.card-modules {
+    min-width: 220px;
+    max-width: calc((100% - 60px) / 4);
+    flex: 1 1 calc(25% - 20px);
+    height: 130px;
+    background-color: #ffffff;
+    display: flex;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid #dedede;
+    border-right: 1px solid #dedede;
+    border-bottom: 1px solid #dedede;
+}
+
+.card-modules:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 8px;
+    height: 100%;
+    background-color: #3498db;
+}
+
+/* Different colored accents for card variety */
+.card-modules:nth-child(4n+1):before {
+    background-color: #3498db;
+    /* Blue */
+}
+
+.card-modules:nth-child(4n+2):before {
+    background-color: #2ecc71;
+    /* Green */
+}
+
+.card-modules:nth-child(4n+3):before {
+    background-color: #e74c3c;
+    /* Red */
+}
+
+.card-modules:nth-child(4n+4):before {
+    background-color: #f39c12;
+    /* Orange */
+}
+
+.card-modules:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.invisible-module {
+    visibility: hidden;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.card-content {
+    flex: 1;
+    padding: 15px;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+.card-content:first-child {
+    flex: 1 1 20%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.card-content:last-child {
+    flex: 1 1 80%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: right;
+}
+
+.card-heading {
+    font-size: 1.3rem;
+    font-weight: 700;
+    overflow-wrap: break-word;
+    color: #2c3e50;
+}
+
+.card-message {
+    font-size: .9rem;
+    overflow-wrap: break-word;
+    color: #7f8c8d;
+}
+
+.active {
+    background-color: #2A67D5;
+    color: white;
+}
+
+.active .card-heading,
+.active .card-message {
+    color: white;
+}
+
+.icon-container {
+    height: 50px;
+    width: 50px;
+    border-radius: 10px;
+    background-color: #f5f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+/* Colored icon backgrounds based on card number */
+.card-modules:nth-child(4n+1) .icon-container {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.card-modules:nth-child(4n+2) .icon-container {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.card-modules:nth-child(4n+3) .icon-container {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.card-modules:nth-child(4n+4) .icon-container {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+
+/* Active state overrides */
+.active:before {
+    width: 100%;
+    opacity: 0.2;
+    z-index: 0;
+}
+
+.active .icon-container {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+@media screen and (max-width: 1200px) {
+    .card-modules {
+        flex: 1 1 calc((100% - 40px) / 3);
+        max-width: calc((100% - 40px) / 3);
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .card-modules {
+        flex: 1 1 calc(50% - 20px);
+        max-width: calc((50% - 20px));
+    }
+
+    .card-heading {
+        font-size: 1rem;
+        font-weight: 700;
+        overflow-wrap: break-word;
+    }
+
+    .card-message {
+        font-size: .8rem;
+        overflow-wrap: break-word;
+    }
+
+    .invisible-module {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .card-modules {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+}

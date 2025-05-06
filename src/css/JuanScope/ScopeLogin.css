@@ -1,0 +1,722 @@
+.scope-login-container {
+  font-family: 'Segoe UI', sans-serif;
+  color: #222;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Left side with image and gradient overlay */
+.scope-login-left-side {
+  width: 40%;
+  position: relative;
+  min-height: 100vh;
+}
+
+.scope-login-image-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../../images/collage background.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.scope-login-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(66, 133, 244, 0.5) 0%,
+    rgba(0, 36, 90, 0.5) 50%,
+    rgba(66, 133, 244, 0.5) 100%
+  );
+}
+
+.scope-login-left-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  color: white;
+}
+
+.scope-login-top-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scope-login-sjdefi-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.scope-login-top-text h1 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.scope-login-motto {
+  font-size: 0.7rem;
+  color: #dddddd;
+  margin: 0.15rem 0 0 0;
+  font-style: italic;
+}
+
+.scope-login-center-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 70%;
+  margin: 0;
+}
+
+.scope-login-ems-logo {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.scope-login-ems-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #C68A00;
+  margin: 0.5rem 0;
+}
+
+.scope-login-ems-subtitle {
+  font-size: 1rem;
+  color: white;
+  margin: 0;
+}
+
+/* Right side with form */
+.scope-login-right-side {
+  width: 60%;
+  background: linear-gradient(to bottom, #00245A 0%, #2A67D5 60%, #2A67D5 60%, #00245A 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.scope-login-form-container {
+  width: 100%;
+  max-width: 500px;
+  background-color: #2A67D5;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.scope-login-scope-title {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.scope-login-scope-title h1 {
+  font-size: 2.5rem;
+  color: #ffffff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scope-login-scope-image {
+  width: 40px;
+  height: 40px;
+  margin: 0 5px;
+}
+
+.scope-login-scope-subtitle {
+  font-size: 1.25rem;
+  color: #ffffff;
+  margin: 0.5rem 0 0 0;
+}
+
+.scope-login-login-form {
+  margin-top: 2rem;
+}
+
+.scope-login-form-title {
+  font-size: 1.5rem;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.scope-login-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.scope-login-input-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.scope-login-input-icon {
+  color: #ffffff;
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+.scope-login-input-label label {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.scope-login-input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.scope-login-input-field:focus {
+  outline: none;
+  border-color: #00245A;
+  box-shadow: 0 0 0 2px rgba(0, 36, 90, 0.2);
+}
+
+.scope-login-password-container {
+  position: relative;
+}
+
+.scope-login-password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1;
+}
+
+.scope-login-password-container .scope-login-input-field {
+  padding-right: 2.5rem;
+}
+
+.scope-login-links-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.scope-login-forgot-password-btn {
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  text-align: right;
+}
+
+.scope-login-forgot-password-btn:hover {
+  text-decoration: underline;
+}
+
+.scope-login-login-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #4CA85C;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.scope-login-login-button:hover {
+  background-color: #3d8b4a;
+}
+
+.scope-login-go-home-btn {
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  text-align: left;
+}
+
+.scope-login-go-home-btn:hover {
+  text-decoration: underline;
+}
+
+.scope-login-error-message {
+  color: #ff9999;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Add to your ScopeLogin.css */
+.scope-login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.scope-login-modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scope-login-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.scope-login-modal-cancel {
+  padding: 8px 16px;
+  background-color: #f5f5f5;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+
+.scope-login-button-loading {
+  background-color: #94a3b8 !important; /* Light gray when loading */
+  cursor: not-allowed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.scope-login-spinner {
+  font-size: 16px;
+}
+
+.scope-login-login-button:disabled,
+.scope-login-go-home-btn:disabled,
+.scope-login-forgot-password-btn:disabled,
+.scope-login-password-toggle:disabled,
+.scope-login-modal-cancel:disabled,
+.scope-login-modal-confirm:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.scope-login-modal-confirm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.scope-login-modal-confirm {
+  padding: 8px 16px;
+  background-color: #2A67D5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  .scope-login-left-side {
+    width: 45%;
+  }
+  
+  .scope-login-right-side {
+    width: 55%;
+  }
+  
+  .scope-login-ems-logo {
+    width: 130px;
+    height: 130px;
+  }
+  
+  .scope-login-ems-title {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .scope-login-container {
+    flex-direction: column;
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+  }
+  
+  .scope-login-left-side,
+  .scope-login-right-side {
+    width: 100%;
+    min-height: auto;
+  }
+  
+  .scope-login-left-side {
+    height: 300px;
+    overflow: hidden;
+  }
+  
+  .scope-login-left-content {
+    padding: 1.5rem;
+    justify-content: space-between;
+  }
+  
+  .scope-login-right-side {
+    padding: 2rem;
+    flex: 1;
+  }
+  
+  .scope-login-form-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .scope-login-center-logo {
+    height: auto;
+    padding: 0;
+    margin-top: 0.5rem;
+    justify-content: center;
+  }
+  
+  .scope-login-ems-logo {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .scope-login-ems-title {
+    font-size: 1.8rem;
+    margin: 0.25rem 0;
+  }
+  
+  .scope-login-ems-subtitle {
+    font-size: 0.9rem;
+    text-align: center;
+    line-height: 1.2;
+  }
+  
+  .scope-login-scope-title h1 {
+    font-size: 2.2rem;
+  }
+  
+  .scope-login-scope-subtitle {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .scope-login-left-side {
+    height: 250px;
+  }
+  
+  .scope-login-left-content {
+    padding: 1.25rem;
+  }
+  
+  .scope-login-right-side {
+    padding: 1.5rem;
+  }
+  
+  .scope-login-top-logo {
+    gap: 0.3rem;
+  }
+  
+  .scope-login-top-text h1 {
+    font-size: 0.9rem;
+  }
+  
+  .scope-login-motto {
+    font-size: 0.65rem;
+  }
+  
+  .scope-login-ems-logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .scope-login-ems-title {
+    font-size: 1.6rem;
+  }
+  
+  .scope-login-ems-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .scope-login-scope-title h1 {
+    font-size: 1.8rem;
+  }
+  
+  .scope-login-scope-image {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .scope-login-scope-subtitle {
+    font-size: 1rem;
+  }
+  
+  .scope-login-form-container {
+    padding: 1.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .scope-login-left-side {
+    height: 220px;
+  }
+  
+  .scope-login-left-content {
+    padding: 1rem;
+  }
+  
+  .scope-login-right-side {
+    padding: 1rem;
+  }
+  
+  .scope-login-form-container {
+    padding: 1.5rem;
+  }
+  
+  .scope-login-sjdefi-logo {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .scope-login-top-text h1 {
+    font-size: 0.8rem;
+  }
+  
+  .scope-login-motto {
+    font-size: 0.6rem;
+  }
+  
+  .scope-login-ems-logo {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 0.35rem;
+  }
+  
+  .scope-login-ems-title {
+    font-size: 1.5rem;
+    margin: 0.2rem 0;
+  }
+  
+  .scope-login-ems-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .scope-login-scope-title h1 {
+    font-size: 1.6rem;
+  }
+  
+  .scope-login-scope-image {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .scope-login-scope-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .scope-login-form-title {
+    font-size: 1.3rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .scope-login-input-field {
+    padding: 0.65rem 0.9rem;
+  }
+  
+  .scope-login-form-group {
+    margin-bottom: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .scope-login-left-side {
+    height: 200px;
+  }
+  
+  .scope-login-form-container {
+    padding: 1.25rem;
+  }
+  
+  .scope-login-top-logo {
+    gap: 0.25rem;
+  }
+  
+  .scope-login-sjdefi-logo {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .scope-login-top-text h1 {
+    font-size: 0.75rem;
+  }
+  
+  .scope-login-motto {
+    font-size: 0.55rem;
+  }
+  
+  .scope-login-ems-logo {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .scope-login-ems-title {
+    font-size: 1.4rem;
+  }
+  
+  .scope-login-ems-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .scope-login-scope-title h1 {
+    font-size: 1.5rem;
+  }
+  
+  .scope-login-scope-image {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .scope-login-scope-subtitle {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .scope-login-left-side {
+    height: 180px;
+  }
+  
+  .scope-login-form-container {
+    padding: 1.1rem;
+  }
+  
+  .scope-login-scope-title h1 {
+    font-size: 1.4rem;
+  }
+  
+  .scope-login-scope-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .scope-login-links-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .scope-login-forgot-password-btn, 
+  .scope-login-go-home-btn {
+    font-size: 0.85rem;
+  }
+  
+  .scope-login-ems-logo {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .scope-login-ems-title {
+    font-size: 1.3rem;
+  }
+  
+  .scope-login-ems-subtitle {
+    font-size: 0.7rem;
+  }
+  
+  .scope-login-form-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .scope-login-input-label label {
+    font-size: 0.9rem;
+  }
+  
+  .scope-login-login-button {
+    padding: 0.65rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-height: 700px) and (min-width: 993px) {
+  .scope-login-ems-logo {
+    width: 110px;
+    height: 110px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .scope-login-ems-title {
+    font-size: 2rem;
+    margin: 0.25rem 0;
+  }
+  
+  .scope-login-ems-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .scope-login-center-logo {
+    height: 60%;
+  }
+}
+
+@media (max-height: 550px) and (min-width: 993px) {
+  .scope-login-ems-logo {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .scope-login-ems-title {
+    font-size: 1.7rem;
+  }
+  
+  .scope-login-ems-subtitle {
+    font-size: 0.85rem;
+  }
+}

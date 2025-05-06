@@ -1,0 +1,145 @@
+.main {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    overflow-y: auto;
+    box-sizing: border-box;
+    flex-direction: column;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    padding: 2%;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+p {
+    margin: 0;
+    color: #5F6366;
+}
+
+.arrows {
+    display: flex;
+    gap: 10px;
+}
+
+.arrows>* {
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #989898;
+    transition: background-color 0.2s ease;
+}
+
+.arrows>*:hover {
+    background-color: #f0f0f0;
+}
+
+.page-title {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.custom-input {
+    border-radius: 4px;
+    height: 34px;
+    margin-bottom: 20px;
+}
+
+.custom-input:focus {
+    border-color: #00245A !important;
+    box-shadow: 0 0 0 0;
+}
+
+.heading {
+    color: #00245A;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.subheading {
+    color: black;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.group-title {
+    display: flex;
+    flex-direction: row;
+    color: #5F6366;
+    align-items: center;
+    gap: 8px;
+  }  
+
+.section-title {
+    color: black;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.section-icon {
+    color: black;
+    font-size: 1rem;
+    margin-right: 8px;
+}
+
+
+.content-filter .input-label {
+    margin-right: 10px;
+}
+
+.pfp {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    background-color: gray;
+}
+
+.create-btn {
+    background-color: #C68A00;
+    border-color: #C68A00;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    height: 30px;
+    transition: background-color 0.3s ease;
+}
+
+.create-btn:hover,
+.create-btn:focus {
+    background-color: #a57100;
+    border-color: #a57100;
+    color: white;
+}
+
+.archived-tag {
+    width: 100%;
+    background-color: #ff0004;  
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    padding: 5px;
+  }
+
+  .main-content {
+    background-color: #f2f7fA;
+  }

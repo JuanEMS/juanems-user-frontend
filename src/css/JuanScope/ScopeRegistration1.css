@@ -1,0 +1,961 @@
+.scope-registration-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Header Styles */
+.juan-register-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #00245A;
+    color: white;
+    height: 80px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+}
+
+.juan-header-left {
+    display: flex;
+    align-items: center;
+}
+
+.juan-logo-register {
+    height: 60px;
+    margin-right: 1rem;
+}
+
+.juan-header-text h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.hamburger-menu {
+    display: none;
+}
+
+.hamburger-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* Main Layout */
+.scope-registration-content {
+    display: flex;
+    flex: 1;
+    margin-top: 80px;
+}
+
+/* Main Content Styles */
+.scope-main-content {
+    flex: 1;
+    padding: 1.5rem;
+    background-color: #f5f5f5;
+    overflow-y: auto;
+    margin-left: 280px;
+}
+
+.registration-content {
+    background-color: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Registration Title */
+.registration-title {
+    color: #00245A;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.8rem;
+    text-align: left;
+    padding-left: 0.8rem;
+}
+
+.registration-divider {
+    height: 2px;
+    background-color: #e0e0e0;
+    margin-bottom: 1.5rem;
+    margin-left: 0.8rem;
+    margin-right: 0.8rem;
+}
+
+/* Registration Container */
+.registration-container {
+    margin-top: 0.8rem;
+}
+
+/* Step Indicator */
+.step-indicator {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 25px;
+    width: 100%;
+    gap: 10px;
+}
+
+.step-circles {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 200px;
+}
+
+.step-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-color: #D8D8D8;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.step-circle.active {
+    background-color: #64676C;
+}
+
+.step-circle.completed {
+    background-color: #34A853;
+}
+
+.step-line {
+    height: 2px;
+    background-color: #D8D8D8;
+    flex: 1;
+    min-width: 20px;
+}
+
+.step-line.completed {
+    background-color: #34A853;
+}
+
+.step-text {
+    margin-left: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    min-width: 60px;
+    flex-shrink: 0;
+}
+
+/* Personal Info Section */
+.personal-info-section {
+    width: 100%;
+}
+
+.personal-info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.personal-info-header h3 {
+    color: #212121;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.personal-info-divider {
+    height: 1px;
+    background-color: #A2A2A2;
+    margin-bottom: 15px;
+}
+
+/* Reminder Box */
+.reminder-box {
+    background-color: #C68A00;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 0.5rem 0;
+    color: white;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.reminder-box p {
+    color: white;
+    margin: 0;
+    font-size: 12px;
+}
+
+.reminder-box strong {
+    font-weight: bold;
+}
+
+.required-asterisk {
+    color: #880D0C;
+}
+
+/* Requirements Box */
+.requirements-box {
+    background-color: #E0E0E0;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 1rem;
+}
+
+.requirements-container {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.requirements-container p {
+    font-size: 12px;
+    font-weight: bold;
+    color: #880D0C;
+    margin-bottom: 10px;
+}
+
+.requirements-container h4 {
+    font-size: 13px;
+    font-weight: bold;
+    color: #212121;
+    margin: 10px 0 5px;
+}
+
+.requirements-container ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 0 0 10px;
+}
+
+.requirements-container li {
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+/* Form Note */
+.juan-form-note {
+    display: flex;
+    align-items: flex-start;
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.juan-note-icon {
+    color: #C68A00;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.juan-form-note p {
+    margin: 0;
+    font-size: 12px;
+    color: #333;
+}
+
+/* Form Address Container */
+.form-address-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.form-group.full-width {
+    width: 100%;
+}
+
+/* Form Grid */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.8rem;
+    width: 100%;
+}
+
+.form-grid.address-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* Collapsible Container */
+.collapsible-container {
+    margin-bottom: 1rem;
+    border: 1px solid #2A67D5;
+    background-color: #CFE0FF;
+}
+
+.collapsible-header {
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.collapsible-header h4 {
+    color: #2A67D5;
+    font-weight: bold;
+    margin: 0;
+    font-size: 14px;
+}
+
+.collapsible-content {
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background-color: white;
+    position: relative;
+}
+
+/* Contact Details */
+.contact-details {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    flex: 1;
+}
+
+.contact-details svg {
+    font-size: 24px;
+    color: #2A67D5;
+}
+
+.contact-details p {
+    margin: 0;
+    font-size: 12px;
+    color: #333;
+}
+
+.contact-details p strong {
+    color: #212121;
+}
+
+.emergency-contact {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.emergency-contact svg {
+    font-size: 16px;
+    color: #34A853;
+}
+
+.emergency-contact span {
+    color: #34A853;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* Contact Actions */
+.contact-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.contact-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 16px;
+    color: #666;
+}
+
+.contact-actions button:hover {
+    color: #2A67D5;
+}
+
+/* Add Contact Button */
+.add-contact-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #2A67D5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.add-contact-button:hover {
+    background-color: #1e4ca1;
+}
+
+/* Form Group */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+    width: 100%;
+}
+
+.form-group.horizontal {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.form-group.horizontal label {
+    flex: 0 0 200px;
+    font-weight: bold;
+    font-size: 12px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding-top: 0.4rem;
+}
+
+.form-group.horizontal .input-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 0.2rem;
+    font-size: 12px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+.form-group input,
+.form-group select {
+    height: 34px;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #00245A;
+}
+
+.disabled-input {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.input-error {
+    border-color: #880D0C !important;
+}
+
+.error-message {
+    color: #880D0C;
+    font-size: 10px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.character-count {
+    font-size: 10px;
+    color: #666;
+    margin-top: 3px;
+    text-align: right;
+}
+
+.character-count.warning {
+    color: #C68A00;
+}
+
+.optional-text {
+    font-weight: normal;
+    font-size: 10px;
+    color: #666;
+}
+
+/* Checkbox Container */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.checkbox-container input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.checkbox-container label {
+    font-size: 12px;
+    font-weight: normal;
+}
+
+/* Radio Group */
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.radio-group input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+/* Form Buttons */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    gap: 10px;
+}
+
+.back-button {
+    background-color: #666;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.back-button:hover {
+    background-color: #555;
+}
+
+.save-button {
+    background-color: #046315;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.next-button {
+    background-color: #00245A;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.save-button:hover {
+    background-color: #034a10;
+}
+
+.next-button:hover {
+    background-color: #001d48;
+}
+
+/* Loading and Error States */
+.scope-loading,
+.scope-error {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.scope-error {
+    color: #d32f2f;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+    display: none;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* Modal Styles */
+.scope-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.scope-confirm-modal {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.scope-confirm-modal h3 {
+    margin: 0 0 15px;
+    font-size: 18px;
+}
+
+.scope-confirm-modal p {
+    margin: 0 0 20px;
+    font-size: 14px;
+}
+
+.scope-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.scope-modal-cancel,
+.scope-modal-confirm {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 5px;
+}
+
+.scope-modal-cancel {
+    background-color: #ccc;
+    color: #333;
+}
+
+.scope-modal-confirm {
+    background-color: #00245A;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .form-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .form-grid.address-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .hamburger-menu {
+        display: block;
+    }
+
+    .scope-main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid.address-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group.horizontal {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .form-group.horizontal label {
+        flex: none;
+        width: auto;
+    }
+
+    .form-group.horizontal .input-container {
+        width: 100%;
+    }
+
+    .step-circles {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .step-line {
+        width: 20px;
+        min-width: 10px;
+    }
+
+    .step-text {
+        min-width: 50px;
+        font-size: 14px;
+        margin-left: 8px;
+    }
+
+    .step-circle {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
+
+    .registration-content {
+        padding: 1rem;
+    }
+
+    .form-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .back-button,
+    .save-button,
+    .next-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .collapsible-content {
+        padding: 0.5rem;
+    }
+
+    .contact-actions {
+        top: 5px;
+        right: 5px;
+    }
+
+    .requirements-container {
+        font-size: 11px;
+    }
+
+    .requirements-container p {
+        font-size: 11px;
+    }
+
+    .requirements-container h4 {
+        font-size: 12px;
+    }
+
+    .requirements-container li {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .registration-title {
+        font-size: 1.2rem;
+        padding-left: 0.8rem;
+    }
+
+    .registration-divider {
+        margin-left: 0.8rem;
+        margin-right: 0.8rem;
+    }
+
+    .step-circles {
+        min-width: 120px;
+    }
+
+    .step-line {
+        width: 15px;
+        min-width: 8px;
+    }
+
+    .step-text {
+        font-size: 12px;
+        margin-left: 6px;
+        min-width: 45px;
+    }
+
+    .step-circle {
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
+    }
+
+    .form-group label {
+        font-size: 11px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 11px;
+    }
+
+    .reminder-box {
+        padding: 10px;
+        font-size: 10px;
+    }
+
+    .error-message {
+        font-size: 9px;
+    }
+
+    .optional-text {
+        font-size: 9px;
+    }
+
+    .requirements-container {
+        font-size: 10px;
+    }
+
+    .requirements-container p {
+        font-size: 10px;
+    }
+
+    .requirements-container h4 {
+        font-size: 11px;
+    }
+
+    .requirements-container li {
+        font-size: 9px;
+    }
+}
+
+/* New styles for modern date picker */
+.modern-datepicker-wrapper {
+    position: relative;
+  }
+  
+  .modern-calendar {
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+  }
+  
+  .react-datepicker__header {
+    background-color: #f8f9fa !important;
+    border-bottom: none !important;
+    padding: 1rem !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+  
+  .react-datepicker__current-month {
+    font-size: 1.1rem !important;
+    color: #212121 !important;
+    font-weight: 600 !important;
+  }
+  
+  .react-datepicker__day-name {
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+    width: 2.5rem !important;
+    line-height: 2.5rem !important;
+  }
+  
+  .react-datepicker__day {
+    width: 2.5rem !important;
+    line-height: 2.5rem !important;
+    margin: 0.2rem !important;
+    border-radius: 50% !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .available-date {
+    background-color: #e6f3ff !important;
+    color: #1e40af !important;
+    font-weight: 500 !important;
+  }
+  
+  .available-date:hover {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+  }
+  
+  .selected-date {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+  
+  .selected-date:hover {
+    background-color: #1d4ed8 !important;
+    color: #ffffff !important;
+  }
+  
+  .unavailable-date {
+    background-color: transparent !important;
+    color: #d1d5db !important;
+    cursor: not-allowed !important;
+  }
+  
+  .react-datepicker__navigation {
+    top: 1rem !important;
+  }
+  
+  .react-datepicker__navigation--previous {
+    left: 1rem !important;
+  }
+  
+  .react-datepicker__navigation--next {
+    right: 1rem !important;
+  }
+  
+  .react-datepicker__navigation-icon::before {
+    border-color: #6b7280 !important;
+    border-width: 2px 2px 0 0 !important;
+    width: 8px !important;
+    height: 8px !important;
+  }

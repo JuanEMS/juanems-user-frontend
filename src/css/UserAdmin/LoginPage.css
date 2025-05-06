@@ -1,0 +1,105 @@
+.login-container {
+    min-height: 60vh;
+    width: 90%;
+    max-width: 1000px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+}
+
+.left-box {
+    background-color: #00245A;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+}
+
+.right-box {
+    background-color: white;
+    text-align: start;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+}
+
+.admin-logo {
+    width: 60%;
+    height: 60%;
+    object-fit: scale-down;
+}
+
+.left-box .login-title {
+    color: white;
+}
+
+.right-box .login-title {
+    color: #333333;
+}
+
+.header-text h1 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.header-text p.motto {
+    font-size: 0.7rem;
+    color: #dddddd;
+    margin: 0.15rem 0 0 0;
+    font-style: italic;
+}
+
+.input-label {
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: inline-block;
+    color: #333;
+}
+
+.login-btn {
+    margin-top: 10px;
+    background-color: #C68A00;
+    border-color: #C68A00;
+    font-weight: 600;
+    font-size: 1rem;
+    color: white;
+    height: 40px;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+}
+
+.login-btn:hover,
+.login-btn:focus {
+    background-color: #a57100; 
+    border-color: #a57100;
+    color: white;
+}
+
+.login-options {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }  
+
+@media (min-width: 600px) {
+    .login-container {
+        flex-direction: row;
+        width: 90%;
+        max-width: 1000px;
+        min-height: 60vh;
+    }
+
+    .left-box,
+    .right-box {
+        flex: 1;
+        padding: 50px;
+    }
+}
+
