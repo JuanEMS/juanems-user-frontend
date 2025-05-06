@@ -326,7 +326,7 @@ function ScopeExamInterviewApplication() {
       setIsFormDirty(false);
       setIsDateSaved(true);
       alert(data.message || 'Exam and Interview date saved successfully.');
-      navigate('/scope-exam-interview-result');
+      navigate('/scope-admission-requirements');
     } else {
       if (response.status === 400) {
         setError(data.error || 'Selected date is no longer available or invalid.');
