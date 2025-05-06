@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { FaRegSmileWink, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt, faPhone, faEnvelope, faClock } from '@fortawesome/free-solid-svg-icons';
@@ -13,11 +14,12 @@ import ScopeImage from '../../images/scope.png';
 import JuanEMSLogo from '../../images/JuanEMS logotop image final.png';
 
 function HomePage() {
+    const navigate = useNavigate(); // Initialize useNavigate
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
     const banners = [Banner1, Banner2, Banner3];
 
-    // Add these intersection observer hooks for each section you want to animate
+    // Intersection observer hooks
     const [headingRef, headingInView] = useInView({
         triggerOnce: true,
         threshold: 0.1,
@@ -76,7 +78,6 @@ function HomePage() {
     // Function to go to next slide
     const nextSlide = () => {
         setCurrentSlide((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-        // Pause auto-rotation temporarily when manually changing slides
         setIsAutoPlaying(false);
         setTimeout(() => setIsAutoPlaying(true), 5000);
     };
@@ -84,7 +85,6 @@ function HomePage() {
     // Function to go to previous slide
     const prevSlide = () => {
         setCurrentSlide((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
-        // Pause auto-rotation temporarily when manually changing slides
         setIsAutoPlaying(false);
         setTimeout(() => setIsAutoPlaying(true), 5000);
     };
@@ -180,7 +180,6 @@ function HomePage() {
                     ref={cardsRef}
                     className={`cards-container ${cardsInView ? 'fade-in-up' : ''}`}
                 >
-
                     {cards.map((card, index) => (
                         <div key={index} className="card-wrapper">
                             {/* Card Number */}
@@ -219,13 +218,7 @@ function HomePage() {
                                             <button
                                                 key={buttonIndex}
                                                 className={`${button.style === 'login' ? 'login-button' : 'register-button'} ${card.buttons.length === 1 ? 'single-button' : ''}`}
-                                                onClick={() => {
-                                                    if (button.destination.startsWith('http')) {
-                                                        window.location.href = button.destination;
-                                                    } else {
-                                                        window.location.pathname = button.destination;
-                                                    }
-                                                }}
+                                                onClick={() => navigate(button.destination)}
                                             >
                                                 {button.text}
                                             </button>
@@ -273,7 +266,6 @@ function HomePage() {
                         className="about-logo-external"
                     />
                 </div>
-
             </main>
 
             {/* Footer */}
@@ -346,7 +338,6 @@ function HomePage() {
                     </div>
                 </div>
             </footer>
-
         </div>
     );
 }

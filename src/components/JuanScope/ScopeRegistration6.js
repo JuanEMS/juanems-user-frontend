@@ -29,7 +29,7 @@ function ScopeRegistration6() {
     return () => clearInterval(timer);
   }, []);
 
-  // Replace the fetchUserData useEffect
+  // Fetch user data, registration status, and verify session
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
     const createdAt = localStorage.getItem('createdAt');
@@ -50,6 +50,7 @@ function ScopeRegistration6() {
           return;
         }
 
+        // Verify account status
         const verificationResponse = await fetch(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
         );
@@ -73,6 +74,7 @@ function ScopeRegistration6() {
           return;
         }
 
+        // Fetch user data
         const userResponse = await fetch(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
         );
@@ -83,6 +85,7 @@ function ScopeRegistration6() {
 
         const userDataResponse = await userResponse.json();
 
+        // Update local storage
         localStorage.setItem('applicantID', userDataResponse.applicantID);
         localStorage.setItem('firstName', userDataResponse.firstName);
         localStorage.setItem('middleName', userDataResponse.middleName || '');
@@ -111,11 +114,13 @@ function ScopeRegistration6() {
 
         setRegistrationStatus(userDataResponse.registrationStatus || 'Incomplete');
 
+        // If registration is complete, redirect to registration-status-complete
         if (userDataResponse.registrationStatus === 'Complete') {
           navigate('/scope-registration-status-complete');
           return;
         }
 
+        // Fetch all registration data
         const registrationDataLocal = localStorage.getItem('registrationData');
         const contacts = localStorage.getItem('familyContacts');
         let parsedRegistrationData, parsedContacts;
@@ -151,7 +156,7 @@ function ScopeRegistration6() {
     return () => clearInterval(refreshInterval);
   }, [navigate]);
 
-  // Replace the checkAccountStatus useEffect
+  // Periodic account status check
   useEffect(() => {
     const checkAccountStatus = async () => {
       try {
@@ -200,43 +205,42 @@ function ScopeRegistration6() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isFormDirty]);
 
- // Replace the handleLogout function
- const handleLogout = async () => {
-  try {
-    const userEmail = localStorage.getItem('userEmail');
-    const createdAt = localStorage.getItem('createdAt');
+  const handleLogout = async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      const createdAt = localStorage.getItem('createdAt');
 
-    if (!userEmail) {
-      navigate('/scope-login');
-      return;
-    }
-
-    const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          createdAt: createdAt,
-        }),
+      if (!userEmail) {
+        navigate('/scope-login');
+        return;
       }
-    );
 
-    if (response.ok) {
-      localStorage.clear();
-      navigate('/scope-login');
-    } else {
-      setError('Failed to logout. Please try again.');
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            createdAt: createdAt,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        localStorage.clear();
+        navigate('/scope-login');
+      } else {
+        setError('Failed to logout. Please try again.');
+      }
+    } catch (err) {
+      setError('Error during logout process');
+    } finally {
+      setShowLogoutModal(false);
     }
-  } catch (err) {
-    setError('Error during logout process');
-  } finally {
-    setShowLogoutModal(false);
-  }
-};
+  };
 
   const handleAnnouncements = () => {
     if (isFormDirty) {
@@ -247,7 +251,6 @@ function ScopeRegistration6() {
     }
   };
 
-  // Replace the handleSaveAndProceed function
   const handleSaveAndProceed = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -257,6 +260,10 @@ function ScopeRegistration6() {
         return;
       }
 
+      // Log formData for debugging
+      console.log('Form Data to be sent:', JSON.stringify(formData, null, 2));
+
+      // Validate formData
       if (!formData || Object.keys(formData).length === 0) {
         setError('Registration data is missing. Please complete all previous steps.');
         return;
@@ -267,6 +274,7 @@ function ScopeRegistration6() {
         return;
       }
 
+      // Send request to save registration data
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/save-registration`, {
         method: 'POST',
         headers: {
