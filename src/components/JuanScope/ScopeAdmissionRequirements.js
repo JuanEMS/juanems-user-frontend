@@ -7,6 +7,7 @@ import '../../css/JuanScope/ScopeRegistration1.css';
 import SideNavigation from './SideNavigation';
 import WaiverFormModal from './WaiverFormModal';
 import DocumentVerificationSystem from './DocumentVerificationSystem';
+import moment from 'moment-timezone';
 
 function ScopeAdmissionRequirements() {
   const navigate = useNavigate();
@@ -539,54 +540,58 @@ function ScopeAdmissionRequirements() {
     }
   };
 
-  // Replace the handlePrintWaiver function
-  const handlePrintWaiver = async () => {
-    const waivedRequirements = requirements.filter((req) => req.waived && req.waiverDetails);
-    if (waivedRequirements.length === 0) {
-      alert('No waived requirements to print.');
+const handlePrintWaiver = async () => {
+  const waivedRequirements = requirements.filter((req) => req.waived && req.waiverDetails);
+  if (waivedRequirements.length === 0) {
+    alert('No waived requirements to print.');
+    return;
+  }
+
+  try {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+      setError('User email not found. Please log in again.');
+      navigate('/scope-login');
       return;
     }
 
-    try {
-      const userEmail = localStorage.getItem('userEmail');
-      if (!userEmail) {
-        setError('User email not found. Please log in again.');
-        navigate('/scope-login');
-        return;
-      }
+    // Get current time in Philippine timezone
+    const now = moment().tz('Asia/Manila');
+    const dateIssued = now.format('YYYY-MM-DD');
+    const dateSigned = now.format('YYYY-MM-DDTHH:mm:ssZ');
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userData: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userEmail,
         },
-        body: JSON.stringify({
-          userData: {
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userEmail,
-          },
-          waivedRequirements,
-          academicYear: '2025-2026',
-          dateIssued: new Date().toISOString(),
-          dateSigned: new Date().toISOString(),
-        }),
-      });
+        waivedRequirements,
+        academicYear: '2025-2026',
+        dateIssued,
+        dateSigned,
+      }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate waiver PDF');
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error generating waiver PDF:', err);
-      setError('Failed to generate waiver PDF. Please check your connection and try again.');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to generate waiver PDF');
     }
-  };
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Error generating waiver PDF:', err);
+    setError('Failed to generate waiver PDF. Please check your connection and try again.');
+  }
+};
 
   const handleNext = async () => {
     const isValid = requirements.every(

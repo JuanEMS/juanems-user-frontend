@@ -1,34 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+import Tesseract from 'tesseract.js';
 
-// Configure pdf.js worker using CDN for simplicity and compatibility
+// Configure pdf.js worker using CDN
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// Lazy-load TensorFlow.js and Tesseract.js
+// Lazy-load TensorFlow.js
 const loadTF = async () => {
   const tf = await import('@tensorflow/tfjs');
   await import('@tensorflow/tfjs-backend-webgl');
   return tf;
-};
-
-const loadTesseract = async () => {
-  return await import('tesseract.js');
-};
-
-// Configure Tesseract worker with CDN paths
-const initializeTesseractWorker = async (Tesseract) => {
-  try {
-    Tesseract.setLogging(true);
-    return await Tesseract.createWorker({
-      workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
-      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-      corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js',
-      logger: (m) => console.log(m),
-    });
-  } catch (error) {
-    console.error('Failed to initialize Tesseract worker:', error);
-    throw new Error('OCR initialization failed. Please try again later.');
-  }
 };
 
 // Load TensorFlow.js backend
@@ -119,15 +100,12 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         return;
       }
 
-      // Load Tesseract.js dynamically
-      const Tesseract = await loadTesseract();
-
       // Process based on file type
       let documentData;
       if (fileType === 'application/pdf') {
-        documentData = await processPdfDocument(file, Tesseract);
+        documentData = await processPdfDocument(file);
       } else {
-        documentData = await processImageDocument(file, Tesseract);
+        documentData = await processImageDocument(file);
       }
 
       // Specific verification based on requirement type
@@ -197,7 +175,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
   };
 
   // Process PDF document
-  const processPdfDocument = async (file, Tesseract) => {
+  const processPdfDocument = async (file) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -208,14 +186,8 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         throw new Error('PDF is empty or has no valid pages');
       }
 
-      // Try to access the first page
-      let page;
-      try {
-        page = await pdf.getPage(1);
-      } catch (error) {
-        throw new Error('Invalid page request: Unable to access the first page of the PDF');
-      }
-
+      // Process the first page
+      const page = await pdf.getPage(1);
       const viewport = page.getViewport({ scale: 1.0 });
 
       const canvas = document.createElement('canvas');
@@ -231,12 +203,14 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
       // Extract text using Tesseract.js
-      const worker = await initializeTesseractWorker(Tesseract);
-      await worker.load();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      const { data: { text } } = await worker.recognize(canvas.toDataURL());
-      await worker.terminate();
+      const { data: { text } } = await Tesseract.recognize(canvas.toDataURL(), 'eng');
+      if (!text) {
+        throw new Error('No text extracted from PDF');
+      }
+
+      // Clean up
+      canvas.remove();
+      URL.revokeObjectURL(canvas.toDataURL());
 
       return {
         imageData,
@@ -252,7 +226,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
   };
 
   // Process image document
-  const processImageDocument = async (file, Tesseract) => {
+  const processImageDocument = async (file) => {
     try {
       const img = new Image();
       img.src = URL.createObjectURL(file);
@@ -267,12 +241,14 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
       // Extract text using Tesseract.js
-      const worker = await initializeTesseractWorker(Tesseract);
-      await worker.load();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      const { data: { text } } = await worker.recognize(img.src);
-      await worker.terminate();
+      const { data: { text } } = await Tesseract.recognize(img.src, 'eng');
+      if (!text) {
+        throw new Error('No text extracted from image');
+      }
+
+      // Clean up
+      canvas.remove();
+      URL.revokeObjectURL(img.src);
 
       return {
         imageData,
@@ -282,6 +258,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         canvas,
       };
     } catch (error) {
+      console.error('Image processing error:', error);
       throw new Error(`Error processing image: ${error.message}`);
     }
   };
@@ -360,6 +337,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         },
       };
     } catch (error) {
+      console.error('ID photo verification error:', error);
       return {
         isValid: false,
         message: `ID photo verification error: ${error.message}`,
@@ -657,6 +635,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         };
       }
     } catch (error) {
+      console.error('Educational document verification error:', error);
       return {
         isValid: false,
         message: `Educational document verification error: ${error.message}`,
@@ -713,7 +692,7 @@ const DocumentVerificationSystem = () => {
       },
     }));
 
-    // Optional: Submit verification results to backend
+    // Submit verification results to backend
     try {
       const userEmail = localStorage.getItem('userEmail');
       if (userEmail) {

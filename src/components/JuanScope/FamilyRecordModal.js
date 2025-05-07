@@ -181,21 +181,18 @@ const FamilyRecordModal = ({
                 return null;
             case 'province':
             case 'city':
-                if (!formData.sameAsApplicant) {
-                    if (!value) return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
-                    if (value.length < 2) return `${name.charAt(0).toUpperCase() + name.slice(1)} must be at least 2 characters`;
-                }
+                if (!value) return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+                if (value.length < 2) return `${name.charAt(0).toUpperCase() + name.slice(1)} must be at least 2 characters`;
                 return null;
             case 'houseNo':
-                if (!formData.sameAsApplicant) {
-                    if (!value) return 'House No. & Street is required';
-                }
+                if (!value) return 'House No. & Street is required';
                 return null;
             case 'postalCode':
-                if (!formData.sameAsApplicant) {
-                    if (!value) return 'Postal Code is required';
-                    if (!/^\d{4}$/.test(value)) return 'Postal Code must be exactly 4 digits';
-                }
+                if (!value) return 'Postal Code is required';
+                if (!/^\d{4}$/.test(value)) return 'Postal Code must be exactly 4 digits';
+                return null;
+            case 'barangay':
+                if (!value) return 'Barangay is required';
                 return null;
             case 'mobileNo':
                 if (!value) return 'Mobile No. is required';
@@ -226,10 +223,7 @@ const FamilyRecordModal = ({
 
     const validateForm = () => {
         const newErrors = {};
-        const requiredFields = ['relationship', 'firstName', 'lastName', 'mobileNo', 'emailAddress', 'isEmergencyContact'];
-        if (!formData.sameAsApplicant) {
-            requiredFields.push('province', 'city', 'houseNo', 'postalCode');
-        }
+        const requiredFields = ['relationship', 'firstName', 'lastName', 'province', 'city', 'houseNo', 'postalCode', 'barangay', 'mobileNo', 'emailAddress', 'isEmergencyContact'];
 
         requiredFields.forEach((field) => {
             const error = validateField(field, formData[field]);
@@ -456,7 +450,7 @@ const FamilyRecordModal = ({
                                     id="houseNo"
                                     name="houseNo"
                                     value={formData.houseNo}
-                                    onChange={handleInputChange}
+                onChange={handleInputChange}
                                     onBlur={() => setTouchedFields({ ...touchedFields, houseNo: true })}
                                     className={errors.houseNo ? 'input-error' : ''}
                                     placeholder="Enter House No. & Street"

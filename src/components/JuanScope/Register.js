@@ -265,7 +265,7 @@ function Register() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  
+
   // Improved email validation state
   const [emailValidationState, setEmailValidationState] = useState({
     checking: false,
@@ -306,9 +306,10 @@ function Register() {
   const fuse = useMemo(() => new Fuse(countries, fuseOptions), []);
 
   // Validation function - extracted for reuse
+  // Update the validateField function (only the mobile case)
   const validateField = (name, value) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+63\s\(\d{3}\)\s\d{3}\s\d{4}$/;
+    const phoneRegex = /^\+639\d{9}$/;
 
     switch (name) {
       case 'firstName':
@@ -333,7 +334,7 @@ function Register() {
 
       case 'mobile':
         if (!value) return 'Mobile number is required';
-        if (!phoneRegex.test(value)) return 'Please enter a valid Philippine mobile number (+63 (XXX) YYY ZZZZ)';
+        if (!phoneRegex.test(value)) return 'Mobile No. must be 10 digits starting with 9 (e.g., +639123456789)';
         return null;
 
       case 'nationality':
@@ -347,7 +348,7 @@ function Register() {
   // Real-time validation effect - triggers on every form change
   useEffect(() => {
     const newErrors = {};
-    
+
     // Only validate fields that have been touched or changed
     Object.keys(touchedFields).forEach(field => {
       if (touchedFields[field]) {
@@ -429,11 +430,10 @@ function Register() {
     const { name, value } = e.target;
     const sanitizedValue = value.replace(/<[^>]*>?/gm, '');
 
-    // For name fields, remove extra spaces and count actual letters
     if (['firstName', 'middleName', 'lastName'].includes(name)) {
       const trimmedValue = sanitizedValue.trim();
       if (trimmedValue.length > 50) {
-        return; // Don't update if exceeds max length
+        return;
       }
     }
 
@@ -444,6 +444,7 @@ function Register() {
 
     if (name === 'mobile') {
       processedValue = formatPhilippinePhone(sanitizedValue);
+      processedValue = processedValue ? `+63${processedValue}` : '';
     }
 
     setFormData({
@@ -451,7 +452,6 @@ function Register() {
       [name]: processedValue
     });
 
-    // Mark field as touched/changed immediately on input
     setTouchedFields({
       ...touchedFields,
       [name]: true
@@ -468,20 +468,11 @@ function Register() {
   };
 
   const formatPhilippinePhone = (value) => {
-    const digits = value.replace(/\D/g, '');
-    // Ensure the number starts with 9 for Philippine mobile numbers
-    let cleanedDigits = digits.startsWith('0') ? digits.slice(1) : digits;
-    cleanedDigits = cleanedDigits.startsWith('9') ? cleanedDigits : '9' + cleanedDigits;
-
-    if (cleanedDigits.length <= 3) {
-      return `+63 (${cleanedDigits})`;
-    } else if (cleanedDigits.length <= 6) {
-      return `+63 (${cleanedDigits.slice(0, 3)}) ${cleanedDigits.slice(3)}`;
-    } else if (cleanedDigits.length <= 10) {
-      return `+63 (${cleanedDigits.slice(0, 3)}) ${cleanedDigits.slice(3, 6)} ${cleanedDigits.slice(6)}`;
-    } else {
-      return `+63 (${cleanedDigits.slice(0, 3)}) ${cleanedDigits.slice(3, 6)} ${cleanedDigits.slice(6, 10)}`;
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    if (digits && !digits.startsWith('9')) {
+      return '';
     }
+    return digits;
   };
 
   // Handle country select from dropdown
@@ -490,7 +481,7 @@ function Register() {
       ...formData,
       nationality: selectedOption ? selectedOption.label : ''
     });
-    
+
     // Mark nationality as touched when a selection is made or cleared
     setTouchedFields({
       ...touchedFields,
@@ -544,14 +535,14 @@ function Register() {
       allFieldsTouched[field] = true;
     });
     setTouchedFields(allFieldsTouched);
-    
+
     // Run validation on all required fields
     const newErrors = {};
     Object.keys(allFieldsTouched).forEach(field => {
       const error = validateField(field, formData[field]);
       if (error) newErrors[field] = error;
     });
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -612,7 +603,7 @@ function Register() {
   };
 
   return (
-<div className="juan-register-container">
+    <div className="juan-register-container">
       {/* Header */}
       <header className="juan-register-header">
         <div className="juan-header-left">
@@ -817,22 +808,24 @@ function Register() {
                       </span>
                     )}
                   </div>
-
-                  {/* Mobile */}
                   <div className="juan-form-group">
                     <label htmlFor="mobile">
                       Mobile Number:<span className="juan-required-asterisk">*</span>
                     </label>
-                    <input
-                      type="tel"
-                      id="mobile"
-                      name="mobile"
-                      value={formData.mobile}
-                      onChange={handleInputChange}
-                      onBlur={handleBlur}
-                      className={errors.mobile ? 'juan-input-error' : ''}
-                      placeholder="+63 (XXX) YYY ZZZZ"
-                    />
+                    <div className="mobile-input-container">
+                      <span className="country-code">+63</span>
+                      <input
+                        type="tel"
+                        id="mobile"
+                        name="mobile"
+                        value={formData.mobile.replace('+63', '')}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        className={errors.mobile ? 'juan-input-error' : ''}
+                        placeholder="9123456789"
+                        maxLength={10}
+                      />
+                    </div>
                     {errors.mobile && (
                       <span className="juan-error-message">
                         <FontAwesomeIcon icon={faExclamationCircle} /> {errors.mobile}
