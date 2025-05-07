@@ -85,7 +85,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
       const fileSize = file.size;
 
       // Basic file validation
-      const validationResult = validateFileBasics(fileType, fileSize, fileExtension);
+      const validationResult = validateFileBasics(fileType, fileSize, fileExtension, requirementType);
       if (!validationResult.valid) {
         setVerificationResult({
           isValid: false,
@@ -106,6 +106,25 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         documentData = await processPdfDocument(file);
       } else {
         documentData = await processImageDocument(file);
+      }
+
+      // Pre-check for ID photo characteristics in educational documents
+      if (['report_card', 'transcript'].includes(requirementType)) {
+        const isIDPhotoLike = await checkIfIDPhoto(documentData);
+        if (isIDPhotoLike) {
+          setVerificationResult({
+            isValid: false,
+            message: 'This appears to be an ID photo, not a report card or transcript. Please upload the correct document.',
+            details: { error: 'Incorrect document type' },
+          });
+          onVerificationComplete({
+            isValid: false,
+            message: 'This appears to be an ID photo, not a report card or transcript. Please upload the correct document.',
+            details: { error: 'Incorrect document type' },
+          });
+          setIsVerifying(false);
+          return;
+        }
       }
 
       // Specific verification based on requirement type
@@ -147,7 +166,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
   };
 
   // Basic file validation
-  const validateFileBasics = (fileType, fileSize, fileExtension) => {
+  const validateFileBasics = (fileType, fileSize, fileExtension, requirementType) => {
     const validTypes = ['image/png', 'image/jpeg', 'application/pdf'];
     if (!validTypes.includes(fileType)) {
       return {
@@ -168,6 +187,21 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
       return {
         valid: false,
         message: 'Invalid file extension. Only PNG, JPG, or PDF are allowed.',
+      };
+    }
+
+    // Enforce file type restrictions based on requirement
+    if (requirementType === 'id_photo' && fileType === 'application/pdf') {
+      return {
+        valid: false,
+        message: 'ID photo must be an image file (PNG or JPG). PDFs are not allowed.',
+      };
+    }
+
+    if (['report_card', 'transcript'].includes(requirementType) && !['image/png', 'image/jpeg', 'application/pdf'].includes(fileType)) {
+      return {
+        valid: false,
+        message: 'Educational documents must be PNG, JPG, or PDF.',
       };
     }
 
@@ -263,7 +297,41 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
     }
   };
 
-  // Verify ID photo
+  // Check if document resembles an ID photo
+  const checkIfIDPhoto = async (documentData) => {
+    try {
+      const { dimensions, imageData, canvas, image } = documentData;
+
+      // Check dimensions for 2x2 photo
+      const dpi = 300;
+      const expectedSize = 2 * dpi; // 600 pixels
+      const tolerance = 50;
+      if (
+        Math.abs(dimensions.width - expectedSize) <= tolerance &&
+        Math.abs(dimensions.height - expectedSize) <= tolerance
+      ) {
+        // Check aspect ratio
+        const aspectRatio = dimensions.width / dimensions.height;
+        if (Math.abs(aspectRatio - 1) <= 0.1) {
+          // Check background
+          const { isWhiteBackground } = await checkBackgroundColor(imageData);
+          if (isWhiteBackground) {
+            // Check for face
+            const hasFace = await detectFace(canvas || image);
+            if (hasFace) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('ID photo check error:', error);
+      return false;
+    }
+  };
+
+  // Verify ID photo (restored to original working version)
   const verifyIDPhoto = async (documentData) => {
     try {
       const { imageData, dimensions, image, canvas } = documentData;
@@ -271,8 +339,8 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
       if (!image && !canvas) {
         return {
           isValid: false,
-          message: 'ID photo must be an image file (PNG or JPG). PDFs are not allowed for ID photos.',
-          details: { error: 'Invalid file type' },
+          message: 'Invalid image data for ID photo.',
+          details: { error: 'Invalid image data' },
         };
       }
 
@@ -293,7 +361,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         return {
           isValid: false,
           message: 'ID photo should be approximately square (2x2). Current aspect ratio is too far from square.',
-          details: { aspectRatio, expectedRatio: '1:1 (square)', dimensions },
+          details: { aspectRatio, expectedRatio: '1:1 (square)' },
         };
       }
 
@@ -303,7 +371,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
         return {
           isValid: false,
           message: 'ID photo should have a light/white background. The current background is too dark or colorful.',
-          details: { backgroundCheck: 'failed', whitePercentage: Math.round(whitePercentage * 100) + '%' },
+          details: { backgroundCheck: 'failed', whitePercentage: `${Math.round(whitePercentage * 100)}%` },
         };
       }
 
@@ -311,7 +379,7 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
       if (!hasFace) {
         return {
           isValid: false,
-          message: 'No face detected in the image. Ensure the photo clearly shows a human face centered in the frame.',
+          message: 'No face detected in the ID photo. Ensure a human face is centered.',
           details: { faceDetection: 'failed' },
         };
       }
@@ -596,20 +664,20 @@ const DocumentVerification = ({ file, requirementType, onVerificationComplete })
 
       let confidence = 0;
 
-      // Reduced weight for keywords, increased for grades and courses
-      const keywordScore = Math.min(40, keywordMatches.length * 4);
+      // Adjusted scoring for stricter validation
+      const keywordScore = Math.min(30, keywordMatches.length * 3);
       confidence += keywordScore;
 
-      const courseScore = Math.min(30, courses.length * 10);
+      const courseScore = Math.min(20, courses.length * 8);
       confidence += courseScore;
 
-      const gradeScore = Math.min(30, grades.length * 5);
+      const gradeScore = Math.min(40, grades.length * 6);
       confidence += gradeScore;
 
       const pageScore = Math.min(10, (pageCount || 1) * 5);
       confidence += pageScore;
 
-      if (confidence >= 40) {
+      if (confidence >= 50) {
         return {
           isValid: true,
           message: 'Educational document verification successful.',
@@ -721,7 +789,7 @@ const DocumentVerificationSystem = () => {
 
   const getVerificationType = (requirementName) => {
     const nameLower = requirementName.toLowerCase();
-    if (nameLower.includes('photo') || nameLower.includes('2x2')) {
+    if (nameLower.includes('2x2') || nameLower.includes('id photo')) {
       return 'id_photo';
     } else if (nameLower.includes('report card')) {
       return 'report_card';

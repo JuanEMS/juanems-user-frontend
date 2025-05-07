@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faTimes, faArrowLeft, faEye, faCheck, faUpload, faTrash, faFileAlt, faPrint, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import SJDEFILogo from '../../images/SJDEFILogo.png';
@@ -13,6 +13,8 @@ function ScopeAdmissionRequirements() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState({});
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
+  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -46,7 +48,6 @@ function ScopeAdmissionRequirements() {
     return () => clearInterval(timer);
   }, []);
 
-  // Replace the fetchData useEffect
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
     const createdAt = localStorage.getItem('createdAt');
@@ -185,10 +186,13 @@ function ScopeAdmissionRequirements() {
             feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded, verification pending' : 'No document uploaded'}`,
             waiverDetails: req.waiverDetails
           })));
-          setRegistrationStatus(admissionData.admissionRequirementsStatus);
+          setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || 'On-going');
           setIsSubmitted(admissionData.admissionRequirementsStatus === 'Complete');
         } else {
           setRequirements(reqList);
+          setAdmissionRequirementsStatus('Incomplete');
+          setAdmissionAdminFirstStatus('On-going');
         }
 
         setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
@@ -207,11 +211,10 @@ function ScopeAdmissionRequirements() {
     };
 
     fetchData();
-    const refreshInterval = setInterval(fetchData, 5 * 60 * 1000);
+    const refreshInterval = setInterval(fetchData, 2 * 60 * 1000); // Reduced to 2 minutes for more frequent updates
     return () => clearInterval(refreshInterval);
   }, [navigate]);
 
-  // Replace the checkAccountStatus useEffect
   useEffect(() => {
     const checkAccountStatus = async () => {
       try {
@@ -263,7 +266,6 @@ function ScopeAdmissionRequirements() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isFormDirty, isSubmitted]);
 
-  // Replace the handleLogout function
   const handleLogout = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -352,7 +354,6 @@ function ScopeAdmissionRequirements() {
     }
   };
 
-  // Replace the handleViewDocument function
   const handleViewDocument = async (id) => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -477,7 +478,6 @@ function ScopeAdmissionRequirements() {
     setShowWaiverModal(false);
   };
 
-  // Replace the handleSave function
   const handleSave = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -518,7 +518,8 @@ function ScopeAdmissionRequirements() {
             feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded, verification pending' : 'No document uploaded'}`,
             waiverDetails: req.waiverDetails
           })));
-          setRegistrationStatus(admissionJson.admissionRequirementsStatus);
+          setAdmissionRequirementsStatus(admissionJson.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(admissionJson.admissionAdminFirstStatus || 'On-going');
           setIsSubmitted(admissionJson.admissionRequirementsStatus === 'Complete');
         }
         return true;
@@ -540,58 +541,57 @@ function ScopeAdmissionRequirements() {
     }
   };
 
-const handlePrintWaiver = async () => {
-  const waivedRequirements = requirements.filter((req) => req.waived && req.waiverDetails);
-  if (waivedRequirements.length === 0) {
-    alert('No waived requirements to print.');
-    return;
-  }
-
-  try {
-    const userEmail = localStorage.getItem('userEmail');
-    if (!userEmail) {
-      setError('User email not found. Please log in again.');
-      navigate('/scope-login');
+  const handlePrintWaiver = async () => {
+    const waivedRequirements = requirements.filter((req) => req.waived && req.waiverDetails);
+    if (waivedRequirements.length === 0) {
+      alert('No waived requirements to print.');
       return;
     }
 
-    // Get current time in Philippine timezone
-    const now = moment().tz('Asia/Manila');
-    const dateIssued = now.format('YYYY-MM-DD');
-    const dateSigned = now.format('YYYY-MM-DDTHH:mm:ssZ');
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        setError('User email not found. Please log in again.');
+        navigate('/scope-login');
+        return;
+      }
 
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userData: {
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userEmail,
+      const now = moment().tz('Asia/Manila');
+      const dateIssued = now.format('YYYY-MM-DD');
+      const dateSigned = now.format('YYYY-MM-DDTHH:mm:ssZ');
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        waivedRequirements,
-        academicYear: '2025-2026',
-        dateIssued,
-        dateSigned,
-      }),
-    });
+        body: JSON.stringify({
+          userData: {
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userEmail,
+          },
+          waivedRequirements,
+          academicYear: '2025-2026',
+          dateIssued,
+          dateSigned,
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to generate waiver PDF');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate waiver PDF');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error generating waiver PDF:', err);
+      setError('Failed to generate waiver PDF. Please check your connection and try again.');
     }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('Error generating waiver PDF:', err);
-    setError('Failed to generate waiver PDF. Please check your connection and try again.');
-  }
-};
+  };
 
   const handleNext = async () => {
     const isValid = requirements.every(
@@ -604,14 +604,13 @@ const handlePrintWaiver = async () => {
     }
 
     if (isSubmitted) {
-      navigate('/scope-exam-interview-result');
+      navigate('/scope-admission-exam-details');
       return;
     }
 
     setShowConfirmModal(true);
   };
 
-  // Replace the handleConfirmSubmit function
   const handleConfirmSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -652,10 +651,13 @@ const handlePrintWaiver = async () => {
         throw new Error(errorData.error || 'Failed to complete admission requirements');
       }
 
+      const data = await response.json();
       setIsSubmitted(true);
+      setAdmissionRequirementsStatus('Complete');
+      setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
       setShowConfirmModal(false);
-      alert('Admission requirements submitted successfully. Your submission is being validated (On-going). Please check back for updates.');
-      navigate('/scope-exam-interview-result');
+      alert('Admission requirements submitted successfully. Your submission is being validated. Please check back for updates.');
+      navigate('/scope-admission-exam-details');
     } catch (err) {
       console.error('Error during final submission:', err);
       setError(`Submission failed: ${err.message}. Please try again or contact support.`);
@@ -698,6 +700,15 @@ const handlePrintWaiver = async () => {
     setNextLocation(null);
   };
 
+  const handleNavigation = (path) => {
+    if (isFormDirty && !isSubmitted) {
+      setNextLocation(path);
+      setShowUnsavedModal(true);
+    } else {
+      navigate(path);
+    }
+  };
+
   return (
     <div className="scope-registration-container">
       <header className="juan-register-header">
@@ -728,7 +739,9 @@ const handlePrintWaiver = async () => {
         <SideNavigation
           userData={userData}
           registrationStatus={registrationStatus}
-          onNavigate={closeSidebar}
+          admissionRequirementsStatus={admissionRequirementsStatus}
+          admissionAdminFirstStatus={admissionAdminFirstStatus}
+          onNavigate={handleNavigation}
           isOpen={sidebarOpen}
         />
         <main
@@ -745,7 +758,7 @@ const handlePrintWaiver = async () => {
               <div className="registration-container">
                 <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '1rem' }}>
                   {isSubmitted
-                    ? 'Your admission requirements have been submitted and are being validated (On-going). Check back periodically for updates.'
+                    ? 'Your admission requirements have been submitted and are being validated. Check back periodically for updates.'
                     : 'Upload the required admission documents to continue your application. If unavailable, complete the waiver form by clicking Waive Credentials.'}
                 </div>
                 <div style={{ fontSize: '12px', marginBottom: '1.5rem', color: '#333' }}>
@@ -753,7 +766,18 @@ const handlePrintWaiver = async () => {
                 </div>
                 {isSubmitted && (
                   <div style={{ margin: '1rem 0', color: '#333', fontSize: '14px', backgroundColor: '#e0f7fa', padding: '1rem', borderRadius: '5px' }}>
-                    <p>Your submission is complete and under validation. Please check the Exam & Interview Result page for further updates.</p>
+                    <p>Your submission is complete and under validation. Please check the Admission Exam Details page for further updates.</p>
+                  </div>
+                )}
+                {(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') && (
+                  <div style={{ margin: '1rem 0', color: '#333', fontSize: '14px', backgroundColor: '#e0f7fa', padding: '1rem', borderRadius: '5px' }}>
+                    <p>
+                      The next details are already available. You can proceed to the{' '}
+                      <Link to="/scope-admission-exam-details" style={{ color: '#2A67D5', textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); handleNavigation('/scope-admission-exam-details'); }}>
+                        Admission Exam Details
+                      </Link>{' '}
+                      page.
+                    </p>
                   </div>
                 )}
                 <div className="personal-info-section">
