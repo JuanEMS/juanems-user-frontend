@@ -14,6 +14,7 @@ function ScopeAdmissionRequirements() {
   const [userData, setUserData] = useState({});
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -185,11 +186,13 @@ function ScopeAdmissionRequirements() {
             feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded, verification pending' : 'No document uploaded'}`,
             waiverDetails: req.waiverDetails
           })));
-          setRegistrationStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
           setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || 'On-going');
           setIsSubmitted(admissionData.admissionRequirementsStatus === 'Complete');
         } else {
           setRequirements(reqList);
+          setAdmissionRequirementsStatus('Incomplete');
+          setAdmissionAdminFirstStatus('On-going');
         }
 
         setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
@@ -208,7 +211,7 @@ function ScopeAdmissionRequirements() {
     };
 
     fetchData();
-    const refreshInterval = setInterval(fetchData, 5 * 60 * 1000);
+    const refreshInterval = setInterval(fetchData, 2 * 60 * 1000); // Reduced to 2 minutes for more frequent updates
     return () => clearInterval(refreshInterval);
   }, [navigate]);
 
@@ -515,7 +518,7 @@ function ScopeAdmissionRequirements() {
             feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded, verification pending' : 'No document uploaded'}`,
             waiverDetails: req.waiverDetails
           })));
-          setRegistrationStatus(admissionJson.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionRequirementsStatus(admissionJson.admissionRequirementsStatus || 'Incomplete');
           setAdmissionAdminFirstStatus(admissionJson.admissionAdminFirstStatus || 'On-going');
           setIsSubmitted(admissionJson.admissionRequirementsStatus === 'Complete');
         }
@@ -648,9 +651,12 @@ function ScopeAdmissionRequirements() {
         throw new Error(errorData.error || 'Failed to complete admission requirements');
       }
 
+      const data = await response.json();
       setIsSubmitted(true);
+      setAdmissionRequirementsStatus('Complete');
+      setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
       setShowConfirmModal(false);
-      alert('Admission requirements submitted successfully. Your submission is being validated (On-going). Please check back for updates.');
+      alert('Admission requirements submitted successfully. Your submission is being validated. Please check back for updates.');
       navigate('/scope-admission-exam-details');
     } catch (err) {
       console.error('Error during final submission:', err);
@@ -694,6 +700,15 @@ function ScopeAdmissionRequirements() {
     setNextLocation(null);
   };
 
+  const handleNavigation = (path) => {
+    if (isFormDirty && !isSubmitted) {
+      setNextLocation(path);
+      setShowUnsavedModal(true);
+    } else {
+      navigate(path);
+    }
+  };
+
   return (
     <div className="scope-registration-container">
       <header className="juan-register-header">
@@ -724,7 +739,9 @@ function ScopeAdmissionRequirements() {
         <SideNavigation
           userData={userData}
           registrationStatus={registrationStatus}
-          onNavigate={closeSidebar}
+          admissionRequirementsStatus={admissionRequirementsStatus}
+          admissionAdminFirstStatus={admissionAdminFirstStatus}
+          onNavigate={handleNavigation}
           isOpen={sidebarOpen}
         />
         <main
@@ -741,7 +758,7 @@ function ScopeAdmissionRequirements() {
               <div className="registration-container">
                 <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '1rem' }}>
                   {isSubmitted
-                    ? 'Your admission requirements have been submitted and are being validated (On-going). Check back periodically for updates.'
+                    ? 'Your admission requirements have been submitted and are being validated. Check back periodically for updates.'
                     : 'Upload the required admission documents to continue your application. If unavailable, complete the waiver form by clicking Waive Credentials.'}
                 </div>
                 <div style={{ fontSize: '12px', marginBottom: '1.5rem', color: '#333' }}>
@@ -756,7 +773,7 @@ function ScopeAdmissionRequirements() {
                   <div style={{ margin: '1rem 0', color: '#333', fontSize: '14px', backgroundColor: '#e0f7fa', padding: '1rem', borderRadius: '5px' }}>
                     <p>
                       The next details are already available. You can proceed to the{' '}
-                      <Link to="/scope-admission-exam-details" style={{ color: '#2A67D5', textDecoration: 'underline' }}>
+                      <Link to="/scope-admission-exam-details" style={{ color: '#2A67D5', textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); handleNavigation('/scope-admission-exam-details'); }}>
                         Admission Exam Details
                       </Link>{' '}
                       page.
