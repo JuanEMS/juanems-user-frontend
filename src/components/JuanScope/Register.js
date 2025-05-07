@@ -585,7 +585,7 @@ function Register() {
     } else if (emailValidationState.available === false) {
       setErrors({
         ...errors,
-        email: 'This email is already registered with an active account. Please use a different email.'
+        email: 'This email is already registered with an active account. Please, use a different email.'
       });
       return;
     }
