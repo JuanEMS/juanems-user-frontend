@@ -23,8 +23,8 @@ function SideNavigation({ userData, registrationStatus, onNavigate, isOpen }) {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
+  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
 
-  // Replace the fetchExamInterviewStatus useEffect
   useEffect(() => {
     const fetchExamInterviewStatus = async () => {
       try {
@@ -41,8 +41,24 @@ function SideNavigation({ userData, registrationStatus, onNavigate, isOpen }) {
       }
     };
 
+    const fetchAdmissionAdminFirstStatus = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userData.email}`
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch admission admin first status');
+        }
+        const data = await response.json();
+        setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
+      } catch (err) {
+        console.error('Error fetching admission admin first status:', err);
+      }
+    };
+
     if (userData.email) {
       fetchExamInterviewStatus();
+      fetchAdmissionAdminFirstStatus();
     }
   }, [userData.email]);
 
@@ -65,42 +81,40 @@ function SideNavigation({ userData, registrationStatus, onNavigate, isOpen }) {
     setShowLogoutModal(true);
   };
 
-    // Replace the handleLogout function
-    const handleLogout = async () => {
-      try {
-        const userEmail = localStorage.getItem('userEmail');
-        const createdAt = localStorage.getItem('createdAt');
-  
-        if (!userEmail) {
-          navigate('/scope-login');
-          return;
-        }
-  
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userEmail,
-            createdAt: createdAt
-          }),
-        });
-  
-        if (response.ok) {
-          localStorage.clear();
-          navigate('/scope-login');
-        } else {
-          console.error('Failed to logout. Please try again.');
-        }
-      } catch (err) {
-        console.error('Error during logout process:', err);
-      } finally {
-        setShowLogoutModal(false);
-      }
-    };
+  const handleLogout = async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      const createdAt = localStorage.getItem('createdAt');
 
-  // Navigation items with their paths and enabled status
+      if (!userEmail) {
+        navigate('/scope-login');
+        return;
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          createdAt: createdAt
+        }),
+      });
+
+      if (response.ok) {
+        localStorage.clear();
+        navigate('/scope-login');
+      } else {
+        console.error('Failed to logout. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error during logout process:', err);
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
+
   const navItems = [
     {
       path: '/scope-registration',
@@ -121,10 +135,10 @@ function SideNavigation({ userData, registrationStatus, onNavigate, isOpen }) {
       enabled: examInterviewStatus === 'Complete',
     },
     {
-      path: '#',
+      path: '/scope-admission-exam-details',
       icon: faFileSignature,
       label: '4. Admission Exam Details',
-      enabled: false,
+      enabled: admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected',
     },
     {
       path: '#',

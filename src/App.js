@@ -22,6 +22,8 @@ import ScopeRegistration6 from './components/JuanScope/ScopeRegistration6';
 import RegistrationStatusComplete from './components/JuanScope/RegistrationStatusComplete';
 import ScopeExamInterviewApplication from './components/JuanScope/ScopeExamInterviewApplication';
 import ScopeAdmissionRequirements from './components/JuanScope/ScopeAdmissionRequirements';
+import ScopeAdmissionExamDetails from './components/JuanScope/ScopeAdmissionExamDetails';
+
 import Admin_LoginPage from './components/UserAdmin/LoginPage';
 import Admin_DashboardPage from './components/UserAdmin/DashboardPage';
 import Admin_ManageAccountsPage from './components/UserAdmin/ManageAccountsPage';
@@ -77,6 +79,7 @@ function App() {
           <Route path="/scope-registration-status-complete" element={<SessionManager><RegistrationStatusComplete /></SessionManager>} />
           <Route path="/scope-exam-interview-application" element={<SessionManager><ScopeExamInterviewApplication /></SessionManager>} />
           <Route path="/scope-admission-requirements" element={<SessionManager><ScopeAdmissionRequirements /></SessionManager>} />
+          <Route path="/scope-admission-exam-details" element={<SessionManager><ScopeAdmissionExamDetails /></SessionManager>} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<Admin_LoginPage />} />
