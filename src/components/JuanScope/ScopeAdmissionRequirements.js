@@ -170,14 +170,21 @@ function ScopeAdmissionRequirements() {
             },
           ];
         } else {
-          throw new Error('Invalid or missing entry level');
+          reqList = [];
+          setError('Invalid or missing entry level. Please contact support.');
         }
 
-        const admissionData = await fetchWithRetry(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
-        );
+        let admissionData;
+        try {
+          admissionData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
+          );
+        } catch (err) {
+          console.error('Error fetching admission data:', err);
+          admissionData = null;
+        }
 
-        if (admissionData.admissionRequirements && admissionData.admissionRequirements.length > 0) {
+        if (admissionData && Array.isArray(admissionData.admissionRequirements) && admissionData.admissionRequirements.length > 0) {
           setRequirements(admissionData.admissionRequirements.map(req => ({
             id: req.requirementId,
             name: req.name,
@@ -193,6 +200,9 @@ function ScopeAdmissionRequirements() {
           setRequirements(reqList);
           setAdmissionRequirementsStatus('Incomplete');
           setAdmissionAdminFirstStatus('On-going');
+          if (!admissionData) {
+            setError('Failed to load admission requirements. Using default requirements.');
+          }
         }
 
         setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
@@ -211,7 +221,7 @@ function ScopeAdmissionRequirements() {
     };
 
     fetchData();
-    const refreshInterval = setInterval(fetchData, 2 * 60 * 1000); // Reduced to 2 minutes for more frequent updates
+    const refreshInterval = setInterval(fetchData, 2 * 60 * 1000);
     return () => clearInterval(refreshInterval);
   }, [navigate]);
 
@@ -253,6 +263,15 @@ function ScopeAdmissionRequirements() {
     checkAccountStatus();
     return () => clearInterval(interval);
   }, [navigate]);
+
+  useEffect(() => {
+    if (admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') {
+      console.log(`Admission status changed to: ${admissionAdminFirstStatus}`);
+      if (admissionAdminFirstStatus === 'Rejected') {
+        setError('Your admission requirements have been rejected. Please check the Admission Exam Details for more information or contact the admissions office.');
+      }
+    }
+  }, [admissionAdminFirstStatus]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -598,12 +617,12 @@ function ScopeAdmissionRequirements() {
       (req) => req.waived || (req.submitted && req.feedback.includes('Verified'))
     );
 
-    if (!isValid) {
+    if (!isValid && !(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected')) {
       alert('All requirements must be verified or waived to proceed.');
       return;
     }
 
-    if (isSubmitted) {
+    if (isSubmitted || admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') {
       navigate('/scope-admission-exam-details');
       return;
     }
@@ -741,7 +760,7 @@ function ScopeAdmissionRequirements() {
           registrationStatus={registrationStatus}
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
-          onNavigate={handleNavigation}
+          onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />
         <main
@@ -770,13 +789,30 @@ function ScopeAdmissionRequirements() {
                   </div>
                 )}
                 {(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') && (
-                  <div style={{ margin: '1rem 0', color: '#333', fontSize: '14px', backgroundColor: '#e0f7fa', padding: '1rem', borderRadius: '5px' }}>
+                  <div style={{ 
+                    margin: '1rem 0', 
+                    color: '#333', 
+                    fontSize: '14px', 
+                    backgroundColor: admissionAdminFirstStatus === 'Approved' ? '#e0f7fa' : '#ffebee',
+                    padding: '1rem', 
+                    borderRadius: '5px' 
+                  }}>
                     <p>
-                      The next details are already available. You can proceed to the{' '}
-                      <Link to="/scope-admission-exam-details" style={{ color: '#2A67D5', textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); handleNavigation('/scope-admission-exam-details'); }}>
+                      Your admission requirements have been {admissionAdminFirstStatus.toLowerCase()}. 
+                      {admissionAdminFirstStatus === 'Approved' 
+                        ? 'You can now proceed to the ' 
+                        : 'Please check the Admission Exam Details for more information or contact the admissions office.'}
+                      <Link 
+                        to="/scope-admission-exam-details" 
+                        style={{ color: '#2A67D5', textDecoration: 'underline' }}
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          handleNavigation('/scope-admission-exam-details'); 
+                        }}
+                      >
                         Admission Exam Details
-                      </Link>{' '}
-                      page.
+                      </Link>
+                      {admissionAdminFirstStatus === 'Approved' ? ' page.' : '.'}
                     </p>
                   </div>
                 )}
@@ -1060,12 +1096,12 @@ function ScopeAdmissionRequirements() {
                       className="next-button"
                       onClick={handleNext}
                       style={{
-                        backgroundColor: requirements.every(
+                        backgroundColor: (requirements.every(
                           (req) => req.waived || (req.submitted && req.feedback.includes('Verified'))
-                        ) ? '#34A853' : '#d3d3d3',
-                        cursor: requirements.every(
+                        ) || admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') ? '#34A853' : '#d3d3d3',
+                        cursor: (requirements.every(
                           (req) => req.waived || (req.submitted && req.feedback.includes('Verified'))
-                        ) ? 'pointer' : 'not-allowed',
+                        ) || admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') ? 'pointer' : 'not-allowed',
                       }}
                     >
                       Next
