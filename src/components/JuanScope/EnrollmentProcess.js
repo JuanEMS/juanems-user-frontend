@@ -9,6 +9,7 @@ const EnrollmentProcess = ({
   admissionExamDetailsStatus,
 }) => {
   const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -39,7 +40,35 @@ const EnrollmentProcess = ({
       }
     };
 
+    const fetchAdmissionRequirementsStatus = async (retries = 3, delay = 1000) => {
+      try {
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          setError('Please log in to view your admission requirements status.');
+          return;
+        }
+
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch admission requirements status');
+        }
+        const data = await response.json();
+        setAdmissionRequirementsStatus(data.admissionRequirementsStatus || 'Incomplete');
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching admission requirements status:', err);
+        if (retries > 0) {
+          setTimeout(() => fetchAdmissionRequirementsStatus(retries - 1, delay * 2), delay);
+        } else {
+          setError('Unable to fetch admission requirements status. Please try again later.');
+        }
+      }
+    };
+
     fetchExamInterviewStatus();
+    fetchAdmissionRequirementsStatus();
   }, []);
 
   const steps = [
@@ -60,8 +89,7 @@ const EnrollmentProcess = ({
     {
       title: 'Step 3 of 14: Admission Requirements',
       content: "Submit all necessary documents listed in the 'Admission Requirements' menu.",
-      note:
-        'If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed.',
+      note: "If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed."
     },
     {
       title: 'Step 4 of 14: Admission Exam Details',
@@ -99,8 +127,7 @@ const EnrollmentProcess = ({
     {
       title: 'Step 9 of 14: Enrollment Requirements',
       content: "Submit all necessary documents listed in the 'Enrollment Requirements' menu.",
-      note:
-        'If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed.',
+      note: "If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed."
     },
     {
       title: 'Step 10 of 14: Voucher Application',
@@ -156,10 +183,8 @@ const EnrollmentProcess = ({
             <div key={index} className="step-item">
               <div className="step-number-circle">
                 <span>{index + 1}</span>
-                {(index === 0 && registrationStatus === 'Complete') ||
-                (index === 1 && examInterviewStatus === 'Complete') ||
-                (index === 2 && admissionRequirementsStatus === 'Complete') ||
-                (index === 3 && admissionExamDetailsStatus === 'Complete') ? (
+                {(index === 0 && registrationStatus === 'Complete') || 
+                 (index === 1 && examInterviewStatus === 'Complete') ? (
                   <FontAwesomeIcon icon={faCheckCircle} className="step-complete-icon" />
                 ) : null}
               </div>

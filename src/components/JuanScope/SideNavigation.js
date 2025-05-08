@@ -31,7 +31,6 @@ function SideNavigation({
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
-  const [fetchedExamDetailsStatus, setFetchedExamDetailsStatus] = useState(admissionExamDetailsStatus || 'Incomplete');
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -63,8 +62,23 @@ function SideNavigation({
       }
     };
 
+    const fetchAdmissionAdminFirstStatus = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userData.email}`
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch admission admin first status');
+        }
+        const data = await response.json();
+        setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
+      } catch (err) {
+        console.error('Error fetching admission admin first status:', err);
+      }
+    };
+
     if (userData.email) {
-      fetchStatuses();
+      fetchExamInterviewStatus();
     }
   }, [userData.email]);
 
@@ -87,39 +101,40 @@ function SideNavigation({
     setShowLogoutModal(true);
   };
 
-  const handleLogout = async () => {
-    try {
-      const userEmail = localStorage.getItem('userEmail');
-      const createdAt = localStorage.getItem('createdAt');
-
-      if (!userEmail) {
-        navigate('/scope-login');
-        return;
+    // Replace the handleLogout function
+    const handleLogout = async () => {
+      try {
+        const userEmail = localStorage.getItem('userEmail');
+        const createdAt = localStorage.getItem('createdAt');
+  
+        if (!userEmail) {
+          navigate('/scope-login');
+          return;
+        }
+  
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            createdAt: createdAt
+          }),
+        });
+  
+        if (response.ok) {
+          localStorage.clear();
+          navigate('/scope-login');
+        } else {
+          console.error('Failed to logout. Please try again.');
+        }
+      } catch (err) {
+        console.error('Error during logout process:', err);
+      } finally {
+        setShowLogoutModal(false);
       }
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          createdAt: createdAt,
-        }),
-      });
-
-      if (response.ok) {
-        localStorage.clear();
-        navigate('/scope-login');
-      } else {
-        console.error('Failed to logout. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error during logout process:', err);
-    } finally {
-      setShowLogoutModal(false);
-    }
-  };
+    };
 
   const navItems = [
     {
