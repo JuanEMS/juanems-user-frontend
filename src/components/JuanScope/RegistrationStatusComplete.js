@@ -13,10 +13,7 @@ function RegistrationStatusComplete() {
   const [registrationStatus, setRegistrationStatus] = useState('Complete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
-<<<<<<< HEAD
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
-=======
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -136,7 +133,6 @@ function RegistrationStatusComplete() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-<<<<<<< HEAD
         // Fetch exam details for admissionExamDetailsStatus
         let examDetailsData;
         try {
@@ -149,8 +145,6 @@ function RegistrationStatusComplete() {
           setAdmissionExamDetailsStatus('Incomplete');
         }
 
-=======
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
         setFormData({
           prefix: applicantData.prefix || '',
           firstName: applicantData.firstName || '',
@@ -328,10 +322,7 @@ function RegistrationStatusComplete() {
           registrationStatus={registrationStatus}
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
-<<<<<<< HEAD
           admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
-=======
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

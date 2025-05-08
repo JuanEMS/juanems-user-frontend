@@ -15,71 +15,36 @@ import {
   faTicketAlt,
   faUserGraduate,
   faCalculator,
-  faSignOut,
+  faSignOut
 } from '@fortawesome/free-solid-svg-icons';
 import '../../css/JuanScope/SideNavigation.css';
 
-function SideNavigation({
-  userData,
-  registrationStatus,
+function SideNavigation({ 
+  userData, 
+  registrationStatus, 
   admissionRequirementsStatus,
   admissionAdminFirstStatus,
-<<<<<<< HEAD
   admissionExamDetailsStatus, // Ensure this prop is received
   onNavigate, 
   isOpen 
-=======
-  admissionExamDetailsStatus,
-  onNavigate,
-  isOpen,
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
 }) {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
 
   useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        const userEmail = userData.email;
-        if (!userEmail) return;
-
-        // Fetch exam and interview status
-        const examInterviewResponse = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
-        );
-        if (!examInterviewResponse.ok) {
-          throw new Error('Failed to fetch exam and interview status');
-        }
-        const examInterviewData = await examInterviewResponse.json();
-        setExamInterviewStatus(examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete');
-
-        // Fetch exam details status
-        const examDetailsResponse = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
-        );
-        if (!examDetailsResponse.ok) {
-          throw new Error('Failed to fetch exam details status');
-        }
-        const examDetailsData = await examDetailsResponse.json();
-        setFetchedExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
-      } catch (err) {
-        console.error('Error fetching statuses:', err);
-      }
-    };
-
-    const fetchAdmissionAdminFirstStatus = async () => {
+    const fetchExamInterviewStatus = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userData.email}`
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userData.email}`
         );
         if (!response.ok) {
-          throw new Error('Failed to fetch admission admin first status');
+          throw new Error('Failed to fetch exam and interview status');
         }
         const data = await response.json();
-        setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
+        setExamInterviewStatus(data.preferredExamAndInterviewApplicationStatus || 'Incomplete');
       } catch (err) {
-        console.error('Error fetching admission admin first status:', err);
+        console.error('Error fetching exam and interview status:', err);
       }
     };
 
@@ -107,40 +72,39 @@ function SideNavigation({
     setShowLogoutModal(true);
   };
 
-    // Replace the handleLogout function
-    const handleLogout = async () => {
-      try {
-        const userEmail = localStorage.getItem('userEmail');
-        const createdAt = localStorage.getItem('createdAt');
-  
-        if (!userEmail) {
-          navigate('/scope-login');
-          return;
-        }
-  
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userEmail,
-            createdAt: createdAt
-          }),
-        });
-  
-        if (response.ok) {
-          localStorage.clear();
-          navigate('/scope-login');
-        } else {
-          console.error('Failed to logout. Please try again.');
-        }
-      } catch (err) {
-        console.error('Error during logout process:', err);
-      } finally {
-        setShowLogoutModal(false);
+  const handleLogout = async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      const createdAt = localStorage.getItem('createdAt');
+
+      if (!userEmail) {
+        navigate('/scope-login');
+        return;
       }
-    };
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          createdAt: createdAt
+        }),
+      });
+
+      if (response.ok) {
+        localStorage.clear();
+        navigate('/scope-login');
+      } else {
+        console.error('Failed to logout. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error during logout process:', err);
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
 
   const navItems = [
     {
@@ -171,11 +135,7 @@ function SideNavigation({
       path: '/scope-exam-fee-payment',
       icon: faMoneyBillWave,
       label: '5. Exam Fee Payment',
-<<<<<<< HEAD
       enabled: admissionExamDetailsStatus === 'Complete', // Enable when admissionExamDetailsStatus is Complete
-=======
-      enabled: fetchedExamDetailsStatus === 'Complete',
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
     },
     {
       path: '#',

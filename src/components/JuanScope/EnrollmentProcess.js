@@ -60,12 +60,8 @@ const EnrollmentProcess = ({
     {
       title: 'Step 3 of 14: Admission Requirements',
       content: "Submit all necessary documents listed in the 'Admission Requirements' menu.",
-<<<<<<< HEAD
       note:
         'If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed.',
-=======
-      note: "If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed."
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
     },
     {
       title: 'Step 4 of 14: Admission Exam Details',
@@ -103,12 +99,8 @@ const EnrollmentProcess = ({
     {
       title: 'Step 9 of 14: Enrollment Requirements',
       content: "Submit all necessary documents listed in the 'Enrollment Requirements' menu.",
-<<<<<<< HEAD
       note:
         'If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed.',
-=======
-      note: "If you cannot complete all the requirements, you may file a waiver form instead.\nThis step will be marked as complete once all required documents are submitted or the waiver form is filed."
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
     },
     {
       title: 'Step 10 of 14: Voucher Application',
@@ -164,15 +156,10 @@ const EnrollmentProcess = ({
             <div key={index} className="step-item">
               <div className="step-number-circle">
                 <span>{index + 1}</span>
-<<<<<<< HEAD
                 {(index === 0 && registrationStatus === 'Complete') ||
                 (index === 1 && examInterviewStatus === 'Complete') ||
                 (index === 2 && admissionRequirementsStatus === 'Complete') ||
                 (index === 3 && admissionExamDetailsStatus === 'Complete') ? (
-=======
-                {(index === 0 && registrationStatus === 'Complete') || 
-                 (index === 1 && examInterviewStatus === 'Complete') ? (
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
                   <FontAwesomeIcon icon={faCheckCircle} className="step-complete-icon" />
                 ) : null}
               </div>

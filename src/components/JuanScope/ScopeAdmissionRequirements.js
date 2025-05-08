@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faTimes, faArrowLeft, faEye, faCheck, faUpload, faTrash, faFileAlt, faPrint, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import SJDEFILogo from '../../images/SJDEFILogo.png';
@@ -16,12 +15,7 @@ function ScopeAdmissionRequirements() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
-<<<<<<< HEAD
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
-=======
-  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
-  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
->>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -565,8 +559,6 @@ function ScopeAdmissionRequirements() {
           })));
           setAdmissionRequirementsStatus(admissionJson.admissionRequirementsStatus || 'Incomplete');
           setAdmissionAdminFirstStatus(admissionJson.admissionAdminFirstStatus || 'On-going');
-          setAdmissionRequirementsStatus(admissionJson.admissionRequirementsStatus || 'Incomplete');
-          setAdmissionAdminFirstStatus(admissionJson.admissionAdminFirstStatus || 'On-going');
           setIsSubmitted(admissionJson.admissionRequirementsStatus === 'Complete');
         }
         return true;
@@ -594,20 +586,7 @@ function ScopeAdmissionRequirements() {
       alert('No waived requirements to print.');
       return;
     }
-  const handlePrintWaiver = async () => {
-    const waivedRequirements = requirements.filter((req) => req.waived && req.waiverDetails);
-    if (waivedRequirements.length === 0) {
-      alert('No waived requirements to print.');
-      return;
-    }
 
-    try {
-      const userEmail = localStorage.getItem('userEmail');
-      if (!userEmail) {
-        setError('User email not found. Please log in again.');
-        navigate('/scope-login');
-        return;
-      }
     try {
       const userEmail = localStorage.getItem('userEmail');
       if (!userEmail) {
@@ -619,27 +598,7 @@ function ScopeAdmissionRequirements() {
       const now = moment().tz('Asia/Manila');
       const dateIssued = now.format('YYYY-MM-DD');
       const dateSigned = now.format('YYYY-MM-DDTHH:mm:ssZ');
-      const now = moment().tz('Asia/Manila');
-      const dateIssued = now.format('YYYY-MM-DD');
-      const dateSigned = now.format('YYYY-MM-DDTHH:mm:ssZ');
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userData: {
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userEmail,
-          },
-          waivedRequirements,
-          academicYear: '2025-2026',
-          dateIssued,
-          dateSigned,
-        }),
-      });
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`, {
         method: 'POST',
         headers: {
@@ -662,20 +621,7 @@ function ScopeAdmissionRequirements() {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to generate waiver PDF');
       }
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate waiver PDF');
-      }
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error generating waiver PDF:', err);
-      setError('Failed to generate waiver PDF. Please check your connection and try again.');
-    }
-  };
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
@@ -745,10 +691,7 @@ function ScopeAdmissionRequirements() {
       }
 
       const data = await response.json();
-      const data = await response.json();
       setIsSubmitted(true);
-      setAdmissionRequirementsStatus('Complete');
-      setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
       setAdmissionRequirementsStatus('Complete');
       setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
       setShowConfirmModal(false);
@@ -794,15 +737,6 @@ function ScopeAdmissionRequirements() {
   const handleModalCancel = () => {
     setShowUnsavedModal(false);
     setNextLocation(null);
-  };
-
-  const handleNavigation = (path) => {
-    if (isFormDirty && !isSubmitted) {
-      setNextLocation(path);
-      setShowUnsavedModal(true);
-    } else {
-      navigate(path);
-    }
   };
 
   const handleNavigation = (path) => {
