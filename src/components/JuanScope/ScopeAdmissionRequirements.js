@@ -1,41 +1,35 @@
-// src/components/JuanScope/ScopeAdmissionRequirements.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faBars,
-  faTimes,
-  faArrowLeft,
-  faEye,
-  faCheck,
-  faUpload,
-  faFileAlt,
-  faPrint,
-  faSpinner,
-} from '@fortawesome/free-solid-svg-icons';
+import { faBars, faTimes, faArrowLeft, faEye, faCheck, faUpload, faTrash, faFileAlt, faPrint, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import SJDEFILogo from '../../images/SJDEFILogo.png';
 import '../../css/JuanScope/ScopeRegistration1.css';
 import SideNavigation from './SideNavigation';
 import WaiverFormModal from './WaiverFormModal';
 import DocumentVerificationSystem from './DocumentVerificationSystem';
 import moment from 'moment-timezone';
-import { useNavigationContext } from '../../contexts/NavigationContext';
 
 function ScopeAdmissionRequirements() {
   const navigate = useNavigate();
-  const { userData, navigationStatuses } = useNavigationContext();
+  const [userData, setUserData] = useState({});
+  const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
+  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
+  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [nextLocation, setNextLocation] = useState(null);
   const [requirements, setRequirements] = useState([]);
   const [showWaiverModal, setShowWaiverModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isFormDirty, setIsFormDirty] = useState(false);
-  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-  const [nextLocation, setNextLocation] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
 
   const {
     DocumentVerification,
@@ -49,32 +43,109 @@ function ScopeAdmissionRequirements() {
   } = DocumentVerificationSystem();
 
   useEffect(() => {
-    const userEmail = userData.email;
-    if (!userEmail) {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    const createdAt = localStorage.getItem('createdAt');
+
+    if (!userEmail || !createdAt) {
       navigate('/scope-login', { state: { error: 'No active session found. Please log in.' } });
       return;
     }
 
-    if (navigationStatuses.registrationStatus !== 'Complete') {
-      navigate('/scope-registration-6');
-      return;
-    }
+    const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return fetchWithRetry(url, retries - 1, delay);
+        }
+        throw error;
+      }
+    };
 
-    const fetchRequirements = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError('');
 
+        const createdAtDate = new Date(createdAt);
+        if (isNaN(createdAtDate.getTime())) {
+          handleLogout();
+          navigate('/scope-login', { state: { accountInactive: true, error: 'Invalid session data. Please log in again.' } });
+          return;
+        }
+
+        const verificationData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
+        );
+
+        if (
+          verificationData.status !== 'Active' ||
+          (createdAt &&
+            Math.abs(
+              new Date(verificationData.createdAt).getTime() -
+              new Date(createdAt).getTime()
+            ) > 1000)
+        ) {
+          handleLogout();
+          navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
+          return;
+        }
+
+        const userData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/activity/${userEmail}?createdAt=${encodeURIComponent(createdAt)}`
+        );
+
+        const applicantData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
+        );
+
+        console.log('Fetched applicantData:', applicantData); // Debug log
+
+        localStorage.setItem('applicantID', applicantData.applicantID || userData.applicantID || '');
+        localStorage.setItem('firstName', applicantData.firstName || userData.firstName || '');
+        localStorage.setItem('middleName', applicantData.middleName || '');
+        localStorage.setItem('lastName', applicantData.lastName || userData.lastName || '');
+        localStorage.setItem('dob', applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '');
+        localStorage.setItem('nationality', applicantData.nationality || '');
+
+        setUserData({
+          email: userEmail,
+          firstName: applicantData.firstName || userData.firstName || 'User',
+          middleName: applicantData.middleName || '',
+          lastName: applicantData.lastName || userData.lastName || '',
+          dob: applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '',
+          nationality: applicantData.nationality || '',
+          studentID: applicantData.studentID || userData.studentID || 'N/A',
+          applicantID: applicantData.applicantID || userData.applicantID || 'N/A',
+          entryLevel: applicantData.entryLevel || '',
+        });
+
+        const entryLevel = applicantData.entryLevel || '';
+        const fetchedAdmissionStatus = applicantData.admissionAdminFirstStatus || 'On-going';
+        console.log('Fetched admissionAdminFirstStatus:', fetchedAdmissionStatus); // Debug log
+        setAdmissionAdminFirstStatus(fetchedAdmissionStatus);
+
         let reqList = [];
-        if (userData.entryLevel === 'Senior High School') {
+        if (entryLevel === 'Senior High School') {
           reqList = [
             {
               id: 1,
               name: 'Photocopy of latest report card (photocopy of Gr 10 latest semester or Gr 9 Report Card)',
               submitted: null,
               waived: false,
-              feedback:
-                '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
+              feedback: '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
               waiverDetails: null,
             },
             {
@@ -82,20 +153,18 @@ function ScopeAdmissionRequirements() {
               name: 'ID (2x2) Photo – White background',
               submitted: null,
               waived: false,
-              feedback:
-                '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
+              feedback: '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
               waiverDetails: null,
             },
           ];
-        } else if (userData.entryLevel === 'Senior High School - Transferee') {
+        } else if (entryLevel === 'Senior High School - Transferee') {
           reqList = [
             {
               id: 1,
               name: 'ID (2x2) Photo – White background',
               submitted: null,
               waived: false,
-              feedback:
-                '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
+              feedback: '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
               waiverDetails: null,
             },
             {
@@ -103,8 +172,7 @@ function ScopeAdmissionRequirements() {
               name: 'Transcript of records or certification of grades from previous school – for evaluation purposes',
               submitted: null,
               waived: false,
-              feedback:
-                '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
+              feedback: '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
               waiverDetails: null,
             },
           ];
@@ -113,62 +181,117 @@ function ScopeAdmissionRequirements() {
           setError('Invalid or missing entry level. Please contact support.');
         }
 
-        const admissionData = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
-        ).then((res) => res.json());
-
-        if (
-          admissionData &&
-          Array.isArray(admissionData.admissionRequirements) &&
-          admissionData.admissionRequirements.length > 0
-        ) {
-          setRequirements(
-            admissionData.admissionRequirements.map((req) => ({
-              id: req.requirementId,
-              name: req.name,
-              submitted: req.fileName || null,
-              waived: req.status === 'Waived',
-              feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${
-                req.status === 'Waived'
-                  ? 'Waiver approved'
-                  : req.status === 'Verified'
-                  ? 'Document verified'
-                  : req.status === 'Submitted'
-                  ? 'Document uploaded'
-                  : 'No document uploaded'
-              }`,
-              waiverDetails: req.waiverDetails,
-            }))
+        let admissionData;
+        try {
+          admissionData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
           );
+          console.log('Fetched admissionData:', admissionData); // Debug log
+        } catch (err) {
+          console.error('Error fetching admission data:', err);
+          admissionData = null;
+        }
+
+        // Fetch exam details for admissionExamDetailsStatus
+        let examDetailsData;
+        try {
+          examDetailsData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
+          );
+          setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+        } catch (err) {
+          console.error('Error fetching exam details:', err);
+          setAdmissionExamDetailsStatus('Incomplete');
+        }
+
+        if (admissionData && Array.isArray(admissionData.admissionRequirements) && admissionData.admissionRequirements.length > 0) {
+          setRequirements(admissionData.admissionRequirements.map(req => ({
+            id: req.requirementId,
+            name: req.name,
+            submitted: req.fileName || null,
+            waived: req.status === 'Waived',
+            feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded' : 'No document uploaded'}`,
+            waiverDetails: req.waiverDetails,
+          })));
+          setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || fetchedAdmissionStatus);
           setIsSubmitted(admissionData.admissionRequirementsStatus === 'Complete');
         } else {
           setRequirements(reqList);
-          setError('Failed to load admission requirements. Using default requirements.');
+          setAdmissionRequirementsStatus('Incomplete');
+          if (!admissionData) {
+            setError('Failed to load admission requirements. Using default requirements.');
+          }
+        }
+
+        setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
+
+        if (applicantData.registrationStatus !== 'Complete') {
+          navigate('/scope-registration-6');
+          return;
         }
 
         setLoading(false);
       } catch (err) {
-        console.error('Error loading requirements:', err);
-        setError('Failed to load admission requirements. Please check your connection.');
+        console.error('Error loading data:', err);
+        setError('Failed to load user data or admission requirements. Please check your connection and try again.');
         setLoading(false);
       }
     };
 
-    fetchRequirements();
-  }, [userData.email, navigate, navigationStatuses.registrationStatus]);
+    fetchData();
+    const refreshInterval = setInterval(fetchData, 2 * 60 * 1000);
+    return () => clearInterval(refreshInterval);
+  }, [navigate]);
 
   useEffect(() => {
-    if (
-      navigationStatuses.admissionAdminFirstStatus === 'Approved' ||
-      navigationStatuses.admissionAdminFirstStatus === 'Rejected'
-    ) {
-      if (navigationStatuses.admissionAdminFirstStatus === 'Rejected') {
-        setError(
-          'Your admission requirements have been rejected. Please check the Admission Exam Details for more information or contact the admissions office.'
+    const checkAccountStatus = async () => {
+      try {
+        const userEmail = localStorage.getItem('userEmail');
+        const createdAt = localStorage.getItem('createdAt');
+
+        if (!userEmail || !createdAt) {
+          navigate('/scope-login', { state: { error: 'Session expired. Please log in.' } });
+          return;
+        }
+
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
         );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (
+          data.status !== 'Active' ||
+          new Date(data.createdAt).getTime() !== new Date(createdAt).getTime()
+        ) {
+          handleLogout();
+          navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
+        }
+      } catch (err) {
+        console.error('Error checking account status:', err);
+        setError('Unable to verify account status. Please check your connection.');
+      }
+    };
+
+    const interval = setInterval(checkAccountStatus, 60 * 1000);
+    checkAccountStatus();
+    return () => clearInterval(interval);
+  }, [navigate]);
+
+  useEffect(() => {
+    console.log('admissionAdminFirstStatus updated:', admissionAdminFirstStatus); // Debug log
+    if (admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') {
+      console.log(`Admission status changed to: ${admissionAdminFirstStatus}`);
+      if (admissionAdminFirstStatus === 'Rejected') {
+        setError('Your admission requirements have been rejected. Please check the Admission Exam Details for more information or contact the admissions office.');
       }
     }
-  }, [navigationStatuses.admissionAdminFirstStatus]);
+  }, [admissionAdminFirstStatus]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -181,6 +304,52 @@ function ScopeAdmissionRequirements() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isFormDirty, isSubmitted]);
+
+  const handleLogout = async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      const createdAt = localStorage.getItem('createdAt');
+
+      if (!userEmail) {
+        navigate('/scope-login', { state: { error: 'No active session found.' } });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            createdAt: createdAt,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        localStorage.clear();
+        navigate('/scope-login');
+      } else {
+        setError('Failed to log out. Please try again.');
+      }
+    } catch (err) {
+      setError('Error during logout process. Please check your connection.');
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleAnnouncements = () => {
+    if (isFormDirty && !isSubmitted) {
+      setNextLocation('/scope-announcements');
+      setShowUnsavedModal(true);
+    } else {
+      navigate('/scope-announcements');
+    }
+  };
 
   const handleFileUpload = (id, event) => {
     if (isSubmitted) {
@@ -212,10 +381,9 @@ function ScopeAdmissionRequirements() {
           return {
             ...req,
             submitted: file.name,
-            feedback:
-              '<strong>Status:</strong> Submitted\n<strong>Feedback:</strong> Document uploaded, verification in progress...',
+            feedback: '<strong>Status:</strong> Submitted\n<strong>Feedback:</strong> Document uploaded, verification in progress...',
             waiverDetails: null,
-            waived: false,
+            waived: false
           };
         }
         return req;
@@ -227,7 +395,7 @@ function ScopeAdmissionRequirements() {
 
   const handleViewDocument = async (id) => {
     try {
-      const userEmail = userData.email;
+      const userEmail = localStorage.getItem('userEmail');
       if (!userEmail) {
         alert('User email not found. Please log in again.');
         return;
@@ -298,9 +466,7 @@ function ScopeAdmissionRequirements() {
           if (req.id === parseInt(id)) {
             return {
               ...req,
-              feedback: `<strong>Status:</strong> ${
-                result.status === 'verified' ? 'Verified' : 'Invalid'
-              }\n<strong>Feedback:</strong> ${result.message}`,
+              feedback: `<strong>Status:</strong> ${result.status === 'verified' ? 'Verified' : 'Invalid'}\n<strong>Feedback:</strong> ${result.message}`,
             };
           }
           return req;
@@ -330,8 +496,7 @@ function ScopeAdmissionRequirements() {
           ...req,
           waived: true,
           submitted: null,
-          feedback:
-            '<strong>Status:</strong> Waived\n<strong>Feedback:</strong> Waiver requested, pending approval.',
+          feedback: '<strong>Status:</strong> Waived\n<strong>Feedback:</strong> Waiver requested, pending approval.',
           waiverDetails: {
             reason: waiverData.reason,
             promiseDate: waiverData.promiseDate,
@@ -341,8 +506,7 @@ function ScopeAdmissionRequirements() {
         return {
           ...req,
           waived: false,
-          feedback:
-            '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
+          feedback: '<strong>Status:</strong> Unverified\n<strong>Feedback:</strong> No document uploaded - all requirements are required unless waived',
           waiverDetails: null,
         };
       }
@@ -355,7 +519,7 @@ function ScopeAdmissionRequirements() {
 
   const handleSave = async () => {
     try {
-      const userEmail = userData.email;
+      const userEmail = localStorage.getItem('userEmail');
       if (!userEmail) {
         setError('User email not found. Please log in again.');
         navigate('/scope-login');
@@ -385,33 +549,23 @@ function ScopeAdmissionRequirements() {
         );
         if (admissionData.ok) {
           const admissionJson = await admissionData.json();
-          setRequirements(
-            admissionJson.admissionRequirements.map((req) => ({
-              id: req.requirementId,
-              name: req.name,
-              submitted: req.fileName || null,
-              waived: req.status === 'Waived',
-              feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${
-                req.status === 'Waived'
-                  ? 'Waiver approved'
-                  : req.status === 'Verified'
-                  ? 'Document verified'
-                  : req.status === 'Submitted'
-                  ? 'Document uploaded, verification pending'
-                  : 'No document uploaded'
-              }`,
-              waiverDetails: req.waiverDetails,
-            }))
-          );
+          setRequirements(admissionJson.admissionRequirements.map(req => ({
+            id: req.requirementId,
+            name: req.name,
+            submitted: req.fileName || null,
+            waived: req.status === 'Waived',
+            feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded, verification pending' : 'No document uploaded'}`,
+            waiverDetails: req.waiverDetails
+          })));
+          setAdmissionRequirementsStatus(admissionJson.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(admissionJson.admissionAdminFirstStatus || 'On-going');
           setIsSubmitted(admissionJson.admissionRequirementsStatus === 'Complete');
         }
         return true;
       } else {
         console.error('Save failed:', data.error);
         if (response.status === 400) {
-          setError(
-            data.error || 'Invalid file format or size. Please check requirements and try again.'
-          );
+          setError(data.error || 'Invalid file format or size. Please check requirements and try again.');
         } else if (response.status === 429) {
           setError('Too many requests. Please try again later.');
         } else {
@@ -421,9 +575,7 @@ function ScopeAdmissionRequirements() {
       }
     } catch (err) {
       console.error('Error saving admission requirements:', err.message, err.stack);
-      setError(
-        'An error occurred while saving the admission requirements. Please check your connection and try again.'
-      );
+      setError('An error occurred while saving the admission requirements. Please check your connection and try again.');
       return false;
     }
   };
@@ -436,7 +588,7 @@ function ScopeAdmissionRequirements() {
     }
 
     try {
-      const userEmail = userData.email;
+      const userEmail = localStorage.getItem('userEmail');
       if (!userEmail) {
         setError('User email not found. Please log in again.');
         navigate('/scope-login');
@@ -447,26 +599,23 @@ function ScopeAdmissionRequirements() {
       const dateIssued = now.format('YYYY-MM-DD');
       const dateSigned = now.format('YYYY-MM-DDTHH:mm:ssZ');
 
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-waiver-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userData: {
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userEmail,
           },
-          body: JSON.stringify({
-            userData: {
-              firstName: userData.firstName,
-              lastName: userData.lastName,
-              email: userEmail,
-            },
-            waivedRequirements,
-            academicYear: '2025-2026',
-            dateIssued,
-            dateSigned,
-          }),
-        }
-      );
+          waivedRequirements,
+          academicYear: '2025-2026',
+          dateIssued,
+          dateSigned,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -488,22 +637,12 @@ function ScopeAdmissionRequirements() {
       (req) => req.waived || (req.submitted && req.feedback.includes('Verified'))
     );
 
-    if (
-      !isValid &&
-      !(
-        navigationStatuses.admissionAdminFirstStatus === 'Approved' ||
-        navigationStatuses.admissionAdminFirstStatus === 'Rejected'
-      )
-    ) {
+    if (!isValid && !(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected')) {
       alert('All requirements must be verified or waived to proceed.');
       return;
     }
 
-    if (
-      isSubmitted ||
-      navigationStatuses.admissionAdminFirstStatus === 'Approved' ||
-      navigationStatuses.admissionAdminFirstStatus === 'Rejected'
-    ) {
+    if (isSubmitted || admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') {
       navigate('/scope-admission-exam-details');
       return;
     }
@@ -516,7 +655,7 @@ function ScopeAdmissionRequirements() {
     setIsSubmitting(true);
 
     try {
-      const userEmail = userData.email;
+      const userEmail = localStorage.getItem('userEmail');
       if (!userEmail) {
         setError('User email not found. Please log in again.');
         navigate('/scope-login');
@@ -551,11 +690,12 @@ function ScopeAdmissionRequirements() {
         throw new Error(errorData.error || 'Failed to complete admission requirements');
       }
 
+      const data = await response.json();
       setIsSubmitted(true);
+      setAdmissionRequirementsStatus('Complete');
+      setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
       setShowConfirmModal(false);
-      alert(
-        'Admission requirements submitted successfully. Your submission is being validated. Please check back for updates.'
-      );
+      alert('Admission requirements submitted successfully. Your submission is being validated. Please check back for updates.');
       navigate('/scope-admission-requirements');
     } catch (err) {
       console.error('Error during final submission:', err);
@@ -612,7 +752,11 @@ function ScopeAdmissionRequirements() {
     <div className="scope-registration-container">
       <header className="juan-register-header">
         <div className="juan-header-left">
-          <img src={SJDEFILogo} alt="SJDEFI Logo" className="juan-logo-register" />
+          <img
+            src={SJDEFILogo}
+            alt="SJDEFI Logo"
+            className="juan-logo-register"
+          />
           <div className="juan-header-text">
             <h1>JUAN SCOPE</h1>
           </div>
@@ -623,12 +767,23 @@ function ScopeAdmissionRequirements() {
             onClick={toggleSidebar}
             aria-label="Toggle navigation menu"
           >
-            <FontAwesomeIcon icon={sidebarOpen ? faTimes : faBars} size="lg" />
+            <FontAwesomeIcon
+              icon={sidebarOpen ? faTimes : faBars}
+              size="lg"
+            />
           </button>
         </div>
       </header>
       <div className="scope-registration-content">
-        <SideNavigation onNavigate={closeSidebar} isOpen={sidebarOpen} />
+        <SideNavigation
+          userData={userData}
+          registrationStatus={registrationStatus}
+          admissionRequirementsStatus={admissionRequirementsStatus}
+          admissionAdminFirstStatus={admissionAdminFirstStatus}
+          admissionExamDetailsStatus={admissionExamDetailsStatus}
+          onNavigate={closeSidebar}
+          isOpen={sidebarOpen}
+        />
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">Loading...</div>
@@ -639,49 +794,28 @@ function ScopeAdmissionRequirements() {
               <h2 className="registration-title">Admission Requirements</h2>
               <div className="registration-divider"></div>
               <div className="registration-container">
+                <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '1rem' }}>
+                </div>
                 <div style={{ fontSize: '12px', marginBottom: '1.5rem', color: '#333' }}>
                   <strong>Entry Level:</strong> {userData.entryLevel || 'Not specified'}
                 </div>
-                {isSubmitted &&
-                  !(
-                    navigationStatuses.admissionAdminFirstStatus === 'Approved' ||
-                    navigationStatuses.admissionAdminFirstStatus === 'Rejected'
-                  ) && (
-                    <div
-                      style={{
-                        margin: '1rem 0',
-                        color: '#333',
-                        fontSize: '14px',
-                        backgroundColor: '#e0f7fa',
-                        padding: '1rem',
-                        borderRadius: '5px',
-                      }}
-                    >
-                      <p>
-                        Your submission is complete and under validation. Please check the Admission
-                        Exam Details page for further updates.
-                      </p>
-                    </div>
-                  )}
-                {(navigationStatuses.admissionAdminFirstStatus === 'Approved' ||
-                  navigationStatuses.admissionAdminFirstStatus === 'Rejected') && (
-                  <div
-                    style={{
-                      margin: '1rem 0',
-                      color: '#333',
-                      fontSize: '14px',
-                      backgroundColor:
-                        navigationStatuses.admissionAdminFirstStatus === 'Approved'
-                          ? '#e0f7fa'
-                          : '#ffebee',
-                      padding: '1rem',
-                      borderRadius: '5px',
-                    }}
-                  >
+                {isSubmitted && !(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') && (
+                  <div style={{ margin: '1rem 0', color: '#333', fontSize: '14px', backgroundColor: '#e0f7fa', padding: '1rem', borderRadius: '5px' }}>
+                    <p>Your submission is complete and under validation. Please check the Admission Exam Details page for further updates.</p>
+                  </div>
+                )}
+                {(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') && (
+                  <div style={{
+                    margin: '1rem 0',
+                    color: '#333',
+                    fontSize: '14px',
+                    backgroundColor: admissionAdminFirstStatus === 'Approved' ? '#e0f7fa' : '#ffebee',
+                    padding: '1rem',
+                    borderRadius: '5px'
+                  }}>
                     <p>
-                      Your admission requirements have been{' '}
-                      {navigationStatuses.admissionAdminFirstStatus.toLowerCase()}. The details are
-                      now available on the{' '}
+                      Your admission requirements have been {admissionAdminFirstStatus.toLowerCase()}.
+                      The details are now available on the{' '}
                       <Link
                         to="/scope-admission-exam-details"
                         style={{ color: '#2A67D5', textDecoration: 'underline' }}
@@ -698,7 +832,10 @@ function ScopeAdmissionRequirements() {
                 )}
                 <div className="personal-info-section">
                   <div className="personal-info-header">
-                    <FontAwesomeIcon icon={faFileAlt} style={{ color: '#212121' }} />
+                    <FontAwesomeIcon
+                      icon={faFileAlt}
+                      style={{ color: '#212121' }}
+                    />
                     <h3>{isSubmitted ? 'View Requirements' : 'Upload Requirements'}</h3>
                   </div>
                   <div className="personal-info-divider"></div>
@@ -707,14 +844,8 @@ function ScopeAdmissionRequirements() {
                       <p>
                         <strong>Reminders:</strong> When uploading requirements:
                         <ul style={{ paddingLeft: '20px', margin: '5px 0 0 0', listStyleType: 'disc' }}>
-                          <li>
-                            Verification system will check your uploaded documents for authenticity,
-                            completeness, and accuracy.
-                          </li>
-                          <li>
-                            All documents must be marked as verified by Feedback to continue admission
-                            application.
-                          </li>
+                          <li>Verification system will check your uploaded documents for authenticity, completeness, and accuracy.</li>
+                          <li>All documents must be marked as verified by Feedback to continue admission application.</li>
                           <li>It only accepts an image (PNG or JPG) and PDF file.</li>
                           <li>Size of each uploaded file must not exceed 10MB.</li>
                           <li>You can only upload one (1) file per requirement.</li>
@@ -865,7 +996,7 @@ function ScopeAdmissionRequirements() {
                                     fontSize: '14px',
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '5px',
+                                    gap: '5px'
                                   }}
                                   onClick={() => handleViewDocument(req.id)}
                                 >
@@ -883,7 +1014,10 @@ function ScopeAdmissionRequirements() {
                               }}
                             >
                               {req.waived ? (
-                                <FontAwesomeIcon icon={faCheck} style={{ color: '#34A853' }} />
+                                <FontAwesomeIcon
+                                  icon={faCheck}
+                                  style={{ color: '#34A853' }}
+                                />
                               ) : (
                                 '-'
                               )}
@@ -963,7 +1097,11 @@ function ScopeAdmissionRequirements() {
                     </div>
                   )}
                   <div className="form-buttons">
-                    <button type="button" className="back-button" onClick={handleBack}>
+                    <button
+                      type="button"
+                      className="back-button"
+                      onClick={handleBack}
+                    >
                       <FontAwesomeIcon icon={faArrowLeft} />
                       Back
                     </button>
@@ -972,20 +1110,12 @@ function ScopeAdmissionRequirements() {
                       className="next-button"
                       onClick={handleNext}
                       style={{
-                        backgroundColor: requirements.every(
+                        backgroundColor: (requirements.every(
                           (req) => req.waived || (req.submitted && req.feedback.includes('Verified'))
-                        ) ||
-                        navigationStatuses.admissionAdminFirstStatus === 'Approved' ||
-                        navigationStatuses.admissionAdminFirstStatus === 'Rejected'
-                          ? '#34A853'
-                          : '#d3d3d3',
-                        cursor: requirements.every(
+                        ) || admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') ? '#34A853' : '#d3d3d3',
+                        cursor: (requirements.every(
                           (req) => req.waived || (req.submitted && req.feedback.includes('Verified'))
-                        ) ||
-                        navigationStatuses.admissionAdminFirstStatus === 'Approved' ||
-                        navigationStatuses.admissionAdminFirstStatus === 'Rejected'
-                          ? 'pointer'
-                          : 'not-allowed',
+                        ) || admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') ? 'pointer' : 'not-allowed',
                       }}
                     >
                       Next
@@ -998,7 +1128,32 @@ function ScopeAdmissionRequirements() {
         </main>
       </div>
       {sidebarOpen && (
-        <div className="sidebar-overlay active" onClick={toggleSidebar}></div>
+        <div
+          className="sidebar-overlay active"
+          onClick={toggleSidebar}
+        ></div>
+      )}
+      {showLogoutModal && (
+        <div className="scope-modal-overlay">
+          <div className="scope-confirm-modal">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div className="scope-modal-buttons">
+              <button
+                className="scope-modal-cancel"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="scope-modal-confirm"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {showUnsavedModal && (
         <div className="scope-modal-overlay">
@@ -1006,10 +1161,16 @@ function ScopeAdmissionRequirements() {
             <h3>Unsaved Changes</h3>
             <p>You have unsaved changes. Do you want to leave without saving?</p>
             <div className="scope-modal-buttons">
-              <button className="scope-modal-cancel" onClick={handleModalCancel}>
+              <button
+                className="scope-modal-cancel"
+                onClick={handleModalCancel}
+              >
                 Stay
               </button>
-              <button className="scope-modal-confirm" onClick={handleModalConfirm}>
+              <button
+                className="scope-modal-confirm"
+                onClick={handleModalConfirm}
+              >
                 Leave
               </button>
             </div>
@@ -1021,8 +1182,7 @@ function ScopeAdmissionRequirements() {
           <div className="scope-confirm-modal">
             <h3>Confirm Submission</h3>
             <p>
-              You are about to submit your admission requirements. Once submitted, you cannot make
-              changes. Are you sure you want to proceed?
+              You are about to submit your admission requirements. Once submitted, you cannot make changes. Are you sure you want to proceed?
             </p>
             <div className="scope-modal-buttons">
               <button
