@@ -12,6 +12,9 @@ function ScopeExamInterviewApplication() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState({});
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
+  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -34,7 +37,6 @@ function ScopeExamInterviewApplication() {
     return () => clearInterval(timer);
   }, []);
 
-  // Replace the fetchData useEffect
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
     const createdAt = localStorage.getItem('createdAt');
@@ -116,6 +118,32 @@ function ScopeExamInterviewApplication() {
         });
 
         setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
+        setAdmissionAdminFirstStatus(applicantData.admissionAdminFirstStatus || 'On-going');
+
+        // Fetch admission requirements status
+        let admissionData;
+        try {
+          admissionData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
+          );
+          setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || applicantData.admissionAdminFirstStatus || 'On-going');
+        } catch (err) {
+          console.error('Error fetching admission data:', err);
+          setAdmissionRequirementsStatus('Incomplete');
+        }
+
+        // Fetch exam details for admissionExamDetailsStatus
+        let examDetailsData;
+        try {
+          examDetailsData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
+          );
+          setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+        } catch (err) {
+          console.error('Error fetching exam details:', err);
+          setAdmissionExamDetailsStatus('Incomplete');
+        }
 
         if (applicantData.registrationStatus !== 'Complete') {
           navigate('/scope-registration-6');
@@ -155,45 +183,44 @@ function ScopeExamInterviewApplication() {
     return () => clearInterval(refreshInterval);
   }, [navigate]);
 
- // Replace the checkAccountStatus useEffect
- useEffect(() => {
-  const checkAccountStatus = async () => {
-    try {
-      const userEmail = localStorage.getItem('userEmail');
-      const createdAt = localStorage.getItem('createdAt');
+  useEffect(() => {
+    const checkAccountStatus = async () => {
+      try {
+        const userEmail = localStorage.getItem('userEmail');
+        const createdAt = localStorage.getItem('createdAt');
 
-      if (!userEmail || !createdAt) {
-        navigate('/scope-login', { state: { error: 'Session expired. Please log in.' } });
-        return;
+        if (!userEmail || !createdAt) {
+          navigate('/scope-login', { state: { error: 'Session expired. Please log in.' } });
+          return;
+        }
+
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (
+          data.status !== 'Active' ||
+          new Date(data.createdAt).getTime() !== new Date(createdAt).getTime()
+        ) {
+          handleLogout();
+          navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
+        }
+      } catch (err) {
+        console.error('Error checking account status:', err);
+        setError('Unable to verify account status. Please check your connection.');
       }
+    };
 
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (
-        data.status !== 'Active' ||
-        new Date(data.createdAt).getTime() !== new Date(createdAt).getTime()
-      ) {
-        handleLogout();
-        navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
-      }
-    } catch (err) {
-      console.error('Error checking account status:', err);
-      setError('Unable to verify account status. Please check your connection.');
-    }
-  };
-
-  const interval = setInterval(checkAccountStatus, 60 * 1000);
-  checkAccountStatus();
-  return () => clearInterval(interval);
-}, [navigate]);
+    const interval = setInterval(checkAccountStatus, 60 * 1000);
+    checkAccountStatus();
+    return () => clearInterval(interval);
+  }, [navigate]);
 
   // Handle unsaved changes warning
   useEffect(() => {
@@ -208,7 +235,6 @@ function ScopeExamInterviewApplication() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isFormDirty]);
 
-  // Replace the handleLogout function
   const handleLogout = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -291,56 +317,55 @@ function ScopeExamInterviewApplication() {
     setErrors((prev) => ({ ...prev, selectedDate: null }));
   };
 
- // Replace the handleNext function
- const handleNext = async () => {
-  if (!validateForm()) {
-    return;
-  }
-
-  try {
-    const userEmail = localStorage.getItem('userEmail');
-    if (!userEmail) {
-      setError('User email not found. Please log in again.');
-      navigate('/scope-login');
+  const handleNext = async () => {
+    if (!validateForm()) {
       return;
     }
 
-    const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/save-exam-interview`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          selectedDate: selectedDate.toISOString(),
-          preferredExamAndInterviewApplicationStatus: 'Complete',
-        }),
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        setError('User email not found. Please log in again.');
+        navigate('/scope-login');
+        return;
       }
-    );
 
-    const data = await response.json();
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/save-exam-interview`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            selectedDate: selectedDate.toISOString(),
+            preferredExamAndInterviewApplicationStatus: 'Complete',
+          }),
+        }
+      );
 
-    if (response.ok) {
-      setIsFormDirty(false);
-      setIsDateSaved(true);
-      alert(data.message || 'Exam and Interview date saved successfully.');
-      navigate('/scope-admission-requirements');
-    } else {
-      if (response.status === 400) {
-        setError(data.error || 'Selected date is no longer available or invalid.');
-      } else if (response.status === 429) {
-        setError('Too many requests. Please try again later.');
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsFormDirty(false);
+        setIsDateSaved(true);
+        alert(data.message || 'Exam and Interview date saved successfully.');
+        navigate('/scope-admission-requirements');
       } else {
-        setError(data.error || 'Failed to save exam and interview date.');
+        if (response.status === 400) {
+          setError(data.error || 'Selected date is no longer available or invalid.');
+        } else if (response.status === 429) {
+          setError('Too many requests. Please try again later.');
+        } else {
+          setError(data.error || 'Failed to save exam and interview date.');
+        }
       }
+    } catch (err) {
+      console.error('Error saving exam and interview date:', err);
+      setError('An error occurred while saving the exam and interview date. Please check your connection and try again.');
     }
-  } catch (err) {
-    console.error('Error saving exam and interview date:', err);
-    setError('An error occurred while saving the exam and interview date. Please check your connection and try again.');
-  }
-};
+  };
 
   const handleBack = () => {
     if (isFormDirty) {
@@ -401,6 +426,9 @@ function ScopeExamInterviewApplication() {
         <SideNavigation
           userData={userData}
           registrationStatus={registrationStatus}
+          admissionRequirementsStatus={admissionRequirementsStatus}
+          admissionAdminFirstStatus={admissionAdminFirstStatus}
+          admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

@@ -11,6 +11,9 @@ function RegistrationStatusComplete() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState({});
   const [registrationStatus, setRegistrationStatus] = useState('Complete');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
+  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -26,155 +29,179 @@ function RegistrationStatusComplete() {
     return () => clearInterval(timer);
   }, []);
 
-// Replace the fetchUserData useEffect
-useEffect(() => {
-  const userEmail = localStorage.getItem('userEmail');
-  const createdAt = localStorage.getItem('createdAt');
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    const createdAt = localStorage.getItem('createdAt');
 
-  if (!userEmail || !createdAt) {
-    navigate('/scope-login', { state: { error: 'No active session found. Please log in.' } });
-    return;
-  }
-
-  const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      if (retries > 0) {
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return fetchWithRetry(url, retries - 1, delay);
-      }
-      throw error;
+    if (!userEmail || !createdAt) {
+      navigate('/scope-login', { state: { error: 'No active session found. Please log in.' } });
+      return;
     }
-  };
 
-  const fetchUserData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const createdAtDate = new Date(createdAt);
-      if (isNaN(createdAtDate.getTime())) {
-        handleLogout();
-        navigate('/scope-login', { state: { accountInactive: true, error: 'Invalid session data. Please log in again.' } });
-        return;
+    const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return fetchWithRetry(url, retries - 1, delay);
+        }
+        throw error;
       }
+    };
 
-      const verificationData = await fetchWithRetry(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
-      );
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        setError('');
 
-      if (
-        verificationData.status !== 'Active' ||
-        (createdAt &&
-          Math.abs(
-            new Date(verificationData.createdAt).getTime() -
-              new Date(createdAt).getTime()
-          ) > 1000)
-      ) {
-        handleLogout();
-        navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
-        return;
+        const createdAtDate = new Date(createdAt);
+        if (isNaN(createdAtDate.getTime())) {
+          handleLogout();
+          navigate('/scope-login', { state: { accountInactive: true, error: 'Invalid session data. Please log in again.' } });
+          return;
+        }
+
+        const verificationData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
+        );
+
+        if (
+          verificationData.status !== 'Active' ||
+          (createdAt &&
+            Math.abs(
+              new Date(verificationData.createdAt).getTime() -
+                new Date(createdAt).getTime()
+            ) > 1000)
+        ) {
+          handleLogout();
+          navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
+          return;
+        }
+
+        const userData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/activity/${userEmail}?createdAt=${encodeURIComponent(createdAt)}`
+        );
+
+        const applicantData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
+        );
+
+        localStorage.setItem('applicantID', applicantData.applicantID || userData.applicantID || '');
+        localStorage.setItem('firstName', applicantData.firstName || userData.firstName || '');
+        localStorage.setItem('middleName', applicantData.middleName || '');
+        localStorage.setItem('lastName', applicantData.lastName || userData.lastName || '');
+        localStorage.setItem('dob', applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '');
+        localStorage.setItem('nationality', applicantData.nationality || '');
+        localStorage.setItem('academicYear', applicantData.academicYear || '');
+        localStorage.setItem('academicStrand', applicantData.academicStrand || '');
+        localStorage.setItem('academicTerm', applicantData.academicTerm || '');
+        localStorage.setItem('academicLevel', applicantData.academicLevel || '');
+
+        setUserData({
+          email: userEmail,
+          firstName: applicantData.firstName || userData.firstName || 'User',
+          middleName: applicantData.middleName || '',
+          lastName: applicantData.lastName || userData.lastName || '',
+          dob: applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '',
+          nationality: applicantData.nationality || '',
+          studentID: applicantData.studentID || userData.studentID || 'N/A',
+          applicantID: applicantData.applicantID || userData.applicantID || 'N/A',
+          academicYear: applicantData.academicYear || '',
+          academicStrand: applicantData.academicStrand || '',
+          academicTerm: applicantData.academicTerm || '',
+          academicLevel: applicantData.academicLevel || '',
+        });
+
+        setRegistrationStatus(applicantData.registrationStatus || 'Complete');
+        setAdmissionAdminFirstStatus(applicantData.admissionAdminFirstStatus || 'On-going');
+
+        // Fetch admission requirements status
+        let admissionData;
+        try {
+          admissionData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
+          );
+          setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || applicantData.admissionAdminFirstStatus || 'On-going');
+        } catch (err) {
+          console.error('Error fetching admission data:', err);
+          setAdmissionRequirementsStatus('Incomplete');
+        }
+
+        // Fetch exam details for admissionExamDetailsStatus
+        let examDetailsData;
+        try {
+          examDetailsData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
+          );
+          setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+        } catch (err) {
+          console.error('Error fetching exam details:', err);
+          setAdmissionExamDetailsStatus('Incomplete');
+        }
+
+        setFormData({
+          prefix: applicantData.prefix || '',
+          firstName: applicantData.firstName || '',
+          middleName: applicantData.middleName || '',
+          lastName: applicantData.lastName || '',
+          suffix: applicantData.suffix || '',
+          gender: applicantData.gender || '',
+          lrnNo: applicantData.lrnNo || '',
+          civilStatus: applicantData.civilStatus || '',
+          religion: applicantData.religion || '',
+          birthDate: applicantData.birthDate || '',
+          countryOfBirth: applicantData.countryOfBirth || '',
+          birthPlaceCity: applicantData.birthPlaceCity || '',
+          birthPlaceProvince: applicantData.birthPlaceProvince || '',
+          nationality: applicantData.nationality || '',
+          entryLevel: applicantData.entryLevel || '',
+          academicYear: applicantData.academicYear || '',
+          academicStrand: applicantData.academicStrand || '',
+          academicTerm: applicantData.academicTerm || '',
+          academicLevel: applicantData.academicLevel || '',
+          presentHouseNo: applicantData.presentHouseNo || '',
+          presentBarangay: applicantData.presentBarangay || '',
+          presentCity: applicantData.presentCity || '',
+          presentProvince: applicantData.presentProvince || '',
+          presentPostalCode: applicantData.presentPostalCode || '',
+          permanentHouseNo: applicantData.permanentHouseNo || '',
+          permanentBarangay: applicantData.permanentBarangay || '',
+          permanentCity: applicantData.permanentCity || '',
+          permanentProvince: applicantData.permanentProvince || '',
+          permanentPostalCode: applicantData.permanentPostalCode || '',
+          mobile: applicantData.mobile || '',
+          telephoneNo: applicantData.telephoneNo || '',
+          emailAddress: applicantData.emailAddress || '',
+          elementarySchoolName: applicantData.elementarySchoolName || '',
+          elementaryLastYearAttended: applicantData.elementaryLastYearAttended || '',
+          elementaryGeneralAverage: applicantData.elementaryGeneralAverage || '',
+          elementaryRemarks: applicantData.elementaryRemarks || '',
+          juniorHighSchoolName: applicantData.juniorHighSchoolName || '',
+          juniorHighLastYearAttended: applicantData.juniorHighLastYearAttended || '',
+          juniorHighGeneralAverage: applicantData.juniorHighGeneralAverage || '',
+          juniorHighRemarks: applicantData.juniorHighRemarks || '',
+          contacts: applicantData.contacts || [],
+        });
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading registration data:', err);
+        setError('Failed to load your registration data. Please check your connection and try again.');
+        setLoading(false);
       }
+    };
 
-      const userData = await fetchWithRetry(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/activity/${userEmail}?createdAt=${encodeURIComponent(createdAt)}`
-      );
+    fetchUserData();
+    const refreshInterval = setInterval(fetchUserData, 5 * 60 * 1000);
+    return () => clearInterval(refreshInterval);
+  }, [navigate]);
 
-      const applicantData = await fetchWithRetry(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
-      );
-
-      localStorage.setItem('applicantID', applicantData.applicantID || userData.applicantID || '');
-      localStorage.setItem('firstName', applicantData.firstName || userData.firstName || '');
-      localStorage.setItem('middleName', applicantData.middleName || '');
-      localStorage.setItem('lastName', applicantData.lastName || userData.lastName || '');
-      localStorage.setItem('dob', applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '');
-      localStorage.setItem('nationality', applicantData.nationality || '');
-      localStorage.setItem('academicYear', applicantData.academicYear || '');
-      localStorage.setItem('academicStrand', applicantData.academicStrand || '');
-      localStorage.setItem('academicTerm', applicantData.academicTerm || '');
-      localStorage.setItem('academicLevel', applicantData.academicLevel || '');
-
-      setUserData({
-        email: userEmail,
-        firstName: applicantData.firstName || userData.firstName || 'User',
-        middleName: applicantData.middleName || '',
-        lastName: applicantData.lastName || userData.lastName || '',
-        dob: applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '',
-        nationality: applicantData.nationality || '',
-        studentID: applicantData.studentID || userData.studentID || 'N/A',
-        applicantID: applicantData.applicantID || userData.applicantID || 'N/A',
-        academicYear: applicantData.academicYear || '',
-        academicStrand: applicantData.academicStrand || '',
-        academicTerm: applicantData.academicTerm || '',
-        academicLevel: applicantData.academicLevel || '',
-      });
-
-      setRegistrationStatus(applicantData.registrationStatus || 'Complete');
-
-      setFormData({
-        prefix: applicantData.prefix || '',
-        firstName: applicantData.firstName || '',
-        middleName: applicantData.middleName || '',
-        lastName: applicantData.lastName || '',
-        suffix: applicantData.suffix || '',
-        gender: applicantData.gender || '',
-        lrnNo: applicantData.lrnNo || '',
-        civilStatus: applicantData.civilStatus || '',
-        religion: applicantData.religion || '',
-        birthDate: applicantData.birthDate || '',
-        countryOfBirth: applicantData.countryOfBirth || '',
-        birthPlaceCity: applicantData.birthPlaceCity || '',
-        birthPlaceProvince: applicantData.birthPlaceProvince || '',
-        nationality: applicantData.nationality || '',
-        entryLevel: applicantData.entryLevel || '',
-        academicYear: applicantData.academicYear || '',
-        academicStrand: applicantData.academicStrand || '',
-        academicTerm: applicantData.academicTerm || '',
-        academicLevel: applicantData.academicLevel || '',
-        presentHouseNo: applicantData.presentHouseNo || '',
-        presentBarangay: applicantData.presentBarangay || '',
-        presentCity: applicantData.presentCity || '',
-        presentProvince: applicantData.presentProvince || '',
-        presentPostalCode: applicantData.presentPostalCode || '',
-        permanentHouseNo: applicantData.permanentHouseNo || '',
-        permanentBarangay: applicantData.permanentBarangay || '',
-        permanentCity: applicantData.permanentCity || '',
-        permanentProvince: applicantData.permanentProvince || '',
-        permanentPostalCode: applicantData.permanentPostalCode || '',
-        mobile: applicantData.mobile || '',
-        telephoneNo: applicantData.telephoneNo || '',
-        emailAddress: applicantData.emailAddress || '',
-        elementarySchoolName: applicantData.elementarySchoolName || '',
-        elementaryLastYearAttended: applicantData.elementaryLastYearAttended || '',
-        elementaryGeneralAverage: applicantData.elementaryGeneralAverage || '',
-        elementaryRemarks: applicantData.elementaryRemarks || '',
-        juniorHighSchoolName: applicantData.juniorHighSchoolName || '',
-        juniorHighLastYearAttended: applicantData.juniorHighLastYearAttended || '',
-        juniorHighGeneralAverage: applicantData.juniorHighGeneralAverage || '',
-        juniorHighRemarks: applicantData.juniorHighRemarks || '',
-        contacts: applicantData.contacts || [],
-      });
-
-      setLoading(false);
-    } catch (err) {
-      console.error('Error loading registration data:', err);
-      setError('Failed to load your registration data. Please check your connection and try again.');
-      setLoading(false);
-    }
-  };
-
-  fetchUserData();
-  const refreshInterval = setInterval(fetchUserData, 5 * 60 * 1000);
-  return () => clearInterval(refreshInterval);
-}, [navigate]);
-
-  // Replace the checkAccountStatus useEffect
   useEffect(() => {
     const checkAccountStatus = async () => {
       try {
@@ -214,7 +241,6 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, [navigate]);
 
-  // Replace the handleLogout function
   const handleLogout = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -294,6 +320,9 @@ useEffect(() => {
         <SideNavigation
           userData={userData}
           registrationStatus={registrationStatus}
+          admissionRequirementsStatus={admissionRequirementsStatus}
+          admissionAdminFirstStatus={admissionAdminFirstStatus}
+          admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

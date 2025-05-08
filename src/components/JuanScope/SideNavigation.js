@@ -24,6 +24,7 @@ function SideNavigation({
   registrationStatus, 
   admissionRequirementsStatus,
   admissionAdminFirstStatus,
+  admissionExamDetailsStatus, // Ensure this prop is received
   onNavigate, 
   isOpen 
 }) {
@@ -128,14 +129,13 @@ function SideNavigation({
       path: '/scope-admission-exam-details',
       icon: faFileSignature,
       label: '4. Admission Exam Details',
-      enabled: admissionRequirementsStatus === 'Complete' && 
-              (admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected'),
+      enabled: admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected',
     },
     {
-      path: '#',
+      path: '/scope-exam-fee-payment',
       icon: faMoneyBillWave,
       label: '5. Exam Fee Payment',
-      enabled: false,
+      enabled: admissionExamDetailsStatus === 'Complete', // Enable when admissionExamDetailsStatus is Complete
     },
     {
       path: '#',

@@ -959,3 +959,33 @@
     width: 8px !important;
     height: 8px !important;
   }
+
+  .payment-method-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.payment-method-image {
+    width: 100px;
+    height: 60px;
+    cursor: pointer;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    object-fit: contain; /* Changed from 'contain' to 'cover' */
+    transition: border-color 0.2s ease;
+}
+
+.payment-method-image.selected {
+    border: 2px solid #34A853;
+}
+
+/* Fee Amount Container */
+.fee-amount-container {
+    background-color: #D2D2D2;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-size: 14px;
+    color: #333;
+}

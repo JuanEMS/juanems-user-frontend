@@ -6,7 +6,7 @@ import {
   faBell,
   faCalendarAlt,
   faBars,
-  faTimes
+  faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 import SJDEFILogo from '../../images/SJDEFILogo.png';
 import dashboardBg from '../../images/dashboard background.png';
@@ -21,6 +21,9 @@ function ScopeDashboard() {
   const location = useLocation();
   const [userData, setUserData] = useState({});
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
+  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -35,7 +38,6 @@ function ScopeDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // Replace the fetchUserData useEffect
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
     const createdAt = localStorage.getItem('createdAt');
@@ -50,18 +52,20 @@ function ScopeDashboard() {
     }
 
     const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
+      for (let i = 0; i < retries; i++) {
+        try {
+          const response = await fetch(url);
+          console.log(`Fetch attempt ${i + 1} for ${url}: Status ${response.status}`);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error ${response.status}: ${errorData.error || 'Unknown error'}`);
+          }
+          return await response.json();
+        } catch (error) {
+          if (i === retries - 1) throw error;
+          console.log(`Retrying fetch for ${url} after error: ${error.message}`);
+          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
         }
-        return await response.json();
-      } catch (error) {
-        if (retries > 0) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return fetchWithRetry(url, retries - 1, delay);
-        }
-        throw error;
       }
     };
 
@@ -85,35 +89,44 @@ function ScopeDashboard() {
 
         const createdAtDate = new Date(createdAt);
         if (isNaN(createdAtDate.getTime())) {
-          console.error("Invalid date stored in localStorage");
+          console.error('Invalid date stored in localStorage');
           handleLogout();
-          navigate('/scope-login', { state: { accountInactive: true, error: 'Invalid session data. Please log in again.' } });
+          navigate('/scope-login', {
+            state: { accountInactive: true, error: 'Invalid session data. Please log in again.' },
+          });
           return;
         }
 
         const verificationData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
         );
+        console.log('Verification data:', verificationData);
 
         if (
           verificationData.status !== 'Active' ||
-          (createdAt && Math.abs(
-            new Date(verificationData.createdAt).getTime() -
-            new Date(createdAt).getTime()
-          ) > 1000)
+          (createdAt &&
+            Math.abs(
+              new Date(verificationData.createdAt).getTime() - new Date(createdAt).getTime()
+            ) > 1000)
         ) {
           handleLogout();
-          navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
+          navigate('/scope-login', {
+            state: { accountInactive: true, error: 'Account is inactive or session expired.' },
+          });
           return;
         }
 
         const userDataResponse = await fetchWithRetry(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/activity/${userEmail}?createdAt=${encodeURIComponent(createdAt)}`
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/activity/${userEmail}?createdAt=${encodeURIComponent(
+            createdAt
+          )}`
         );
+        console.log('User activity data:', userDataResponse);
 
         const registrationData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
         );
+        console.log('Registration data:', registrationData);
 
         if (userDataResponse.applicantID && !localStorage.getItem('applicantID')) {
           localStorage.setItem('applicantID', userDataResponse.applicantID);
@@ -135,6 +148,42 @@ function ScopeDashboard() {
         });
 
         setRegistrationStatus(registrationData.registrationStatus || 'Incomplete');
+        setAdmissionAdminFirstStatus(registrationData.admissionAdminFirstStatus || 'On-going');
+
+        // Fetch admission requirements status
+        let admissionData;
+        try {
+          admissionData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
+          );
+          setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(
+            admissionData.admissionAdminFirstStatus ||
+              registrationData.admissionAdminFirstStatus ||
+              'On-going'
+          );
+        } catch (err) {
+          console.error('Error fetching admission data:', err);
+          setAdmissionRequirementsStatus('Incomplete');
+        }
+
+        // Fetch exam details status
+        try {
+          const examDetailsData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
+          );
+          console.log('Exam details data:', examDetailsData);
+          setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+          setAdmissionAdminFirstStatus(
+            examDetailsData.admissionAdminFirstStatus ||
+              admissionData?.admissionAdminFirstStatus ||
+              registrationData.admissionAdminFirstStatus ||
+              'On-going'
+          );
+        } catch (err) {
+          console.error('Error fetching exam details:', err);
+          setAdmissionExamDetailsStatus('Incomplete');
+        }
 
         const announcementsResponse = await axiosWithRetry({
           method: 'get',
@@ -142,8 +191,8 @@ function ScopeDashboard() {
           params: {
             userEmail,
             status: 'Active',
-            audience: 'Applicants'
-          }
+            audience: 'Applicants',
+          },
         });
         setUnviewedCount(announcementsResponse.data.unviewedCount || 0);
 
@@ -166,7 +215,6 @@ function ScopeDashboard() {
     return () => clearInterval(refreshInterval);
   }, [navigate]);
 
-  // Replace the checkAccountStatus useEffect
   useEffect(() => {
     const checkAccountStatus = async () => {
       try {
@@ -193,7 +241,9 @@ function ScopeDashboard() {
           new Date(data.createdAt).getTime() !== new Date(createdAt).getTime()
         ) {
           handleLogout();
-          navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
+          navigate('/scope-login', {
+            state: { accountInactive: true, error: 'Account is inactive or session expired.' },
+          });
         }
       } catch (err) {
         console.error('Error checking account status:', err);
@@ -205,8 +255,7 @@ function ScopeDashboard() {
     checkAccountStatus();
     return () => clearInterval(interval);
   }, [navigate]);
-
-  // Replace the handleLogout function
+  
   const handleLogout = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -226,7 +275,7 @@ function ScopeDashboard() {
           },
           body: JSON.stringify({
             email: userEmail,
-            createdAt: createdAt
+            createdAt: createdAt,
           }),
         }
       );
@@ -261,18 +310,14 @@ function ScopeDashboard() {
       <div className="scope-dashboard-container">
         <header className="juan-register-header">
           <div className="juan-header-left">
-            <img
-              src={SJDEFILogo}
-              alt="SJDEFI Logo"
-              className="juan-logo-register"
-            />
+            <img src={SJDEFILogo} alt="SJDEFI Logo" className="juan-logo-register" />
             <div className="juan-header-text">
               <h1>JUAN SCOPE</h1>
             </div>
           </div>
           <div className="hamburger-menu">
-            <button 
-              className="hamburger-button" 
+            <button
+              className="hamburger-button"
               onClick={toggleSidebar}
               aria-label="Toggle navigation menu"
             >
@@ -281,11 +326,14 @@ function ScopeDashboard() {
           </div>
         </header>
         <div className="scope-dashboard-content">
-          <SideNavigation 
-            userData={userData} 
+          <SideNavigation
+            userData={userData}
             registrationStatus={registrationStatus}
+            admissionRequirementsStatus={admissionRequirementsStatus}
+            admissionAdminFirstStatus={admissionAdminFirstStatus}
+            admissionExamDetailsStatus={admissionExamDetailsStatus}
             onNavigate={closeSidebar}
-            isOpen={sidebarOpen} 
+            isOpen={sidebarOpen}
           />
           <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
             {loading ? (
@@ -303,20 +351,17 @@ function ScopeDashboard() {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
-                          day: 'numeric'
+                          day: 'numeric',
                         })}
                         {', '}
                         {currentDateTime.toLocaleTimeString('en-US', {
                           hour: '2-digit',
-                          minute: '2-digit'
+                          minute: '2-digit',
                         })}
                       </div>
                     </div>
                     <div className="announcement-button-container">
-                      <button
-                        className="scope-announcement-button"
-                        onClick={handleAnnouncements}
-                      >
+                      <button className="scope-announcement-button" onClick={handleAnnouncements}>
                         <FontAwesomeIcon icon={faBell} />
                       </button>
                       {unviewedCount > 0 && (
@@ -346,7 +391,11 @@ function ScopeDashboard() {
                 </div>
               </div>
             )}
-            <EnrollmentProcess registrationStatus={registrationStatus} />
+            <EnrollmentProcess
+              registrationStatus={registrationStatus}
+              admissionRequirementsStatus={admissionRequirementsStatus}
+              admissionExamDetailsStatus={admissionExamDetailsStatus}
+            />
           </main>
         </div>
         {sidebarOpen && (
@@ -364,10 +413,7 @@ function ScopeDashboard() {
                 >
                   Cancel
                 </button>
-                <button
-                  className="scope-modal-confirm"
-                  onClick={handleLogout}
-                >
+                <button className="scope-modal-confirm" onClick={handleLogout}>
                   Logout
                 </button>
               </div>
