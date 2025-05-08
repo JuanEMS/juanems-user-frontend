@@ -30,7 +30,10 @@ function ScopeAnnouncement() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+<<<<<<< HEAD
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
+=======
+>>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -130,6 +133,7 @@ function ScopeAnnouncement() {
         setAdmissionRequirementsStatus('Incomplete');
       }
 
+<<<<<<< HEAD
       // Fetch exam details for admissionExamDetailsStatus
       let examDetailsData;
       try {
@@ -142,6 +146,8 @@ function ScopeAnnouncement() {
         setAdmissionExamDetailsStatus('Incomplete');
       }
 
+=======
+>>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
       const response = await axiosWithRetry({
         method: 'get',
         url: `${process.env.REACT_APP_API_URL}/api/announcements`,
@@ -258,7 +264,10 @@ function ScopeAnnouncement() {
             registrationStatus={registrationStatus}
             admissionRequirementsStatus={admissionRequirementsStatus}
             admissionAdminFirstStatus={admissionAdminFirstStatus}
+<<<<<<< HEAD
             admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
+=======
+>>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />

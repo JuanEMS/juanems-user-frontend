@@ -14,7 +14,10 @@ function ScopeExamInterviewApplication() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+<<<<<<< HEAD
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
+=======
+>>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -132,6 +135,7 @@ function ScopeExamInterviewApplication() {
           console.error('Error fetching admission data:', err);
           setAdmissionRequirementsStatus('Incomplete');
         }
+<<<<<<< HEAD
 
         // Fetch exam details for admissionExamDetailsStatus
         let examDetailsData;
@@ -144,6 +148,8 @@ function ScopeExamInterviewApplication() {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
         }
+=======
+>>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
 
         if (applicantData.registrationStatus !== 'Complete') {
           navigate('/scope-registration-6');
@@ -428,7 +434,10 @@ function ScopeExamInterviewApplication() {
           registrationStatus={registrationStatus}
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
+<<<<<<< HEAD
           admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
+=======
+>>>>>>> a3fea0106862ae583da46e72204acb6def9bc737
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />
