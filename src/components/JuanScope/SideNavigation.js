@@ -15,40 +15,56 @@ import {
   faTicketAlt,
   faUserGraduate,
   faCalculator,
-  faSignOut
+  faSignOut,
 } from '@fortawesome/free-solid-svg-icons';
 import '../../css/JuanScope/SideNavigation.css';
 
-function SideNavigation({ 
-  userData, 
-  registrationStatus, 
+function SideNavigation({
+  userData,
+  registrationStatus,
   admissionRequirementsStatus,
   admissionAdminFirstStatus,
-  onNavigate, 
-  isOpen 
+  admissionExamDetailsStatus,
+  onNavigate,
+  isOpen,
 }) {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
+  const [fetchedExamDetailsStatus, setFetchedExamDetailsStatus] = useState(admissionExamDetailsStatus || 'Incomplete');
 
   useEffect(() => {
-    const fetchExamInterviewStatus = async () => {
+    const fetchStatuses = async () => {
       try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userData.email}`
+        const userEmail = userData.email;
+        if (!userEmail) return;
+
+        // Fetch exam and interview status
+        const examInterviewResponse = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
         );
-        if (!response.ok) {
+        if (!examInterviewResponse.ok) {
           throw new Error('Failed to fetch exam and interview status');
         }
-        const data = await response.json();
-        setExamInterviewStatus(data.preferredExamAndInterviewApplicationStatus || 'Incomplete');
+        const examInterviewData = await examInterviewResponse.json();
+        setExamInterviewStatus(examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete');
+
+        // Fetch exam details status
+        const examDetailsResponse = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
+        );
+        if (!examDetailsResponse.ok) {
+          throw new Error('Failed to fetch exam details status');
+        }
+        const examDetailsData = await examDetailsResponse.json();
+        setFetchedExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
       } catch (err) {
-        console.error('Error fetching exam and interview status:', err);
+        console.error('Error fetching statuses:', err);
       }
     };
 
     if (userData.email) {
-      fetchExamInterviewStatus();
+      fetchStatuses();
     }
   }, [userData.email]);
 
@@ -88,7 +104,7 @@ function SideNavigation({
         },
         body: JSON.stringify({
           email: userEmail,
-          createdAt: createdAt
+          createdAt: createdAt,
         }),
       });
 
@@ -128,14 +144,13 @@ function SideNavigation({
       path: '/scope-admission-exam-details',
       icon: faFileSignature,
       label: '4. Admission Exam Details',
-      enabled: admissionRequirementsStatus === 'Complete' && 
-              (admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected'),
+      enabled: admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected',
     },
     {
-      path: '#',
+      path: '/scope-exam-fee-payment',
       icon: faMoneyBillWave,
       label: '5. Exam Fee Payment',
-      enabled: false,
+      enabled: fetchedExamDetailsStatus === 'Complete',
     },
     {
       path: '#',

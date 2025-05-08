@@ -94,7 +94,7 @@ function ScopeAdmissionRequirements() {
           (createdAt &&
             Math.abs(
               new Date(verificationData.createdAt).getTime() -
-                new Date(createdAt).getTime()
+              new Date(createdAt).getTime()
             ) > 1000)
         ) {
           handleLogout();
@@ -109,6 +109,8 @@ function ScopeAdmissionRequirements() {
         const applicantData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
         );
+
+        console.log('Fetched applicantData:', applicantData); // Debug log
 
         localStorage.setItem('applicantID', applicantData.applicantID || userData.applicantID || '');
         localStorage.setItem('firstName', applicantData.firstName || userData.firstName || '');
@@ -130,6 +132,10 @@ function ScopeAdmissionRequirements() {
         });
 
         const entryLevel = applicantData.entryLevel || '';
+        const fetchedAdmissionStatus = applicantData.admissionAdminFirstStatus || 'On-going';
+        console.log('Fetched admissionAdminFirstStatus:', fetchedAdmissionStatus); // Debug log
+        setAdmissionAdminFirstStatus(fetchedAdmissionStatus);
+
         let reqList = [];
         if (entryLevel === 'Senior High School') {
           reqList = [
@@ -179,6 +185,7 @@ function ScopeAdmissionRequirements() {
           admissionData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
           );
+          console.log('Fetched admissionData:', admissionData); // Debug log
         } catch (err) {
           console.error('Error fetching admission data:', err);
           admissionData = null;
@@ -190,16 +197,15 @@ function ScopeAdmissionRequirements() {
             name: req.name,
             submitted: req.fileName || null,
             waived: req.status === 'Waived',
-            feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded, verification pending' : 'No document uploaded'}`,
-            waiverDetails: req.waiverDetails
+            feedback: `<strong>Status:</strong> ${req.status}\n<strong>Feedback:</strong> ${req.status === 'Waived' ? 'Waiver approved' : req.status === 'Verified' ? 'Document verified' : req.status === 'Submitted' ? 'Document uploaded' : 'No document uploaded'}`,
+            waiverDetails: req.waiverDetails,
           })));
           setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
-          setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || 'On-going');
+          setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || fetchedAdmissionStatus);
           setIsSubmitted(admissionData.admissionRequirementsStatus === 'Complete');
         } else {
           setRequirements(reqList);
           setAdmissionRequirementsStatus('Incomplete');
-          setAdmissionAdminFirstStatus('On-going');
           if (!admissionData) {
             setError('Failed to load admission requirements. Using default requirements.');
           }
@@ -265,6 +271,7 @@ function ScopeAdmissionRequirements() {
   }, [navigate]);
 
   useEffect(() => {
+    console.log('admissionAdminFirstStatus updated:', admissionAdminFirstStatus); // Debug log
     if (admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') {
       console.log(`Admission status changed to: ${admissionAdminFirstStatus}`);
       if (admissionAdminFirstStatus === 'Rejected') {
@@ -676,7 +683,7 @@ function ScopeAdmissionRequirements() {
       setAdmissionAdminFirstStatus(data.admissionAdminFirstStatus || 'On-going');
       setShowConfirmModal(false);
       alert('Admission requirements submitted successfully. Your submission is being validated. Please check back for updates.');
-      navigate('/scope-admission-exam-details');
+      navigate('/scope-admission-requirements');
     } catch (err) {
       console.error('Error during final submission:', err);
       setError(`Submission failed: ${err.message}. Please try again or contact support.`);
@@ -763,9 +770,7 @@ function ScopeAdmissionRequirements() {
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />
-        <main
-          className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}
-        >
+        <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">Loading...</div>
           ) : error ? (
@@ -776,43 +781,38 @@ function ScopeAdmissionRequirements() {
               <div className="registration-divider"></div>
               <div className="registration-container">
                 <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '1rem' }}>
-                  {isSubmitted
-                    ? 'Your admission requirements have been submitted and are being validated. Check back periodically for updates.'
-                    : 'Upload the required admission documents to continue your application. If unavailable, complete the waiver form by clicking Waive Credentials.'}
                 </div>
                 <div style={{ fontSize: '12px', marginBottom: '1.5rem', color: '#333' }}>
                   <strong>Entry Level:</strong> {userData.entryLevel || 'Not specified'}
                 </div>
-                {isSubmitted && (
+                {isSubmitted && !(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') && (
                   <div style={{ margin: '1rem 0', color: '#333', fontSize: '14px', backgroundColor: '#e0f7fa', padding: '1rem', borderRadius: '5px' }}>
                     <p>Your submission is complete and under validation. Please check the Admission Exam Details page for further updates.</p>
                   </div>
                 )}
                 {(admissionAdminFirstStatus === 'Approved' || admissionAdminFirstStatus === 'Rejected') && (
-                  <div style={{ 
-                    margin: '1rem 0', 
-                    color: '#333', 
-                    fontSize: '14px', 
+                  <div style={{
+                    margin: '1rem 0',
+                    color: '#333',
+                    fontSize: '14px',
                     backgroundColor: admissionAdminFirstStatus === 'Approved' ? '#e0f7fa' : '#ffebee',
-                    padding: '1rem', 
-                    borderRadius: '5px' 
+                    padding: '1rem',
+                    borderRadius: '5px'
                   }}>
                     <p>
-                      Your admission requirements have been {admissionAdminFirstStatus.toLowerCase()}. 
-                      {admissionAdminFirstStatus === 'Approved' 
-                        ? 'You can now proceed to the ' 
-                        : 'Please check the Admission Exam Details for more information or contact the admissions office.'}
-                      <Link 
-                        to="/scope-admission-exam-details" 
+                      Your admission requirements have been {admissionAdminFirstStatus.toLowerCase()}.
+                      The details are now available on the{' '}
+                      <Link
+                        to="/scope-admission-exam-details"
                         style={{ color: '#2A67D5', textDecoration: 'underline' }}
-                        onClick={(e) => { 
-                          e.preventDefault(); 
-                          handleNavigation('/scope-admission-exam-details'); 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavigation('/scope-admission-exam-details');
                         }}
                       >
                         Admission Exam Details
-                      </Link>
-                      {admissionAdminFirstStatus === 'Approved' ? ' page.' : '.'}
+                      </Link>{' '}
+                      page.
                     </p>
                   </div>
                 )}

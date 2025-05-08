@@ -23,6 +23,7 @@ import RegistrationStatusComplete from './components/JuanScope/RegistrationStatu
 import ScopeExamInterviewApplication from './components/JuanScope/ScopeExamInterviewApplication';
 import ScopeAdmissionRequirements from './components/JuanScope/ScopeAdmissionRequirements';
 import ScopeAdmissionExamDetails from './components/JuanScope/ScopeAdmissionExamDetails';
+import ScopeExamFeePayment from './components/JuanScope/ScopeExamFeePayment';
 
 import Admin_LoginPage from './components/UserAdmin/LoginPage';
 import Admin_DashboardPage from './components/UserAdmin/DashboardPage';
@@ -48,6 +49,7 @@ import Admin_CreateSubject from './components/UserAdmin/CreateSubject';
 import Admin_AccessControl from './components/UserAdmin/AccessControl';
 import Admin_VerifyEmail from './components/UserAdmin/VerifyEmail';
 import Admin_ForgotPassword from './components/UserAdmin/ForgotPassword';
+
 
 function App() {
   return (
@@ -80,6 +82,7 @@ function App() {
           <Route path="/scope-exam-interview-application" element={<SessionManager><ScopeExamInterviewApplication /></SessionManager>} />
           <Route path="/scope-admission-requirements" element={<SessionManager><ScopeAdmissionRequirements /></SessionManager>} />
           <Route path="/scope-admission-exam-details" element={<SessionManager><ScopeAdmissionExamDetails /></SessionManager>} />
+          <Route path="/scope-exam-fee-payment" element={<SessionManager><ScopeExamFeePayment /></SessionManager>} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<Admin_LoginPage />} />

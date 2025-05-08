@@ -28,6 +28,8 @@ function ScopeAnnouncement() {
     applicantID: localStorage.getItem('applicantID') || 'N/A'
   });
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
+  const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
+  const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -64,89 +66,117 @@ function ScopeAnnouncement() {
     return () => debouncedSearch.cancel();
   }, [searchTerm, debouncedSearch]);
 
-// Replace the fetchAnnouncements function
-const fetchAnnouncements = async (page = currentPage, searchValue = searchTerm) => {
-  try {
-    setLoading(true);
-    setError(null);
-    const userEmail = localStorage.getItem('userEmail');
-    
-    if (!userEmail) {
-      navigate('/scope-login', { state: { error: 'No active session found. Please log in.' } });
-      return;
-    }
+  const fetchAnnouncements = async (page = currentPage, searchValue = searchTerm) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!userEmail) {
+        navigate('/scope-login', { state: { error: 'No active session found. Please log in.' } });
+        return;
+      }
 
-    const axiosWithRetry = async (config, retries = 3, delay = 1000) => {
+      const axiosWithRetry = async (config, retries = 3, delay = 1000) => {
+        try {
+          const response = await axios(config);
+          return response;
+        } catch (error) {
+          if (retries > 0 && error.response?.status !== 400) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return axiosWithRetry(config, retries - 1, delay);
+          }
+          throw error;
+        }
+      };
+
+      const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}`);
+          }
+          return await response.json();
+        } catch (error) {
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchWithRetry(url, retries - 1, delay);
+          }
+          throw error;
+        }
+      };
+
+      const registrationResponse = await fetchWithRetry(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
+      );
+
+      if (!registrationResponse) {
+        throw new Error('Failed to fetch registration status');
+      }
+      setRegistrationStatus(registrationResponse.registrationStatus || 'Incomplete');
+      setAdmissionAdminFirstStatus(registrationResponse.admissionAdminFirstStatus || 'On-going');
+
+      // Fetch admission requirements status
+      let admissionData;
       try {
-        const response = await axios(config);
-        return response;
-      } catch (error) {
-        if (retries > 0 && error.response?.status !== 400) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return axiosWithRetry(config, retries - 1, delay);
-        }
-        throw error;
+        admissionData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
+        );
+        setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
+        setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || registrationResponse.admissionAdminFirstStatus || 'On-going');
+      } catch (err) {
+        console.error('Error fetching admission data:', err);
+        setAdmissionRequirementsStatus('Incomplete');
       }
-    };
 
-    const registrationResponse = await axiosWithRetry({
-      method: 'get',
-      url: `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
-    });
-
-    if (!registrationResponse.data) {
-      throw new Error('Failed to fetch registration status');
-    }
-    setRegistrationStatus(registrationResponse.data.registrationStatus || 'Incomplete');
-
-    const response = await axiosWithRetry({
-      method: 'get',
-      url: `${process.env.REACT_APP_API_URL}/api/announcements`,
-      params: {
-        page,
-        limit: 5,
-        search: searchValue,
-        sortBy: sortConfig.key,
-        sortOrder: sortConfig.direction,
-        status: 'Active',
-        audience: 'Applicants',
-        userEmail
-      }
-    });
-    
-    const validAnnouncements = response.data.announcements.filter(
-      announcement => announcement.audience === 'Applicants' && announcement.status === 'Active'
-    );
-    
-    setAnnouncements(validAnnouncements);
-    setTotalPages(response.data.totalPages || 1);
-    setTotalItems(response.data.totalItems || response.data.announcements.length);
-    
-    const viewPromises = validAnnouncements.map(announcement =>
-      axiosWithRetry({
-        method: 'post',
-        url: `${process.env.REACT_APP_API_URL}/api/announcements/view`,
-        data: {
-          userEmail,
-          announcementId: announcement._id
+      const response = await axiosWithRetry({
+        method: 'get',
+        url: `${process.env.REACT_APP_API_URL}/api/announcements`,
+        params: {
+          page,
+          limit: 5,
+          search: searchValue,
+          sortBy: sortConfig.key,
+          sortOrder: sortConfig.direction,
+          status: 'Active',
+          audience: 'Applicants',
+          userEmail
         }
-      })
-    );
-    await Promise.all(viewPromises);
-    
-    setLoading(false);
-  } catch (err) {
-    console.error('Error fetching announcements:', err);
-    if (err.response?.status === 400) {
-      setError('Invalid request. Please check your input and try again.');
-    } else if (err.response?.status === 429) {
-      setError('Too many requests. Please try again later.');
-    } else {
-      setError('Failed to load announcements. Please check your connection and try again.');
+      });
+      
+      const validAnnouncements = response.data.announcements.filter(
+        announcement => announcement.audience === 'Applicants' && announcement.status === 'Active'
+      );
+      
+      setAnnouncements(validAnnouncements);
+      setTotalPages(response.data.totalPages || 1);
+      setTotalItems(response.data.totalItems || response.data.announcements.length);
+      
+      const viewPromises = validAnnouncements.map(announcement =>
+        axiosWithRetry({
+          method: 'post',
+          url: `${process.env.REACT_APP_API_URL}/api/announcements/view`,
+          data: {
+            userEmail,
+            announcementId: announcement._id
+          }
+        })
+      );
+      await Promise.all(viewPromises);
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching announcements:', err);
+      if (err.response?.status === 400) {
+        setError('Invalid request. Please check your input and try again.');
+      } else if (err.response?.status === 429) {
+        setError('Too many requests. Please try again later.');
+      } else {
+        setError('Failed to load announcements. Please check your connection and try again.');
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  }
-};
+  };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -213,6 +243,8 @@ const fetchAnnouncements = async (page = currentPage, searchValue = searchTerm) 
           <SideNavigation 
             userData={userData} 
             registrationStatus={registrationStatus}
+            admissionRequirementsStatus={admissionRequirementsStatus}
+            admissionAdminFirstStatus={admissionAdminFirstStatus}
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />
