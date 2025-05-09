@@ -84,16 +84,17 @@ const OverallSystemLogs = () => {
     fetchSystemLogs('');
   };
 
-
   const handleExport = () => {
     const currentDate = new Date().toISOString().split('T')[0];
     const fileName = `overall-system-logs-report-${currentDate}.pdf`;
-  
+
+    // Get values from localStorage without parsing as JSON
     const fullName = localStorage.getItem('fullName');
     const role = localStorage.getItem('role');
     const userID = localStorage.getItem('userID');
-  
-    fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/system-logs`, {
+
+    // Include user data in the request URL as query parameters
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/system-logs?userID=${encodeURIComponent(userID)}&fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(role)}`, {
       method: 'GET',
     })
       .then(response => response.blob())
@@ -105,7 +106,7 @@ const OverallSystemLogs = () => {
         document.body.appendChild(link);
         link.click();
         link.remove();
-  
+
         // Log the export action in system logs
         const logData = {
           userID: userID,
@@ -114,7 +115,7 @@ const OverallSystemLogs = () => {
           action: 'Export',
           detail: `Exported system logs report: ${fileName}`
         };
-  
+
         fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
           method: 'POST',
           headers: {
@@ -125,7 +126,7 @@ const OverallSystemLogs = () => {
           .then(response => response.json())
           .then(data => {
             console.log('System log recorded:', data);
-            fetchSystemLogs(); 
+            fetchSystemLogs();
           })
           .catch(error => {
             console.error('Failed to record system log:', error);
@@ -134,7 +135,7 @@ const OverallSystemLogs = () => {
       .catch(error => {
         console.error('Export failed:', error);
       });
-  };  
+  };
 
   const handleBack = () => navigate('/admin/dashboard');
 

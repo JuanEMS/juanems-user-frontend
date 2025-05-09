@@ -93,7 +93,6 @@ const ManageStrandsPage = () => {
         fetchStrands('', showArchived);
     };
 
-
     const handleExport = () => {
         // Get the current date in YYYY-MM-DD format
         const currentDate = new Date().toISOString().split('T')[0];
@@ -104,7 +103,8 @@ const ManageStrandsPage = () => {
         const role = localStorage.getItem('role');
         const userID = localStorage.getItem('userID');
 
-        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/strands`, {
+        // Include user data in the request URL as query parameters
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/strands?userID=${encodeURIComponent(userID)}&fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(role)}`, {
             method: 'GET',
         })
             .then(response => response.blob())
@@ -147,13 +147,12 @@ const ManageStrandsPage = () => {
             });
     };
 
-
     const handleBack = () => navigate('/admin/manage-program');
     const handleCreate = () => navigate('/admin/manage-strands/create');
 
     const handleArchiveToggle = async (record) => {
-        const { _id, isArchived, status} = record;
-        
+        const { _id, isArchived, status } = record;
+
         if (!isArchived && status === 'Active') {
             alert('Cannot archive an active strand. Please deactivate the strand first.');
             return null;

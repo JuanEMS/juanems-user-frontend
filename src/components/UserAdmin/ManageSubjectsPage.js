@@ -93,7 +93,8 @@ const ManageSubjectsPage = () => {
         const role = localStorage.getItem('role');
         const userID = localStorage.getItem('userID');
 
-        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/subjects`, {
+        // Include user data in the request URL as query parameters
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/subjects?userID=${encodeURIComponent(userID)}&fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(role)}`, {
             method: 'GET',
         })
             .then(response => response.blob())

@@ -78,10 +78,10 @@ const fetchSections = async (search = '', showArchived = false) => {
     } catch (error) {
         console.error('Error fetching sections:', error);
         setDataSource([]);
-    } finally {
-        setLoading(false);
-    }
-};
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchSections(searchTerm, showArchived);
@@ -97,7 +97,8 @@ const fetchSections = async (search = '', showArchived = false) => {
         const role = localStorage.getItem('role');
         const userID = localStorage.getItem('userID');
 
-        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/sections`, {
+        // Include user data in the request URL as query parameters
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/sections?userID=${encodeURIComponent(userID)}&fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(role)}`, {
             method: 'GET',
         })
             .then(response => response.blob())
