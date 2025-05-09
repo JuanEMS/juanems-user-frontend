@@ -20,6 +20,7 @@ function ScopeAdmissionExamDetails() {
     approvedExamFeeAmount: null,
     approvedExamRoom: '',
   });
+  const [paymentDetails, setPaymentDetails] = useState(null);
   const [admissionRejectMessage, setAdmissionRejectMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,7 +28,6 @@ function ScopeAdmissionExamDetails() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Update current date and time every minute
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
@@ -35,7 +35,6 @@ function ScopeAdmissionExamDetails() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch user data, statuses, and exam details
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
     const createdAt = localStorage.getItem('createdAt');
@@ -49,7 +48,6 @@ function ScopeAdmissionExamDetails() {
       for (let i = 0; i < retries; i++) {
         try {
           const response = await fetch(url);
-          console.log(`Fetch attempt ${i + 1} for ${url}: Status ${response.status}`);
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`HTTP error ${response.status}: ${errorData.error || 'Unknown error'}`);
@@ -57,7 +55,6 @@ function ScopeAdmissionExamDetails() {
           return await response.json();
         } catch (error) {
           if (i === retries - 1) throw error;
-          console.log(`Retrying fetch for ${url} after error: ${error.message}`);
           await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
         }
       }
@@ -67,8 +64,6 @@ function ScopeAdmissionExamDetails() {
       try {
         setLoading(true);
         setError('');
-        console.log('Starting fetchData for userEmail:', userEmail);
-        console.log('API Base URL:', process.env.REACT_APP_API_URL);
 
         const createdAtDate = new Date(createdAt);
         if (isNaN(createdAtDate.getTime())) {
@@ -80,7 +75,6 @@ function ScopeAdmissionExamDetails() {
         const verificationData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${userEmail}`
         );
-        console.log('Verification data:', verificationData);
 
         if (
           verificationData.status !== 'Active' ||
@@ -98,12 +92,10 @@ function ScopeAdmissionExamDetails() {
         const userDataResponse = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/activity/${userEmail}?createdAt=${encodeURIComponent(createdAt)}`
         );
-        console.log('User activity data:', userDataResponse);
 
         const applicantData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/personal-details/${userEmail}`
         );
-        console.log('Applicant data:', applicantData);
 
         localStorage.setItem('applicantID', applicantData.applicantID || userDataResponse.applicantID || '');
         localStorage.setItem('firstName', applicantData.firstName || userDataResponse.firstName || '');
@@ -126,7 +118,6 @@ function ScopeAdmissionExamDetails() {
         setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
         setAdmissionAdminFirstStatus(applicantData.admissionAdminFirstStatus || 'On-going');
 
-        // Fetch admission requirements status
         let admissionData;
         try {
           admissionData = await fetchWithRetry(
@@ -135,18 +126,13 @@ function ScopeAdmissionExamDetails() {
           setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
           setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || applicantData.admissionAdminFirstStatus || 'On-going');
         } catch (err) {
-          console.error('Error fetching admission data:', err);
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-        // Fetch exam details
-        console.log('Fetching exam details from:', `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`);
-        let examDetailsData;
         try {
-          examDetailsData = await fetchWithRetry(
+          const examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
           );
-          console.log('Exam details response:', examDetailsData);
           if (examDetailsData.message && examDetailsData.admissionAdminFirstStatus === 'On-going') {
             setError('Exam details are not yet available. Your application is under review.');
             setExamDetails({
@@ -175,7 +161,6 @@ function ScopeAdmissionExamDetails() {
             'On-going'
           );
         } catch (err) {
-          console.error('Exam details fetch error:', err.message, err.stack);
           if (err.message.includes('404')) {
             setError('Exam details not found. Your application may not have exam details assigned yet.');
             setAdmissionExamDetailsStatus('Incomplete');
@@ -186,6 +171,19 @@ function ScopeAdmissionExamDetails() {
           }
         }
 
+        // Fetch payment details if exam fee status is 'Paid'
+        if (examDetails.approvedExamFeeStatus === 'Paid') {
+          try {
+            const paymentResponse = await fetchWithRetry(
+              `${process.env.REACT_APP_API_URL}/api/payments/history/${userEmail}`
+            );
+            setPaymentDetails(paymentResponse);
+          } catch (err) {
+            console.error('Failed to fetch payment details:', err);
+            setPaymentDetails(null);
+          }
+        }
+
         if (applicantData.registrationStatus !== 'Complete') {
           navigate('/scope-registration-6');
           return;
@@ -193,7 +191,6 @@ function ScopeAdmissionExamDetails() {
 
         setLoading(false);
       } catch (err) {
-        console.error('General fetchData error:', err.message, err.stack);
         setError('Failed to load user data. Please check your connection and try again.');
         setLoading(false);
       }
@@ -204,7 +201,6 @@ function ScopeAdmissionExamDetails() {
     return () => clearInterval(refreshInterval);
   }, [navigate]);
 
-  // Check account status periodically
   useEffect(() => {
     const checkAccountStatus = async () => {
       try {
@@ -234,7 +230,6 @@ function ScopeAdmissionExamDetails() {
           navigate('/scope-login', { state: { accountInactive: true, error: 'Account is inactive or session expired.' } });
         }
       } catch (err) {
-        console.error('Error checking account status:', err);
         setError('Unable to verify account status. Please check your connection.');
       }
     };
@@ -244,7 +239,6 @@ function ScopeAdmissionExamDetails() {
     return () => clearInterval(interval);
   }, [navigate]);
 
-  // Handle logout
   const handleLogout = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -282,22 +276,18 @@ function ScopeAdmissionExamDetails() {
     }
   };
 
-  // Toggle sidebar
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  // Close sidebar
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
 
-  // Handle back navigation
   const handleBack = () => {
     navigate('/scope-admission-requirements');
   };
 
-  // Handle next navigation
   const handleNext = () => {
     if (admissionAdminFirstStatus !== 'Approved') {
       setError('Cannot proceed: Application is not yet approved.');
@@ -310,13 +300,64 @@ function ScopeAdmissionExamDetails() {
     navigate('/scope-exam-fee-payment');
   };
 
-  // Handle print permit (placeholder)
-  const handlePrintPermit = () => {
-    alert('Print permit functionality is not yet implemented.');
-    // Future implementation: Generate and open a PDF
+  const handlePrintPermit = async () => {
+    if (admissionAdminFirstStatus !== 'Approved' || admissionExamDetailsStatus !== 'Complete') {
+      setError('Cannot print permit: Application is not approved or exam details are incomplete.');
+      return;
+    }
+  
+    setLoading(true);
+    setError('');
+  
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/pdf/generate-exam-permit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userData,
+          examDetails,
+          paymentDetails: examDetails.approvedExamFeeStatus === 'Paid' ? paymentDetails : null,
+        }),
+      });
+  
+      if (!response.ok) {
+        // Check if response is HTML
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          const text = await response.text();
+          console.error('Received HTML response:', text.slice(0, 200)); // Log first 200 chars
+          throw new Error('Server returned an HTML error page. Check the endpoint URL or server logs.');
+        }
+        // Try to parse JSON error
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error ${response.status}`);
+      }
+  
+      // Verify content type is PDF
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/pdf')) {
+        throw new Error(`Unexpected content type: ${contentType}. Expected application/pdf.`);
+      }
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Admission_Exam_Permit_${userData.applicantID || 'unknown'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error generating exam permit:', err);
+      setError(`Failed to generate exam permit: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Format time to 12-hour format with AM/PM
   const formatTime = (time) => {
     if (!time) return 'N/A';
     const [hours, minutes] = time.split(':');
@@ -441,6 +482,7 @@ function ScopeAdmissionExamDetails() {
                           gap: '5px',
                         }}
                         onClick={handlePrintPermit}
+                        disabled={loading}
                       >
                         <FontAwesomeIcon icon={faPrint} />
                         Print Permit
