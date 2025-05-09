@@ -323,10 +323,6 @@ const generateUserID = async (role) => {
   }
 };
 
-const generatePassword = () => { // Simple password generation function (you can customize it as per your needs)
-  return Math.random().toString(36).slice(-8); // 8-character random password
-};
-
 const handleNameBeforeInput = (e) => {
   if (!/^[A-Za-z.\s]*$/.test(e.data)) {
     e.preventDefault();
@@ -492,28 +488,19 @@ const CreateAccount = () => {
 
     setIsSubmitting(true);
     try {
-      // Generate a random password
-      const password = generatePassword();
-
-      // Get mobile digits and ensure it starts with a 0
-      let mobileDigits = formValues.mobile?.replace(/\D/g, '') || '';
-      // Add leading 0 if it doesn't start with 0
-      if (mobileDigits && !mobileDigits.startsWith('0')) {
-        mobileDigits = '0' + mobileDigits;
-      }
-
       // Trim string fields
       const trimmedValues = {
-        ...formValues, // Use formValues instead of undefined values
+        ...formValues,
         firstName: formValues.firstName?.trim() || '',
         middleName: formValues.middleName?.trim() || '',
         lastName: formValues.lastName?.trim() || '',
         email: formValues.email?.trim() || '',
-        mobile: mobileDigits, // Store with leading 0
+        // Format mobile number
+        mobile: formatMobileNumber(formValues.mobile),
         role: formValues.role || '',
         status: formValues.status || '',
-        password: password || '',
-        hasCustomAccess: !!hasCustomAccess, // Ensure this is a boolean value
+        // Remove password from frontend submission
+        hasCustomAccess: !!hasCustomAccess,
         customModules: hasCustomAccess ? selectedModules : [],
       };
 
@@ -525,7 +512,7 @@ const CreateAccount = () => {
         }
         trimmedValues.userID = generatedID;
       }
-      console.log('Creating account with values:', trimmedValues);
+      console.log('Creating/updating account with values:', trimmedValues);
 
       const url = id
         ? `${process.env.REACT_APP_API_URL}/api/admin/accounts/${id}`
@@ -533,7 +520,7 @@ const CreateAccount = () => {
 
       const method = id ? 'PUT' : 'POST';
 
-      // API call to create the account
+      // API call to create or update the account
       const response = await fetch(url, {
         method,
         headers: {
@@ -545,29 +532,27 @@ const CreateAccount = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // Conflict (duplicate userID/email/mobile) or other business error
+        // Handle errors
         if (response.status === 409) {
           return message.error(data.message);
         }
-        // Validation errors, bad request, etc.
         if (response.status >= 400 && response.status < 500) {
           return message.warning(data.message || 'Invalid input.');
         }
-        // Server error
         return message.error('Server error. Please try again later.');
       }
 
       message.success(id ? 'Account successfully updated!' : 'Account successfully created!');
 
-      // Get values from localStorage without parsing as JSON
+      // Get values from localStorage
       const fullName = localStorage.getItem('fullName');
       const role = localStorage.getItem('role');
       const userID = localStorage.getItem('userID');
 
-      // After successful create/update, log the action
+      // Log the action
       const logAction = id ? 'Update' : 'Create';
       const fullAccountName = `${trimmedValues.firstName} ${trimmedValues.middleName} ${trimmedValues.lastName}`.replace(/\s+/g, ' ').trim();
-      const logDetail = `${logAction === 'Create' ? 'Created' : 'Updated'} account [${trimmedValues.userID}] of ${fullAccountName} (${trimmedValues.role}`;
+      const logDetail = `${logAction === 'Create' ? 'Created' : 'Updated'} account [${trimmedValues.userID}] of ${fullAccountName} (${trimmedValues.role})`;
 
       const logData = {
         userID: userID,
@@ -577,7 +562,7 @@ const CreateAccount = () => {
         detail: logDetail,
       };
 
-      // Make API call to save the system log
+      // Record system log
       fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
         method: 'POST',
         headers: {
@@ -595,12 +580,27 @@ const CreateAccount = () => {
 
       navigate('/admin/manage-accounts');
     } catch (error) {
-      console.error('Error creating account:', error);
-      message.error(error.message || 'Failed to create account. Please try again.');
+      console.error('Error with account operation:', error);
+      message.error(error.message || 'Operation failed. Please try again.');
     } finally {
       setIsSubmitting(false);
       setShowConfirmModal(false);
     }
+  };
+
+  // Helper function to format mobile number
+  const formatMobileNumber = (mobile) => {
+    if (!mobile) return '';
+
+    // Get mobile digits and ensure it starts with a 0
+    let mobileDigits = mobile.replace(/\D/g, '');
+
+    // Add leading 0 if it doesn't start with 0
+    if (mobileDigits && !mobileDigits.startsWith('0')) {
+      mobileDigits = '0' + mobileDigits;
+    }
+
+    return mobileDigits;
   };
 
   const items = [
