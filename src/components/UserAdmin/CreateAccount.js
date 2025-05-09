@@ -303,7 +303,7 @@ const CustomAccessForm = ({ role, selectedModules, setSelectedModules, hasCustom
 
 const generateUserID = async (role) => {
   try {
-    const response = await fetch('/api/admin/generate-userid', {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/generate-userid`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -409,7 +409,7 @@ const CreateAccount = () => {
       if (!id) return; // only fetch if editing
 
       try {
-        const res = await fetch(`http://localhost:5000/api/admin/accounts/${id}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/accounts/${id}`);
         const result = await res.json();
 
         if (!res.ok) {
@@ -528,8 +528,8 @@ const CreateAccount = () => {
       console.log('Creating account with values:', trimmedValues);
 
       const url = id
-        ? `http://localhost:5000/api/admin/accounts/${id}`
-        : 'http://localhost:5000/api/admin/create-account';
+        ? `${process.env.REACT_APP_API_URL}/api/admin/accounts/${id}`
+        : `${process.env.REACT_APP_API_URL}/api/admin/create-account`;
 
       const method = id ? 'PUT' : 'POST';
 
@@ -578,7 +578,7 @@ const CreateAccount = () => {
       };
 
       // Make API call to save the system log
-      fetch('http://localhost:5000/api/admin/system-logs', {
+      fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -681,7 +681,7 @@ const CreateAccount = () => {
                         // Add a leading 0 when checking availability
                         const mobileWithLeadingZero = '0' + digits;
 
-                        const res = await fetch('http://localhost:5000/api/admin/check-availability', {
+                        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/check-availability`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
@@ -736,7 +736,7 @@ const CreateAccount = () => {
                     // Only check availability if we're not editing (no id) or if the email has changed
                     if (!id || value !== form.getFieldValue('email')) {
                       try {
-                        const res = await fetch('http://localhost:5000/api/admin/check-availability', {
+                        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/check-availability`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',

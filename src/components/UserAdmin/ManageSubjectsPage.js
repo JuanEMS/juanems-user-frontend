@@ -37,7 +37,7 @@ const ManageSubjectsPage = () => {
     const fetchSubjects = async (search = '', showArchived = false) => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/admin/subjects?archived=${showArchived}`);
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/subjects?archived=${showArchived}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const result = await response.json();
@@ -93,7 +93,7 @@ const ManageSubjectsPage = () => {
         const role = localStorage.getItem('role');
         const userID = localStorage.getItem('userID');
 
-        fetch('http://localhost:5000/api/admin/export/subjects', {
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/subjects`, {
             method: 'GET',
         })
             .then(response => response.blob())
@@ -116,7 +116,7 @@ const ManageSubjectsPage = () => {
                 };
 
                 // Make API call to save the system log
-                fetch('http://localhost:5000/api/admin/system-logs', {
+                fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -165,14 +165,14 @@ const ManageSubjectsPage = () => {
     
         try {
             // Fetch latest subject info by ID
-            const subjectRes = await fetch(`http://localhost:5000/api/admin/subjects/${_id}`);
+            const subjectRes = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/subjects/${_id}`);
             if (!subjectRes.ok) throw new Error('Failed to fetch subject details');
     
             const subject = await subjectRes.json();
             const { subjectName } = subject.data || {};
     
             // Proceed with archiving/unarchiving
-            const response = await fetch(`/api/admin/subjects/archive/${_id}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/subjects/archive/${_id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ const ManageSubjectsPage = () => {
                 detail: logDetail,
             };
     
-            await fetch('http://localhost:5000/api/admin/system-logs', {
+            await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

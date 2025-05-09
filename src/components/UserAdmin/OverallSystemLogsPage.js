@@ -35,7 +35,7 @@ const OverallSystemLogs = () => {
   const fetchSystemLogs = async (search = '') => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/system-logs');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const logs = await response.json();
@@ -93,7 +93,7 @@ const OverallSystemLogs = () => {
     const role = localStorage.getItem('role');
     const userID = localStorage.getItem('userID');
   
-    fetch('http://localhost:5000/api/admin/export/system-logs', {
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/system-logs`, {
       method: 'GET',
     })
       .then(response => response.blob())
@@ -115,7 +115,7 @@ const OverallSystemLogs = () => {
           detail: `Exported system logs report: ${fileName}`
         };
   
-        fetch('http://localhost:5000/api/admin/system-logs', {
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -125,6 +125,7 @@ const OverallSystemLogs = () => {
           .then(response => response.json())
           .then(data => {
             console.log('System log recorded:', data);
+            fetchSystemLogs(); 
           })
           .catch(error => {
             console.error('Failed to record system log:', error);

@@ -37,7 +37,14 @@ const ManageAccountsPage = () => {
   const fetchAccounts = async (search = '', showArchived = false) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/accounts?archived=${showArchived}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/accounts?archived=${showArchived}`);
+
+      // Check for non-JSON responses
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error(`Expected JSON response but got ${contentType}. Status: ${response.status}`);
+      }
+
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const result = await response.json();
 
@@ -103,7 +110,7 @@ const ManageAccountsPage = () => {
     const role = localStorage.getItem('role');
     const userID = localStorage.getItem('userID');
 
-    fetch('http://localhost:5000/api/admin/export/accounts', {
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/accounts`, {
       method: 'GET',
     })
       .then(response => response.blob())
@@ -126,7 +133,7 @@ const ManageAccountsPage = () => {
         };
 
         // Make API call to save the system log
-        fetch('http://localhost:5000/api/admin/system-logs', {
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -155,7 +162,7 @@ const ManageAccountsPage = () => {
     const updatedStatus = record.status === 'Active' ? 'Inactive' : 'Active';
 
     try {
-      const response = await fetch(`/api/admin/accounts/${record._id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/accounts/${record._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: updatedStatus }),
@@ -183,7 +190,7 @@ const ManageAccountsPage = () => {
 
     try {
       // Fetch latest account info by ID
-      const accountRes = await fetch(`http://localhost:5000/api/admin/accounts/${_id}`);
+      const accountRes = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/accounts/${_id}`);
       if (!accountRes.ok) throw new Error('Failed to fetch account details');
 
       const account = await accountRes.json();
@@ -193,7 +200,7 @@ const ManageAccountsPage = () => {
       const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ') || 'N/A';
 
       // Proceed with archiving/unarchiving
-      const response = await fetch(`/api/admin/archive/${_id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/archive/${_id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +229,7 @@ const ManageAccountsPage = () => {
         detail: logDetail,
       };
 
-      await fetch('http://localhost:5000/api/admin/system-logs', {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

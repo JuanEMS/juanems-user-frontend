@@ -36,7 +36,7 @@ const ManageStrandsPage = () => {
     const fetchStrands = async (search = '', showArchived = false) => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/admin/strands?archived=${showArchived}`);
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/strands?archived=${showArchived}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const result = await response.json();
@@ -104,7 +104,7 @@ const ManageStrandsPage = () => {
         const role = localStorage.getItem('role');
         const userID = localStorage.getItem('userID');
 
-        fetch('http://localhost:5000/api/admin/export/strands', {
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/strands`, {
             method: 'GET',
         })
             .then(response => response.blob())
@@ -127,7 +127,7 @@ const ManageStrandsPage = () => {
                 };
 
                 // Make API call to save the system log
-                fetch('http://localhost:5000/api/admin/system-logs', {
+                fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -164,14 +164,14 @@ const ManageStrandsPage = () => {
         
         try {
             // Fetch latest strand info by ID
-            const strandRes = await fetch(`http://localhost:5000/api/admin/strands/${_id}`)
+            const strandRes = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/strands/${_id}`)
             if (!strandRes.ok) throw new Error('Failed to fetch strand details');
             
             const strand = await strandRes.json();
             const {strandName} = strand.data || {};
             
             // Proceed with archiving/unarchiving
-            const response = await fetch(`/api/admin/strands/archive/${_id}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/strands/archive/${_id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -200,7 +200,7 @@ const ManageStrandsPage = () => {
                 detail: logDetail,
             };
             
-            await fetch('http://localhost:5000/api/admin/system-logs', {
+            await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

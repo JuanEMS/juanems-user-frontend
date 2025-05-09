@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Button, List, Skeleton, Form, message, Input, DatePicker, Select, Divider, Card, Typography, Badge, Tag, Tooltip, Radio } from 'antd';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import utc from 'dayjs/plugin/utc';
-import axios from 'axios'; // Import axios for API calls
 
 import { MdOutlineKeyboardArrowLeft } from 'react-icons/md';
 import { FaUser, FaEye } from "react-icons/fa";
-import { PlusOutlined, ClockCircleOutlined, TeamOutlined, BookOutlined } from '@ant-design/icons';
+import { PlusOutlined, ClockCircleOutlined } from '@ant-design/icons';
 
 import '../../css/UserAdmin/Global.css';
 import '../../css/UserAdmin/CreateAnnouncement.css';
@@ -130,7 +129,7 @@ const CreateAnnouncementsPage = () => {
       // Remove the dateRange field as it's not expected by the backend
       // (it's now replaced with startDate and endDate)
 
-      const response = await fetch('/api/announcements/create-announcement', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/announcements/create-announcement`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

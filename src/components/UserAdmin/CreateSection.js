@@ -22,7 +22,7 @@ const CreateSection = () => {
             if (!id) return; // only fetch if editing
 
             try {
-                const res = await fetch(`http://localhost:5000/api/admin/sections/${id}`);
+                const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/sections/${id}`);
                 const result = await res.json();
 
                 if (!res.ok) {
@@ -68,8 +68,8 @@ const CreateSection = () => {
             };
 
             const url = id
-                ? `http://localhost:5000/api/admin/sections/${id}`
-                : 'http://localhost:5000/api/admin/sections/create-section';
+                ? `${process.env.REACT_APP_API_URL}/api/admin/sections/${id}`
+                : `${process.env.REACT_APP_API_URL}/api/admin/sections/create-section`;
 
             const method = id ? 'PUT' : 'POST';
 
@@ -113,7 +113,7 @@ const CreateSection = () => {
             };
 
             // Make API call to save the system log
-            fetch('http://localhost:5000/api/admin/system-logs', {
+            fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

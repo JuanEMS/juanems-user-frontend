@@ -38,7 +38,7 @@ const ManageSectionsPage = () => {
 const fetchSections = async (search = '', showArchived = false) => {
     setLoading(true);
     try {
-        const response = await fetch(`/api/admin/sections?archived=${showArchived}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/sections?archived=${showArchived}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const result = await response.json();
@@ -97,7 +97,7 @@ const fetchSections = async (search = '', showArchived = false) => {
         const role = localStorage.getItem('role');
         const userID = localStorage.getItem('userID');
 
-        fetch('http://localhost:5000/api/admin/export/sections', {
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/sections`, {
             method: 'GET',
         })
             .then(response => response.blob())
@@ -120,7 +120,7 @@ const fetchSections = async (search = '', showArchived = false) => {
                 };
 
                 // Make API call to save the system log
-                fetch('http://localhost:5000/api/admin/system-logs', {
+                fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -169,14 +169,14 @@ const fetchSections = async (search = '', showArchived = false) => {
 
         try {
             // Fetch latest section info by ID
-            const sectionRes = await fetch(`http://localhost:5000/api/admin/sections/${_id}`)
+            const sectionRes = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/sections/${_id}`)
             if (!sectionRes.ok) throw new Error('Failed to fetch section details');
 
             const section = await sectionRes.json();
             const {sectionName} = section.data || {}; 
             
             // Proceed with archiving/unarchiving
-            const response = await fetch(`/api/admin/sections/archive/${_id}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/sections/archive/${_id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ const fetchSections = async (search = '', showArchived = false) => {
                 detail: logDetail,
             };
 
-            await fetch('http://localhost:5000/api/admin/system-logs', {
+            await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

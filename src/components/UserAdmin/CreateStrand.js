@@ -38,7 +38,7 @@ const CreateStrand = () => {
             if (!id) return; // Only fetch if editing
 
             try {
-                const res = await fetch(`http://localhost:5000/api/admin/strands/${id}`);
+                const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/strands/${id}`);
                 const result = await res.json();
 
                 if (!res.ok) {
@@ -70,7 +70,7 @@ const CreateStrand = () => {
 
     const fetchSubjects = async () => {
         try {
-            const res = await axios.get('/api/admin/subjects');
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/subjects`);
             setSubjects(res.data.data);
         } catch (error) {
             console.error('Failed to fetch subjects:', error);
@@ -128,8 +128,8 @@ const CreateStrand = () => {
 
             // Determine if it's a create or update operation
             const url = id
-                ? `http://localhost:5000/api/admin/strands/${id}`
-                : 'http://localhost:5000/api/admin/strands/create-strand';
+                ? `${process.env.REACT_APP_API_URL}/api/admin/strands/${id}`
+                : `${process.env.REACT_APP_API_URL}/api/admin/strands/create-strand`;
 
             const method = id ? 'PUT' : 'POST';
 
@@ -174,7 +174,7 @@ const CreateStrand = () => {
             };
 
             // Make API call to save the system log
-            fetch('http://localhost:5000/api/admin/system-logs', {
+            fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

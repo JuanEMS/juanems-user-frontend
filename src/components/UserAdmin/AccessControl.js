@@ -152,7 +152,7 @@ const RoleAccessForm = ({ role }) => {
         const fetchRoleData = async () => {
             try {
                 // Use the role name to find the role
-                const response = await fetch(`/api/admin/roles/${role}`);
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/roles/${role}`);
                 if (response.ok) {
                     const result = await response.json();
                     // Access modules from the correct path in the response
@@ -246,7 +246,7 @@ const RoleAccessForm = ({ role }) => {
 
         try {
             // Send the selected modules to the backend to update the role access
-            const response = await fetch('/api/admin/roles/save-access', {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/roles/save-access`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

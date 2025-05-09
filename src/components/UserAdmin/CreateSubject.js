@@ -24,7 +24,7 @@ const CreateSubject = () => {
             if (!id) return; // only fetch if editing
 
             try {
-                const res = await fetch(`http://localhost:5000/api/admin/subjects/${id}`);
+                const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/subjects/${id}`);
                 const result = await res.json();
 
                 if (!res.ok) {
@@ -97,8 +97,8 @@ const CreateSubject = () => {
             };
 
             const url = id
-                ? `http://localhost:5000/api/admin/subjects/${id}`
-                : 'http://localhost:5000/api/admin/subjects/create-subject';
+                ? `${process.env.REACT_APP_API_URL}/api/admin/subjects/${id}`
+                : `${process.env.REACT_APP_API_URL}/api/admin/subjects/create-subject`;
 
             const method = id ? 'PUT' : 'POST';
 
@@ -142,7 +142,7 @@ const CreateSubject = () => {
             };
 
             // Make API call to save the system log
-            fetch('http://localhost:5000/api/admin/system-logs', {
+            fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
