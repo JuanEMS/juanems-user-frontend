@@ -444,25 +444,6 @@ function ScopeExamFeePayment() {
                       <p>
                         Since your Exam Fee Status is {examDetails.approvedExamFeeStatus}, you can print your permit. Best of luck!
                       </p>
-                      <button
-                        style={{
-                          backgroundColor: '#4285F4',
-                          color: 'white',
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          marginTop: '1rem',
-                        }}
-                        onClick={handlePrintPermit}
-                      >
-                        <FontAwesomeIcon icon={faPrint} />
-                        Print Permit
-                      </button>
                     </div>
                   ) : (
                     <>

@@ -106,11 +106,11 @@ function ScopeAdmissionExamDetails() {
 
         setUserData({
           email: userEmail,
-          firstName: applicantData.firstName || userDataResponse.firstName || 'User',
+          firstName: applicantData.firstName || userDataResponse.firstName || 'N/A',
           middleName: applicantData.middleName || '',
-          lastName: applicantData.lastName || userDataResponse.lastName || '',
-          dob: applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '',
-          nationality: applicantData.nationality || '',
+          lastName: applicantData.lastName || userDataResponse.lastName || 'N/A',
+          dob: applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : 'N/A',
+          nationality: applicantData.nationality || 'N/A',
           studentID: applicantData.studentID || userDataResponse.studentID || 'N/A',
           applicantID: applicantData.applicantID || userDataResponse.applicantID || 'N/A',
         });
@@ -145,21 +145,32 @@ function ScopeAdmissionExamDetails() {
             setAdmissionExamDetailsStatus('Incomplete');
           } else {
             setExamDetails({
-              approvedExamDate: examDetailsData.approvedExamDate,
-              approvedExamTime: examDetailsData.approvedExamTime || '',
-              approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'Required',
-              approvedExamFeeAmount: examDetailsData.approvedExamFeeAmount,
-              approvedExamRoom: examDetailsData.approvedExamRoom || '',
+              approvedExamDate: examDetailsData.approvedExamDate || null,
+              approvedExamTime: examDetailsData.approvedExamTime || 'N/A',
+              approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'N/A',
+              approvedExamFeeAmount: examDetailsData.approvedExamFeeAmount || null,
+              approvedExamRoom: examDetailsData.approvedExamRoom || 'N/A',
             });
             setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
           }
           setAdmissionRejectMessage(examDetailsData.admissionRejectMessage || '');
-          setAdmissionAdminFirstStatus(
-            examDetailsData.admissionAdminFirstStatus ||
-            admissionData?.admissionAdminFirstStatus ||
-            applicantData.admissionAdminFirstStatus ||
-            'On-going'
-          );
+
+          // Fetch payment details if exam fee status is 'Paid'
+          if (examDetailsData.approvedExamFeeStatus === 'Paid') {
+            try {
+              const paymentResponse = await fetchWithRetry(
+                `${process.env.REACT_APP_API_URL}/api/payments/history/${userEmail}`
+              );
+              const successfulPayment = Array.isArray(paymentResponse)
+                ? paymentResponse.find(payment => payment.status === 'successful')
+                : paymentResponse.status === 'successful' ? paymentResponse : null;
+              setPaymentDetails(successfulPayment || null);
+            } catch (err) {
+              console.error('Failed to fetch payment details:', err);
+              setPaymentDetails(null);
+              setError('Failed to load payment details. Please try again or contact support.');
+            }
+          }
         } catch (err) {
           if (err.message.includes('404')) {
             setError('Exam details not found. Your application may not have exam details assigned yet.');
@@ -168,19 +179,6 @@ function ScopeAdmissionExamDetails() {
             setError('Network error. Please check your internet connection and try again.');
           } else {
             setError('Failed to load exam details. Please try again later or contact support.');
-          }
-        }
-
-        // Fetch payment details if exam fee status is 'Paid'
-        if (examDetails.approvedExamFeeStatus === 'Paid') {
-          try {
-            const paymentResponse = await fetchWithRetry(
-              `${process.env.REACT_APP_API_URL}/api/payments/history/${userEmail}`
-            );
-            setPaymentDetails(paymentResponse);
-          } catch (err) {
-            console.error('Failed to fetch payment details:', err);
-            setPaymentDetails(null);
           }
         }
 
@@ -305,61 +303,130 @@ function ScopeAdmissionExamDetails() {
       setError('Cannot print permit: Application is not approved or exam details are incomplete.');
       return;
     }
-  
+
+    // Allow printing for 'Required', 'Paid', or 'Waived' status
+    if (!['Required', 'Paid', 'Waived'].includes(examDetails.approvedExamFeeStatus)) {
+      setError('Cannot print permit: Invalid exam fee status.');
+      return;
+    }
+
+    // Check payment details only if status is 'Paid'
+    if (examDetails.approvedExamFeeStatus === 'Paid' && !paymentDetails) {
+      setError('Cannot print permit: Payment details not found.');
+      return;
+    }
+
     setLoading(true);
     setError('');
-  
+
+    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const response = await fetch(url, options);
+          console.log(`Attempt ${i + 1} - Response status: ${response.status}, URL: ${url}`);
+          if (!response.ok) {
+            const contentType = response.headers.get('content-type');
+            let errorMessage = `HTTP error ${response.status}`;
+            if (contentType && contentType.includes('application/json')) {
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorMessage;
+            } else {
+              const text = await response.text();
+              console.error('Non-JSON response:', text);
+              errorMessage = `Server returned an unexpected response: ${text || 'No details available'}.`;
+            }
+            throw new Error(errorMessage);
+          }
+          return response;
+        } catch (error) {
+          if (i === retries - 1) throw error;
+          console.log(`Retrying request (${i + 1}/${retries}) after ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+        }
+      }
+    };
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/pdf/generate-exam-permit`, {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        throw new Error('User email not found. Please log in again.');
+      }
+
+      const applicantName = `${userData.firstName || ''} ${userData.middleName ? userData.middleName + ' ' : ''}${userData.lastName || ''}`.trim() || 'N/A';
+      const approvedDate = examDetails.approvedExamDate
+        ? new Date(examDetails.approvedExamDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : 'N/A';
+      const formattedTime = examDetails.approvedExamTime && examDetails.approvedExamTime !== 'N/A'
+        ? (() => {
+            const [hours, minutes] = examDetails.approvedExamTime.split(':');
+            const hour = parseInt(hours, 10);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const formattedHour = hour % 12 || 12;
+            return `${formattedHour}:${minutes} ${ampm}`;
+          })()
+        : 'N/A';
+      const examFeeAmount = examDetails.approvedExamFeeAmount != null
+        ? `₱${examDetails.approvedExamFeeAmount.toFixed(2)}`
+        : 'N/A';
+      const referenceNumber = examDetails.approvedExamFeeStatus === 'Paid' && paymentDetails
+        ? paymentDetails.referenceNumber || 'N/A'
+        : 'N/A';
+
+      const requestBody = {
+        userData: {
+          firstName: userData.firstName || 'N/A',
+          middleName: userData.middleName || '',
+          lastName: userData.lastName || 'N/A',
+          email: userEmail,
+        },
+        examDetails: {
+          applicantName,
+          applicantID: userData.applicantID || 'N/A',
+          approvedDate,
+          time: formattedTime,
+          room: examDetails.approvedExamRoom || 'N/A',
+          examFeeStatus: examDetails.approvedExamFeeStatus || 'N/A',
+          examFeeAmount,
+          referenceNumber,
+        },
+      };
+
+      console.log('Sending request to generate exam permit:', JSON.stringify(requestBody, null, 2));
+
+      const apiUrl = `${process.env.REACT_APP_API_URL}/api/generate-exam-permit`;
+      const response = await fetchWithRetry(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userData,
-          examDetails,
-          paymentDetails: examDetails.approvedExamFeeStatus === 'Paid' ? paymentDetails : null,
-        }),
-      });
-  
-      if (!response.ok) {
-        // Check if response is HTML
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('text/html')) {
-          const text = await response.text();
-          console.error('Received HTML response:', text.slice(0, 200)); // Log first 200 chars
-          throw new Error('Server returned an HTML error page. Check the endpoint URL or server logs.');
-        }
-        // Try to parse JSON error
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error ${response.status}`);
-      }
-  
-      // Verify content type is PDF
+        body: JSON.stringify(requestBody),
+      }, 3, 1000);
+
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/pdf')) {
-        throw new Error(`Unexpected content type: ${contentType}. Expected application/pdf.`);
+        const text = await response.text();
+        console.error('Unexpected content type:', contentType, 'Response:', text);
+        throw new Error(`Unexpected content type: ${contentType || 'none'}. Expected application/pdf.`);
       }
-  
+
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Admission_Exam_Permit_${userData.applicantID || 'unknown'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Error generating exam permit:', err);
-      setError(`Failed to generate exam permit: ${err.message}`);
+      console.error('Error generating exam permit:', err.message, err.stack);
+      setError(`Failed to generate exam permit: ${err.message}. Please try again or contact support.`);
     } finally {
       setLoading(false);
     }
   };
 
   const formatTime = (time) => {
-    if (!time) return 'N/A';
+    if (!time || time === 'N/A') return 'N/A';
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -429,12 +496,16 @@ function ScopeAdmissionExamDetails() {
                   <div className="personal-info-divider"></div>
                   <div className="reminder-box">
                     <p>
-                      <strong>Reminder:</strong> Please settle or pay exam fee on or before the exam date. No payment means no exam or interview. If no payment is needed, you can now move forward to the next step and take the exam and interview. Make sure to print your generated exam permit and bring it.
+                      <strong>Reminder:</strong> If the exam fee is required, you can print the permit and pay in person at the school before the exam date, or pay online. If the fee is paid or waived, you can proceed to the exam. Ensure you print your exam permit and bring it to the exam.
                     </p>
                   </div>
                   <div style={{ marginTop: '1rem', fontSize: '14px', color: '#333' }}>
                     {admissionAdminFirstStatus === 'Approved' ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px', alignItems: 'center' }}>
+                        <strong>Applicant Name:</strong>
+                        <span>{`${userData.firstName} ${userData.middleName ? userData.middleName + ' ' : ''}${userData.lastName}`}</span>
+                        <strong>Applicant ID:</strong>
+                        <span>{userData.applicantID || 'N/A'}</span>
                         <strong>Approved Date:</strong>
                         <span>
                           {examDetails.approvedExamDate
@@ -457,6 +528,12 @@ function ScopeAdmissionExamDetails() {
                             ? `₱${examDetails.approvedExamFeeAmount.toFixed(2)}`
                             : 'N/A'}
                         </span>
+                        <strong>Reference Number:</strong>
+                        <span>
+                          {examDetails.approvedExamFeeStatus === 'Paid' && paymentDetails
+                            ? paymentDetails.referenceNumber || 'N/A'
+                            : 'N/A'}
+                        </span>
                       </div>
                     ) : admissionAdminFirstStatus === 'Rejected' ? (
                       <div>
@@ -476,7 +553,7 @@ function ScopeAdmissionExamDetails() {
                           borderRadius: '8px',
                           fontSize: '12px',
                           border: 'none',
-                          cursor: 'pointer',
+                          cursor: loading ? 'not-allowed' : 'pointer',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '5px',
