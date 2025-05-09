@@ -16,7 +16,7 @@ const Dashboard = () => {
   const [authorizedModules, setAuthorizedModules] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const formattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -85,25 +85,40 @@ const Dashboard = () => {
     const fetchModules = async () => {
       try {
         setIsLoading(true);
-        
-        // Fetch user account data to get hasCustomAccess and modules
-        const response = await fetch(`/api/admin/accounts/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch user account');
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/accounts/${id}`);
+
+        // Check for non-JSON responses
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error(`Expected JSON response but got ${contentType}. Status: ${response.status}`);
+        }
+
+        if (!response.ok) throw new Error(`Failed to fetch user account. Status: ${response.status}`);
+
         const data = await response.json();
-        
+
         if (!data.data) throw new Error('Invalid account data received');
-        
+
         const { hasCustomAccess, customModules, role } = data.data;
-        
+
         // If user has custom access, use their custom modules
         if (hasCustomAccess) {
           setAuthorizedModules(customModules || []);
         } else {
-          // Get modules based on user role
-          const roleResponse = await fetch(`/api/admin/roles/${encodeURIComponent(role || userRole)}`);
-          if (!roleResponse.ok) throw new Error('Failed to fetch role modules');
+          // Get modules based on user role - also updated with API_BASE_URL
+          const roleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/roles/${encodeURIComponent(role || userRole)}`);
+
+          // Check for non-JSON responses
+          const roleContentType = roleResponse.headers.get("content-type");
+          if (!roleContentType || !roleContentType.includes("application/json")) {
+            throw new Error(`Expected JSON response but got ${roleContentType}. Status: ${roleResponse.status}`);
+          }
+
+          if (!roleResponse.ok) throw new Error(`Failed to fetch role modules. Status: ${roleResponse.status}`);
+
           const roleData = await roleResponse.json();
-          
+
           if (roleData.data && roleData.data.modules) {
             setAuthorizedModules(roleData.data.modules);
           } else {
@@ -150,7 +165,7 @@ const Dashboard = () => {
             <div className='card-container'>
               {authorizedModules.map((moduleName) => {
                 const moduleInfo = allModules[moduleName];
-                
+
                 // Only render modules that have configuration in allModules
                 if (moduleInfo) {
                   return (

@@ -23,101 +23,116 @@ const ManageStudentRecordsPage = () => {
 
   const handleBack = () => navigate('/admin/dashboard');
 
-   // Module definitions with their icons and paths
-    const allModules = {
-      "Manage Students": {
-        description: "View and update student information",
-        path: "",
-        icon: FaUserGroup
-      },
-      "Attendance Summary": {
-        description: "Track and review attendance records",
-        path: "",
-        icon: IoMdDocument
-      },
-      "Behavior Summary": {
-        description: "Monitor and summarize student behavior",
-        path: "",
-        icon: IoMdDocument
-      },
-      "Grade Summary": {
-        description: "View compiled grades by subject",
-        path: "",
-        icon: IoMdDocument
-      },
-      "Enrollment Summary": {
-        description: "View overall enrollment statistics",
-        path: "",
-        icon: IoMdDocument
-      },
-      "Quarterly Ranking": {
-        description: "Display student ranks per quarter",
-        path: "",
-        icon: FaRankingStar
-      },
-      "Yearly Ranking": {
-        description: "Show overall student rankings per year",
-        path: "",
-        icon: FaRankingStar
-      },
+  // Module definitions with their icons and paths
+  const allModules = {
+    "Manage Students": {
+      description: "View and update student information",
+      path: "",
+      icon: FaUserGroup
+    },
+    "Attendance Summary": {
+      description: "Track and review attendance records",
+      path: "",
+      icon: IoMdDocument
+    },
+    "Behavior Summary": {
+      description: "Monitor and summarize student behavior",
+      path: "",
+      icon: IoMdDocument
+    },
+    "Grade Summary": {
+      description: "View compiled grades by subject",
+      path: "",
+      icon: IoMdDocument
+    },
+    "Enrollment Summary": {
+      description: "View overall enrollment statistics",
+      path: "",
+      icon: IoMdDocument
+    },
+    "Quarterly Ranking": {
+      description: "Display student ranks per quarter",
+      path: "",
+      icon: FaRankingStar
+    },
+    "Yearly Ranking": {
+      description: "Show overall student rankings per year",
+      path: "",
+      icon: FaRankingStar
+    },
+  };
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        setIsLoading(true);
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/accounts/${id}`);
+
+        // Check for non-JSON responses
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error(`Expected JSON response but got ${contentType}. Status: ${response.status}`);
+        }
+
+        if (!response.ok) throw new Error(`Failed to fetch user account. Status: ${response.status}`);
+
+        const data = await response.json();
+
+        if (!data.data) throw new Error('Invalid account data received');
+
+        const { hasCustomAccess, customModules, role } = data.data;
+
+        // If user has custom access, use their custom modules
+        if (hasCustomAccess) {
+          setAuthorizedModules(customModules || []);
+        } else {
+          // Get modules based on user role - also updated with API_BASE_URL
+          const roleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/roles/${encodeURIComponent(role || userRole)}`);
+
+          // Check for non-JSON responses
+          const roleContentType = roleResponse.headers.get("content-type");
+          if (!roleContentType || !roleContentType.includes("application/json")) {
+            throw new Error(`Expected JSON response but got ${roleContentType}. Status: ${roleResponse.status}`);
+          }
+
+          if (!roleResponse.ok) throw new Error(`Failed to fetch role modules. Status: ${roleResponse.status}`);
+
+          const roleData = await roleResponse.json();
+
+          if (roleData.data && roleData.data.modules) {
+            setAuthorizedModules(roleData.data.modules);
+          } else {
+            setAuthorizedModules([]);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching modules:', err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-      useEffect(() => {
-        const fetchModules = async () => {
-          try {
-            setIsLoading(true);
-    
-            // Fetch user account data to get hasCustomAccess and modules
-            const response = await fetch(`/api/admin/accounts/${id}`);
-            if (!response.ok) throw new Error('Failed to fetch user account');
-            const data = await response.json();
-    
-            if (!data.data) throw new Error('Invalid account data received');
-    
-            const { hasCustomAccess, customModules, role } = data.data;
-    
-            // If user has custom access, use their custom modules
-            if (hasCustomAccess) {
-              setAuthorizedModules(customModules || []);
-            } else {
-              // Get modules based on user role
-              const roleResponse = await fetch(`/api/admin/roles/${encodeURIComponent(role || userRole)}`);
-              if (!roleResponse.ok) throw new Error('Failed to fetch role modules');
-              const roleData = await roleResponse.json();
-    
-              if (roleData.data && roleData.data.modules) {
-                setAuthorizedModules(roleData.data.modules);
-              } else {
-                setAuthorizedModules([]);
-              }
-            }
-          } catch (err) {
-            console.error('Error fetching modules:', err);
-            setError(err.message);
-          } finally {
-            setIsLoading(false);
-          }
-        };
-    
-        if (id) {
-          fetchModules();
-        } else {
-          setError('User ID not found. Please log in again.');
-          setIsLoading(false);
-        }
-      }, [id, userRole]);
+    if (id) {
+      fetchModules();
+    } else {
+      setError('User ID not found. Please log in again.');
+      setIsLoading(false);
+    }
+  }, [id, userRole]);
 
   return (
     <div className="main main-container">
-    <Header />
-    <div className="main-content">
-      <div className="page-title">
-        <div className="arrows" onClick={handleBack}>
-          <MdOutlineKeyboardArrowLeft />
+      <Header />
+      <div className="main-content">
+        <div className="page-title">
+          <div className="arrows" onClick={handleBack}>
+            <MdOutlineKeyboardArrowLeft />
+          </div>
+          <p className="heading">Manage Student Records</p>
         </div>
-        <p className="heading">Manage Student Records</p>
-      </div>
-      <div className='content-process'>
+        <div className='content-process'>
           {isLoading ? (
             <div className="loading-indicator">Loading modules...</div>
           ) : error ? (
@@ -144,9 +159,9 @@ const ManageStudentRecordsPage = () => {
             </div>
           )}
         </div>
+      </div>
+      <Footer />
     </div>
-    <Footer />
-  </div>
   )
 }
 
