@@ -4,9 +4,11 @@ import { Button, Input } from 'antd';
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
+import { Turnstile } from '@marsidev/react-turnstile';
 import '../../css/UserAdmin/Global.css';
 import '../../css/JuanEMS/SplashScreen.css';
 import '../../css/UserAdmin/LoginPage.css';
+import '../../css/JuanScope/Register.css';
 import SJDEFILogo from '../../images/SJDEFILogo.png';
 import Footer from './Footer';
 
@@ -15,9 +17,10 @@ const LoginPage = () => {
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loginError, setLoginError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const [isTurnstileReady, setIsTurnstileReady] = useState(true); // Set to true by default
 
   useEffect(() => {
     if (location.state?.fromPasswordReset) {
@@ -42,12 +45,22 @@ const LoginPage = () => {
 
     if (!password) {
       newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } 
+
+    // Add captcha validation
+    if (!captchaToken) {
+      newErrors.captcha = 'Please complete the CAPTCHA verification';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleTurnstileError = () => {
+    setErrors(prev => ({
+      ...prev,
+      captcha: 'An error occurred while verifying CAPTCHA. Please try again.'
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -66,7 +79,8 @@ const LoginPage = () => {
         },
         body: JSON.stringify({
           email: email.trim(),
-          password: password.trim()
+          password: password.trim(),
+          captchaToken // Add captcha token to the request
         }),
       });
 
@@ -162,6 +176,8 @@ const LoginPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          {errors.email && <div className="error-message">{errors.email}</div>}
+          
           <label className="input-label">Password</label>
           <Input.Password
             className="custom-input"
@@ -171,6 +187,8 @@ const LoginPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
           />
+          {errors.password && <div className="error-message">{errors.password}</div>}
+          
           <div className="login-options">
             <Button type="link" onClick={handleGoToHome} style={{ padding: 0 }}>
               Go Back to Home
@@ -179,11 +197,46 @@ const LoginPage = () => {
               Forgot Password?
             </Button>
           </div>
+          
+          {/* Cloudflare Turnstile Captcha */}
+          <div className="turnstile-container" style={{ marginTop: '15px', marginBottom: '15px', justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection:'column' }}>
+            {isTurnstileReady && (
+              <Turnstile
+                siteKey={process.env.REACT_APP_TURNSTILE_SITE_KEY}
+                onSuccess={(token) => {
+                  setCaptchaToken(token);
+                  setErrors(prev => ({ ...prev, captcha: null }));
+                }}
+                onError={handleTurnstileError}
+                onExpire={() => {
+                  setCaptchaToken(null);
+                  handleTurnstileError();
+                }}
+                options={{
+                  theme: 'light',
+                  size: 'normal',
+                  retry: 'auto',
+                  retryInterval: 3000
+                }}
+                scriptOptions={{
+                  async: true,
+                  defer: true,
+                  appendTo: 'head'
+                }}
+              />
+            )}
+            {errors.captcha && (
+              <div className="error-message" style={{ display: 'block', marginTop: '5px' }}>
+                {errors.captcha}
+              </div>
+            )}
+          </div>
+          
           {loginError && <div className="error-message">{loginError}</div>}
           <Button type='ghost' className="login-btn" onClick={handleSubmit}>Login</Button>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 };
