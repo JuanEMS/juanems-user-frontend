@@ -60,10 +60,10 @@ const CreateAnnouncementsPage = () => {
   // Filter announcements based on the showArchived toggle
   useEffect(() => {
     if (allAnnouncements.length > 0) {
-      const filteredData = allAnnouncements.filter(announcement => 
+      const filteredData = allAnnouncements.filter(announcement =>
         showArchived ? announcement.status === 'Inactive' : announcement.status !== 'Inactive'
       );
-      
+
       setData(filteredData);
       setList(filteredData);
     }
@@ -83,12 +83,12 @@ const CreateAnnouncementsPage = () => {
 
       if (response.ok && result.success) {
         setAllAnnouncements(result.announcements);
-        
+
         // Filter based on showArchived toggle state
-        const filteredData = result.announcements.filter(announcement => 
+        const filteredData = result.announcements.filter(announcement =>
           showArchived ? announcement.status === 'Inactive' : announcement.status !== 'Inactive'
         );
-        
+
         setData(filteredData);
         setList(filteredData);
       } else {
@@ -186,7 +186,7 @@ const CreateAnnouncementsPage = () => {
   const handlePreview = () => {
     form.validateFields().then(values => {
       // Store the complete form values in previewData for later submission
-      setPreviewData({...values});
+      setPreviewData({ ...values });
       setShowPreview(true);
     }).catch(info => {
       message.error('Please fill in all required fields before preview');
@@ -256,6 +256,44 @@ const CreateAnnouncementsPage = () => {
         message.success(editingAnnouncement
           ? 'Announcement updated successfully!'
           : 'Announcement posted successfully!');
+
+        // Get values from localStorage for system logs
+        const fullName = localStorage.getItem('fullName');
+        const role = localStorage.getItem('role');
+        const userID = localStorage.getItem('userID');
+
+        // Log the action
+        const logAction = editingAnnouncement ? 'Update' : 'Create';
+
+        // Create detailed log message
+        const logDetail = editingAnnouncement
+          ? `Updated announcement [ID: ${editingAnnouncement._id}]}`
+          : `Created new announcement`;
+
+        const logData = {
+          userID: userID,
+          accountName: fullName,
+          role: role,
+          action: logAction,
+          detail: logDetail,
+        };
+
+        // Make API call to save the system log
+        fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(logData)
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log('System log recorded:', data);
+          })
+          .catch(error => {
+            console.error('Failed to record system log:', error);
+          });
+
         form.resetFields();
         setShowPreview(false);
         setShowForm(false);
@@ -280,23 +318,62 @@ const CreateAnnouncementsPage = () => {
     }
   }
 
-  // Updated to handle archiving directly without using modal
+  // Updated function to handle archiving with system logs
   const handleArchiveAnnouncement = async (id) => {
     try {
       message.loading('Archiving announcement...', 0);
-      
+
+      // Fetch announcement details before archiving to include in logs
+      const detailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/announcements/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!detailsResponse.ok) {
+        throw new Error('Failed to fetch announcement details');
+      }
+
+      const announcementDetails = await detailsResponse.json();
+      const { title, category } = announcementDetails.data || {};
+
+      // Proceed with archiving
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/announcements/archive/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       const result = await response.json();
       message.destroy();
-      
+
       if (response.ok && result.success) {
         message.success('Announcement archived successfully');
+
+        // Log the action using the current user's info
+        const adminID = localStorage.getItem('userID');
+        const adminName = localStorage.getItem('fullName');
+        const adminRole = localStorage.getItem('role');
+
+        const logDetail = `Archived announcement [ID: ${id}])`;
+
+        const logData = {
+          userID: adminID,
+          accountName: adminName,
+          role: adminRole,
+          action: 'Archive',
+          detail: logDetail,
+        };
+
+        await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(logData)
+        });
+
         // Refresh the announcement list
         fetchUserAnnouncements(userID);
       } else {
@@ -309,27 +386,65 @@ const CreateAnnouncementsPage = () => {
     }
   };
 
-  // New function to handle unarchiving announcements
+  // Updated function to handle unarchiving with system logs
   const handleUnarchiveAnnouncement = async (id) => {
     try {
       message.loading('Unarchiving announcement...', 0);
-      
+
+      // Fetch announcement details before unarchiving to include in logs
+      const detailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/announcements/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!detailsResponse.ok) {
+        throw new Error('Failed to fetch announcement details');
+      }
+
+      const announcementDetails = await detailsResponse.json();
+      const { title, category } = announcementDetails.data || {};
+
+      // Proceed with unarchiving
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/announcements/unarchive/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       const result = await response.json();
       message.destroy();
-      
+
       if (response.ok && result.success) {
         message.success('Announcement unarchived successfully');
+
+        // Log the action using the current user's info
+        const adminID = localStorage.getItem('userID');
+        const adminName = localStorage.getItem('fullName');
+        const adminRole = localStorage.getItem('role');
+
+        const logDetail = `Unarchived announcement [ID: ${id}])`;
+
+        const logData = {
+          userID: adminID,
+          accountName: adminName,
+          role: adminRole,
+          action: 'Unarchive',
+          detail: logDetail,
+        };
+
+        await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(logData)
+        });
+
         // Refresh the announcement list
         fetchUserAnnouncements(userID);
       } else {
-        // Show specific error message from the server
         message.error(result.message || 'Failed to unarchive announcement');
       }
     } catch (error) {
@@ -372,23 +487,23 @@ const CreateAnnouncementsPage = () => {
   // Render priority badge
   const renderPriorityBadge = (priority) => {
     if (!priority) return null;
-    
+
     const colorMap = {
       'important': '#f5222d', // red
       'urgent': '#fa8c16',    // orange
       'info': '#1890ff'       // blue
     };
-    
+
     const textMap = {
       'important': 'Important',
       'urgent': 'Urgent',
       'info': 'Info'
     };
-    
+
     return (
-      <Badge 
-        color={colorMap[priority] || '#1890ff'} 
-        text={textMap[priority] || 'Info'} 
+      <Badge
+        color={colorMap[priority] || '#1890ff'}
+        text={textMap[priority] || 'Info'}
       />
     );
   };
@@ -510,8 +625,8 @@ const CreateAnnouncementsPage = () => {
 
   // Get the appropriate empty state message based on the showArchived toggle
   const getEmptyListMessage = () => {
-    return showArchived 
-      ? 'No archived announcements found' 
+    return showArchived
+      ? 'No archived announcements found'
       : 'No active announcements found';
   };
 
@@ -557,7 +672,7 @@ const CreateAnnouncementsPage = () => {
                 </div>
               }
             >
-             
+
               <div className='announcement-list-scroll'>
                 <List
                   className="announcement-list"
