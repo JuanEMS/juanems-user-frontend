@@ -72,7 +72,7 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,6 +109,7 @@ const LoginPage = () => {
       localStorage.setItem('fullName', `${data.firstName} ${data.lastName || ''}`);
       localStorage.setItem('role', data.role || 'ROLE');
       localStorage.setItem('userID', data.userID);
+      localStorage.setItem('userEmail', data.email);
       localStorage.setItem('id', data._id);
       localStorage.setItem('token', data.token); // Store the JWT token
 
@@ -122,7 +123,7 @@ const LoginPage = () => {
       };
 
       // Send the log data to the server
-      await fetch('http://localhost:5000/api/admin/system-logs', {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
