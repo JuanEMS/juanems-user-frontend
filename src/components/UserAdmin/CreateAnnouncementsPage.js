@@ -647,10 +647,8 @@ const CreateAnnouncementsPage = () => {
               bordered={false}
               className='announcement-list-card'
               extra={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center'}}>
                       <Text type={showArchived ? "secondary" : "primary"}>Active</Text>
                       <Switch
                         checked={showArchived}
@@ -659,7 +657,6 @@ const CreateAnnouncementsPage = () => {
                       />
                       <Text type={showArchived ? "primary" : "secondary"}>Archived</Text>
                     </div>
-                  </div>
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
@@ -684,38 +681,94 @@ const CreateAnnouncementsPage = () => {
                   pagination={false} /* Disable default pagination to use our custom load more */
                   renderItem={item => (
                     <List.Item
-                      onClick={() => handleEditAnnouncement(item)}
-                      actions={getActionButtons(item)}
                       className="announcement-list-item"
+                      onClick={() => handleEditAnnouncement(item)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <Skeleton avatar title={false} loading={item.loading} active>
-                        <List.Item.Meta
-                          avatar={<Avatar icon={<FaUser />} style={{ backgroundColor: '#1890ff' }} />}
-                          title={
-                            <div className="announcement-item-header">
-                              <Text strong>{item.subject}</Text>
-                              {getStatusBadge(item.status, item.endDate)}
-                            </div>
-                          }
-                          description={
-                            <div className="announcement-item-content">
-                              <Paragraph ellipsis={{ rows: 2 }}>
-                                {item.content}
-                              </Paragraph>
-                              <div className="announcement-item-meta">
-                                {item.audience && renderAudienceTag(item.audience)}
-                                {item.priority && renderPriorityBadge(item.priority)}
-                                {item.startDate && item.endDate && (
-                                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                                    <ClockCircleOutlined /> {formatDateRange(item.startDate, item.endDate)}
-                                  </Text>
-                                )}
+                      <div className="announcement-item-wrapper">
+                        <Skeleton avatar title={false} loading={item.loading} active>
+                          <List.Item.Meta
+                            avatar={<Avatar icon={<FaUser />} style={{ backgroundColor: '#1890ff' }} />}
+                            title={
+                              <div className="announcement-item-header">
+                                <Text strong>{item.subject}</Text>
+                                {getStatusBadge(item.status, item.endDate)}
                               </div>
-                            </div>
-                          }
-                        />
-                      </Skeleton>
+                            }
+                            description={
+                              <div className="announcement-item-content">
+                                <Paragraph ellipsis={{ rows: 2 }}>
+                                  {item.content}
+                                </Paragraph>
+                                <div className="announcement-item-meta">
+                                  {item.audience && renderAudienceTag(item.audience)}
+                                  {item.priority && renderPriorityBadge(item.priority)}
+                                  {item.startDate && item.endDate && (
+                                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                                      <ClockCircleOutlined /> {formatDateRange(item.startDate, item.endDate)}
+                                    </Text>
+                                  )}
+                                </div>
+                              </div>
+                            }
+                          />
+                        </Skeleton>
+
+                        {/* Action buttons moved below the content */}
+                        <div className="announcement-item-actions">
+                          {item.status === 'Inactive' ? (
+                            <>
+                              <Button
+                                type="text"
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditAnnouncement(item);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                type="text"
+                                icon={<FaUndo />}
+                                style={{ color: '#52c41a' }}
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUnarchiveAnnouncement(item._id);
+                                }}
+                              >
+                                Unarchive
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                type="text"
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditAnnouncement(item);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                type="text"
+                                icon={<FaArchive />}
+                                danger
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleArchiveAnnouncement(item._id);
+                                }}
+                              >
+                                Archive
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </List.Item>
                   )}
                 />
