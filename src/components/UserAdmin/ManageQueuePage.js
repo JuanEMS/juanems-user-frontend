@@ -1,10 +1,9 @@
-import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import utc from 'dayjs/plugin/utc';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdOutlineKeyboardArrowLeft } from 'react-icons/md';
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 
 import '../../css/UserAdmin/Global.css';
 import '../../css/UserAdmin/ManageQueuePage.css';
@@ -15,15 +14,6 @@ import Header from './Header';
 dayjs.extend(utc);
 dayjs.extend(isBetween);
 
-const { RangePicker } = DatePicker;
-
-// Simple icon components to avoid external dependencies
-const ArrowLeftIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-);
-
 const AddIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="12" y1="5" x2="12" y2="19" />
@@ -32,8 +22,8 @@ const AddIcon = () => (
 );
 
 const ManageQueuePage = () => {
-  // Mock function to simulate navigation
-  const handleBack = () => console.log('Navigate back to dashboard');
+  const navigate = useNavigate();
+  const handleBack = () => navigate('/admin/dashboard');
   
   // Add state to track active tab
   const [activeTab, setActiveTab] = useState('main'); // 'main' or 'skipped'
@@ -60,12 +50,12 @@ const ManageQueuePage = () => {
   const displayItems = activeTab === 'main' ? queueItems : skippedItems;
 
   return (
-    <div className="main-container">
+    <div className="main main-container">
       <Header />
       <div className="main-content">
         <div className="page-title">
           <div className="arrows" onClick={handleBack}>
-            <ArrowLeftIcon />
+            <MdOutlineKeyboardArrowLeft/>
           </div>
           <p className="heading">Manage Queue</p>
         </div>
