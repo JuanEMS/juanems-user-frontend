@@ -1,0 +1,328 @@
+.container-columns {
+    display: flex;
+    justify-content: space-between;
+    height: calc(100% - 60px);
+    /* Adjust for page title height */
+    gap: 1rem;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    flex: 1;
+    max-height: 100%;
+}
+
+/* Styling for headings with reduced margins */
+.column h1,
+.column h2 {
+    margin: 0.3rem 0;
+}
+
+.column h2 {
+    color: #00245A;
+    font-size: 1.4rem;
+}
+
+.column h1 {
+    color: #00245A;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.column h2:first-of-type {
+    color: #C68A00;
+}
+
+/* Queue token container with reduced size */
+.queue-token-container {
+    border: 8px solid #C68A00;
+    border-radius: 20px;
+    padding: 0.5rem 1.5rem;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60%;
+}
+
+.queue-token-container h1 {
+    color: #00245A;
+    font-size: 5rem;
+    margin: 0;
+}
+
+/* Queue details container with reduced size */
+.queue-details-container {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    width: 90%;
+}
+
+.queue-details-box {
+    padding: 0.3rem;
+    flex: 1;
+    text-align: center;
+}
+
+.queue-details-box h2 {
+    font-size: 1.2rem;
+    margin: 0.2rem 0;
+}
+
+.vertical-divider {
+    width: 1px;
+    background-color: #ccc;
+}
+
+/* 2nd column */
+
+.queue-button-container {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.5rem;
+}
+
+.queue-button {
+    padding: 1.2rem 1rem;
+    display: flex;
+    border: 2px solid #2A67D5;
+    border-radius: 10px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.9rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2A67D5;
+    cursor: pointer;
+}
+
+.queue-button:hover {
+    border: #C68A00;
+    background-color: #C68A00;
+    color: white;
+}
+
+.queue-button:last-of-type {
+    background-color: #2A67D5;
+    color: white;
+    margin-bottom: 0;
+}
+
+.queue-button:last-of-type:hover {
+    border: #C68A00;
+    background-color: #C68A00;
+    color: white;
+    margin-bottom: 0;
+}
+
+/* 3rd column */
+
+.queue-list-container {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.queue-list-header {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.queue-list-header>div:first-child {
+    background-color: #00245A;
+    color: white;
+    padding: 0.8rem;
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.queue-list-subheader {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+}
+
+.queue-list-subheader div {
+    flex: 1;
+    padding: 0.6rem;
+    text-align: center;
+    font-weight: bold;
+    color: #00245A;
+    cursor: pointer;
+}
+
+.queue-list-subheader div:first-child {
+    border-bottom: 3px solid #C68A00;
+    color: #C68A00;
+}
+
+.queue-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
+
+.queue-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    background-color: white;
+}
+
+.queue-item.current {
+    background-color: #ffe6aa;
+}
+
+.queue-number {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #00245A;
+}
+
+.queue-time {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.queue-add-button {
+    display: flex;
+    border-top: solid 1px #ccc;
+    background-color: #f5f5f5;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.add-button {
+    color: #00245A;
+    background-color: white;
+    border: none;
+    padding: 1.7rem 1.5rem;
+    font-size: 1.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Add this line to center content horizontally */
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.add-button:hover {
+    background-color: #C68A00;
+}
+
+.queue-list-subheader {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+}
+
+.queue-list-subheader div {
+    flex: 1;
+    padding: 0.6rem;
+    text-align: center;
+    font-weight: bold;
+    background-color: white;
+    color: #00245A;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.queue-list-subheader div.active {
+    background-color: #C68A00;
+    color: white;
+    border-bottom: none;
+}
+
+.queue-list-subheader div:hover:not(.active) {
+    background-color: #f0f0f0;
+    border-bottom: none;
+}
+
+.queue-list-subheader div.active:hover {
+    background-color: #C68A00;
+    color: white;
+}
+
+@media screen and (max-height: 800px) {
+    .queue-list-header>div:first-child {
+        padding: 0.6rem;
+        font-size: 1.5rem;
+    }
+
+    .queue-list-subheader div {
+        padding: 0.4rem;
+    }
+
+    .queue-item {
+        padding: 0.6rem;
+    }
+}
+
+@media screen and (max-height: 600px) {
+    .queue-list-header>div:first-child {
+        padding: 0.4rem;
+        font-size: 1rem;
+    }
+
+    .queue-item {
+        padding: 0.4rem;
+    }
+
+    .add-button {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media screen and (max-height: 800px) {
+    .column h2 {
+        font-size: 1.8rem;
+    }
+
+    .column h1 {
+        font-size: 3.5rem;
+    }
+
+    .queue-token-container h1 {
+        font-size: 5.5rem;
+    }
+
+    .queue-button {
+        padding: 1.3rem;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media screen and (max-height: 600px) {
+    .queue-token-container {
+        border-width: 5px;
+    }
+
+    .queue-button {
+        padding: 0.6rem;
+        font-size: 1rem;
+        border-width: 3px;
+    }
+}
