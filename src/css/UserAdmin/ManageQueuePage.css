@@ -1,4 +1,4 @@
-.column {
+.queue-column {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -7,23 +7,23 @@
     max-height: 100%;
 }
 
-.column h1,
-.column h2 {
+.queue-column h1,
+.queue-column h2 {
     margin: 0.3rem 0;
 }
 
-.column h2 {
+.queue-column h2 {
     color: #00245A;
     font-size: 1.4rem;
 }
 
-.column h1 {
+.queue-column h1 {
     color: #00245A;
     font-size: 2.5rem;
     font-weight: bold;
 }
 
-.column h2:first-of-type {
+.queue-column h2:first-of-type {
     color: #C68A00;
 }
 
@@ -285,11 +285,11 @@
 }
 
 @media screen and (max-height: 800px) {
-    .column h2 {
+    .queue-column h2 {
         font-size: 1.8rem;
     }
 
-    .column h1 {
+    .queue-column h1 {
         font-size: 3.5rem;
     }
 

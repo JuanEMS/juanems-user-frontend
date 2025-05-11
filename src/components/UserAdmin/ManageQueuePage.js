@@ -61,7 +61,7 @@ const ManageQueuePage = () => {
         </div>
         
         <div className="container-columns">
-          <div className="column">
+          <div className="queue-column">
             <h2>Currently Serving</h2>
             <h1>Queue No.</h1>
             <div className="queue-token-container">
@@ -82,7 +82,7 @@ const ManageQueuePage = () => {
             </div>
           </div>
           
-          <div className="column">
+          <div className="queue-column">
             <div className='queue-button-container'>
               <div className='queue-button'>History</div>
               <div className='queue-button'>Remove</div>
@@ -93,7 +93,7 @@ const ManageQueuePage = () => {
             </div>
           </div>
           
-          <div className="column">
+          <div className="queue-column">
             <div className='queue-list-container'>
               <div className='queue-list-header'>
                 <div>Waiting List (22)</div>
