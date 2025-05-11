@@ -6,9 +6,12 @@ import '../../css/JuanScope/EnrollmentProcess.css';
 const EnrollmentProcess = ({
   registrationStatus,
   admissionRequirementsStatus,
+  preferredExamAndInterviewApplicationStatus,
   admissionExamDetailsStatus,
   approvedExamFeeStatus,
-  examInterviewResultStatus, // New prop
+  approvedExamInterviewResult,
+  examInterviewResultStatus,
+  reservationFeePaymentStepStatus, // New prop
 }) => {
   const steps = [
     {
@@ -23,7 +26,7 @@ const EnrollmentProcess = ({
       content:
         'All applicants wishing to enroll in San Juan De Dios Educational Foundation, Inc. are required to take the exam and undergo an interview before becoming an official SJDCIAN.\n\nJuan Scope allows you to select your preferred examination and interview schedule.',
       reminders: ['Generate and bring your test permit on your examination date.'],
-      note: 'This step will be marked as complete once you have generated your test permit.',
+      note: 'This step will be marked as complete once you have selected your preferred exam and interview schedule.',
     },
     {
       title: 'Step 3 of 14: Admission Requirements',
@@ -124,11 +127,12 @@ const EnrollmentProcess = ({
               <div className="step-number-circle">
                 <span>{index + 1}</span>
                 {(index === 0 && registrationStatus === 'Complete') ||
-                (index === 1 && examInterviewResultStatus === 'Complete') ||
+                (index === 1 && preferredExamAndInterviewApplicationStatus === 'Complete') ||
                 (index === 2 && admissionRequirementsStatus === 'Complete') ||
                 (index === 3 && admissionExamDetailsStatus === 'Complete') ||
                 (index === 4 && (approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived')) ||
-                (index === 5 && examInterviewResultStatus === 'Complete') ? (
+                (index === 5 && approvedExamInterviewResult === 'Approved') ||
+                (index === 6 && reservationFeePaymentStepStatus === 'Complete') ? ( // Updated condition for Step 7
                   <FontAwesomeIcon icon={faCheckCircle} className="step-complete-icon" />
                 ) : null}
               </div>

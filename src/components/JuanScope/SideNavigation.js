@@ -24,36 +24,17 @@ function SideNavigation({
   registrationStatus, 
   admissionRequirementsStatus,
   admissionAdminFirstStatus,
+  preferredExamAndInterviewApplicationStatus,
   admissionExamDetailsStatus,
   approvedExamFeeStatus,
-  examInterviewResultStatus, // Add new prop
+  approvedExamInterviewResult,
+  examInterviewResultStatus,
+  reservationFeePaymentStepStatus,
   onNavigate, 
   isOpen 
 }) {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
-
-  useEffect(() => {
-    const fetchExamInterviewStatus = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userData.email}`
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch exam and interview status');
-        }
-        const data = await response.json();
-        setExamInterviewStatus(data.preferredExamAndInterviewApplicationStatus || 'Incomplete');
-      } catch (err) {
-        console.error('Error fetching exam and interview status:', err);
-      }
-    };
-
-    if (userData.email) {
-      fetchExamInterviewStatus();
-    }
-  }, [userData.email]);
 
   const formatEmail = (email) => {
     if (!email) return '';
@@ -125,7 +106,7 @@ function SideNavigation({
       path: '/scope-admission-requirements',
       icon: faBook,
       label: '3. Admission Requirements',
-      enabled: examInterviewStatus === 'Complete',
+      enabled: preferredExamAndInterviewApplicationStatus === 'Complete',
     },
     {
       path: '/scope-admission-exam-details',
@@ -149,13 +130,13 @@ function SideNavigation({
       path: '/scope-reservation-payment',
       icon: faMoneyBillWave,
       label: '7. Reservation Payment',
-      enabled: examInterviewResultStatus === 'Complete',
+      enabled: approvedExamInterviewResult === 'Approved',
     },
     {
-      path: '#',
+      path: '/scope-admission-approval', // Updated path
       icon: faCheckCircle,
       label: '8. Admission Approval',
-      enabled: false,
+      enabled: reservationFeePaymentStepStatus === 'Complete', // Enable when reservation payment is complete
     },
     {
       path: '#',

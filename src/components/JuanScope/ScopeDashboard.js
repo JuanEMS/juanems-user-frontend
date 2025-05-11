@@ -23,9 +23,12 @@ function ScopeDashboard() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
   const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
-  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete'); // New state
+  const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending');
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
+  const [reservationFeePaymentStepStatus, setReservationFeePaymentStepStatus] = useState('Incomplete'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -169,6 +172,20 @@ function ScopeDashboard() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
+        // Fetch exam and interview application status
+        try {
+          const examInterviewData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
+          );
+          console.log('Exam interview data:', examInterviewData);
+          setPreferredExamAndInterviewApplicationStatus(
+            examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete'
+          );
+        } catch (err) {
+          console.error('Error fetching exam interview data:', err);
+          setPreferredExamAndInterviewApplicationStatus('Incomplete');
+        }
+
         // Fetch exam details status
         try {
           const examDetailsData = await fetchWithRetry(
@@ -177,7 +194,9 @@ function ScopeDashboard() {
           console.log('Exam details data:', examDetailsData);
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
           setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
-          setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete'); // Set new state
+          setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
+          setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
+          setReservationFeePaymentStepStatus(examDetailsData.reservationFeePaymentStepStatus || 'Incomplete'); // Set new state
           setAdmissionAdminFirstStatus(
             examDetailsData.admissionAdminFirstStatus ||
               admissionData?.admissionAdminFirstStatus ||
@@ -188,7 +207,9 @@ function ScopeDashboard() {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
           setApprovedExamFeeStatus('Required');
+          setApprovedExamInterviewResult('Pending');
           setExamInterviewResultStatus('Incomplete');
+          setReservationFeePaymentStepStatus('Incomplete'); // Default to Incomplete
         }
 
         const announcementsResponse = await axiosWithRetry({
@@ -337,9 +358,12 @@ function ScopeDashboard() {
             registrationStatus={registrationStatus}
             admissionRequirementsStatus={admissionRequirementsStatus}
             admissionAdminFirstStatus={admissionAdminFirstStatus}
+            preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus}
             admissionExamDetailsStatus={admissionExamDetailsStatus}
             approvedExamFeeStatus={approvedExamFeeStatus}
-            examInterviewResultStatus={examInterviewResultStatus} // Pass new prop
+            approvedExamInterviewResult={approvedExamInterviewResult}
+            examInterviewResultStatus={examInterviewResultStatus}
+            reservationFeePaymentStepStatus={reservationFeePaymentStepStatus} // Pass new prop
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />
@@ -402,9 +426,12 @@ function ScopeDashboard() {
             <EnrollmentProcess
               registrationStatus={registrationStatus}
               admissionRequirementsStatus={admissionRequirementsStatus}
+              preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus}
               admissionExamDetailsStatus={admissionExamDetailsStatus}
               approvedExamFeeStatus={approvedExamFeeStatus}
-              examInterviewResultStatus={examInterviewResultStatus} // Pass new prop
+              approvedExamInterviewResult={approvedExamInterviewResult}
+              examInterviewResultStatus={examInterviewResultStatus}
+              reservationFeePaymentStepStatus={reservationFeePaymentStepStatus} // Pass new prop
             />
           </main>
         </div>

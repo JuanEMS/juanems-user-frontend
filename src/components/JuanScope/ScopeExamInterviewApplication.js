@@ -14,8 +14,11 @@ function ScopeExamInterviewApplication() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete'); // New state
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
-  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required'); // New state
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending'); // New state
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -84,7 +87,7 @@ function ScopeExamInterviewApplication() {
           (createdAt &&
             Math.abs(
               new Date(verificationData.createdAt).getTime() -
-                new Date(createdAt).getTime()
+              new Date(createdAt).getTime()
             ) > 1000)
         ) {
           handleLogout();
@@ -134,7 +137,25 @@ function ScopeExamInterviewApplication() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-        // Fetch exam details for admissionExamDetailsStatus and approvedExamFeeStatus
+        // Fetch exam and interview application status
+        let examData;
+        try {
+          examData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
+          );
+          setPreferredExamAndInterviewApplicationStatus(
+            examData.preferredExamAndInterviewApplicationStatus || 'Incomplete'
+          );
+          if (examData.selectedDate) {
+            setSelectedDate(new Date(examData.selectedDate));
+            setIsDateSaved(examData.preferredExamAndInterviewApplicationStatus === 'Complete');
+          }
+        } catch (err) {
+          console.error('Error fetching exam interview data:', err);
+          setPreferredExamAndInterviewApplicationStatus('Incomplete');
+        }
+
+        // Fetch exam details for admissionExamDetailsStatus, approvedExamFeeStatus, approvedExamInterviewResult, and examInterviewResultStatus
         let examDetailsData;
         try {
           examDetailsData = await fetchWithRetry(
@@ -142,25 +163,23 @@ function ScopeExamInterviewApplication() {
           );
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
           setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+          setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
+          setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
         } catch (err) {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
           setApprovedExamFeeStatus('Required');
+          setApprovedExamInterviewResult('Pending');
+          setExamInterviewResultStatus('Incomplete');
         }
 
+        // Navigation guard: Redirect if registration is not complete
         if (applicantData.registrationStatus !== 'Complete') {
           navigate('/scope-registration-6');
           return;
         }
 
-        const examData = await fetchWithRetry(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
-        );
-        if (examData.selectedDate) {
-          setSelectedDate(new Date(examData.selectedDate));
-          setIsDateSaved(examData.preferredExamAndInterviewApplicationStatus === 'Complete');
-        }
-
+        // Fetch available exam dates
         const datesData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/dropdown/exam-dates`
         );
@@ -431,8 +450,11 @@ function ScopeExamInterviewApplication() {
           registrationStatus={registrationStatus}
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
+          preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus} // Pass new prop
           admissionExamDetailsStatus={admissionExamDetailsStatus}
           approvedExamFeeStatus={approvedExamFeeStatus}
+          approvedExamInterviewResult={approvedExamInterviewResult} // Pass new prop
+          examInterviewResultStatus={examInterviewResultStatus} // Pass new prop
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

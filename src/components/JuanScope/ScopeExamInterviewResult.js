@@ -12,6 +12,7 @@ function ScopeExamInterviewResult() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete'); // Added
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
   const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
   const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending');
@@ -123,6 +124,19 @@ function ScopeExamInterviewResult() {
         } catch (err) {
           console.error('Failed to fetch admission requirements:', err.message);
           setAdmissionRequirementsStatus('Incomplete');
+        }
+
+        // Fetch exam and interview application status
+        try {
+          const examInterviewData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
+          );
+          setPreferredExamAndInterviewApplicationStatus(
+            examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete'
+          );
+        } catch (err) {
+          console.error('Failed to fetch exam interview data:', err.message);
+          setPreferredExamAndInterviewApplicationStatus('Incomplete');
         }
 
         try {
@@ -290,7 +304,9 @@ function ScopeExamInterviewResult() {
   };
 
   const handleNext = () => {
-    navigate('/scope-reservation-payment');
+    if (approvedExamInterviewResult === 'Approved') {
+      navigate('/scope-reservation-payment');
+    }
   };
 
   const getStatusStyleAndMessage = () => {
@@ -352,8 +368,10 @@ function ScopeExamInterviewResult() {
           registrationStatus={registrationStatus}
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
+          preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus} // Added
           admissionExamDetailsStatus={admissionExamDetailsStatus}
           approvedExamFeeStatus={approvedExamFeeStatus}
+          approvedExamInterviewResult={approvedExamInterviewResult} // Added
           examInterviewResultStatus={examInterviewResultStatus}
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
