@@ -10,6 +10,7 @@ import '../../css/UserAdmin/ManageQueuePage.css';
 
 import Footer from './Footer';
 import Header from './Header';
+import AddQueueModal from './AddQueueModal';
 
 dayjs.extend(utc);
 dayjs.extend(isBetween);
@@ -25,26 +26,69 @@ const ManageQueuePage = () => {
   const navigate = useNavigate();
   const handleBack = () => navigate('/admin/dashboard');
   
+  // Add state for modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   // Add state to track active tab
   const [activeTab, setActiveTab] = useState('main'); // 'main' or 'skipped'
   
   // Sample queue data
-  const queueItems = [
-    { id: 1, number: 'AAB', time: '10:15 AM', current: true },
-    { id: 2, number: 'AAC', time: '10:18 AM' },
-    { id: 3, number: 'AAD', time: '10:25 AM' },
-    { id: 4, number: 'AAE', time: '10:30 AM' },
-    { id: 5, number: 'AAF', time: '10:35 AM' },
-    { id: 6, number: 'AAG', time: '10:40 AM' },
-    { id: 7, number: 'AAH', time: '10:45 AM' },
-    { id: 8, number: 'AAI', time: '10:50 AM' },
-  ];
+  const [queueItems, setQueueItems] = useState([
+    { id: 1, number: 'AAB', time: '10:15 AM', current: true, name: 'John Smith', mobileNumber: '98765432' },
+    { id: 2, number: 'AAC', time: '10:18 AM', name: 'Alice Johnson', mobileNumber: '91234567' },
+    { id: 3, number: 'AAD', time: '10:25 AM', name: 'Bob Williams', mobileNumber: '98123456' },
+    { id: 4, number: 'AAE', time: '10:30 AM', name: 'Carol Brown', mobileNumber: '87654321' },
+    { id: 5, number: 'AAF', time: '10:35 AM', name: 'David Miller', mobileNumber: '90123456' },
+    { id: 6, number: 'AAG', time: '10:40 AM', name: 'Emma Davis', mobileNumber: '81234567' },
+    { id: 7, number: 'AAH', time: '10:45 AM', name: 'Frank Wilson', mobileNumber: '96543210' },
+    { id: 8, number: 'AAI', time: '10:50 AM', name: 'Grace Lee', mobileNumber: '85432109' },
+  ]);
 
   // Sample skipped queue items
-  const skippedItems = [
-    { id: 101, number: 'XYZ', time: '9:45 AM' },
-    { id: 102, number: 'ABC', time: '9:50 AM' }
-  ];
+  const [skippedItems, setSkippedItems] = useState([
+    { id: 101, number: 'XYZ', time: '9:45 AM', name: 'Michael Taylor', mobileNumber: '90876543' },
+    { id: 102, number: 'ABC', time: '9:50 AM', name: 'Sophie Wong', mobileNumber: '81239876' }
+  ]);
+
+  // Function to generate the next queue number
+  const generateQueueNumber = () => {
+    const lastQueue = queueItems[queueItems.length - 1];
+    if (!lastQueue) return 'AAA';
+    
+    let lastChar = lastQueue.number.charAt(2);
+    let middleChar = lastQueue.number.charAt(1);
+    let firstChar = lastQueue.number.charAt(0);
+    
+    if (lastChar === 'Z') {
+      lastChar = 'A';
+      if (middleChar === 'Z') {
+        middleChar = 'A';
+        firstChar = String.fromCharCode(firstChar.charCodeAt(0) + 1);
+      } else {
+        middleChar = String.fromCharCode(middleChar.charCodeAt(0) + 1);
+      }
+    } else {
+      lastChar = String.fromCharCode(lastChar.charCodeAt(0) + 1);
+    }
+    
+    return `${firstChar}${middleChar}${lastChar}`;
+  };
+
+  // Function to add a new queue item
+  const handleAddQueue = (guestInfo) => {
+    const currentTime = dayjs().format('h:mm A');
+    const newQueueNumber = generateQueueNumber();
+    
+    const newQueueItem = {
+      id: queueItems.length + 1000, // Just to ensure unique ID
+      number: newQueueNumber,
+      time: currentTime,
+      name: guestInfo.name,
+      mobileNumber: guestInfo.mobileNumber
+    };
+    
+    setQueueItems([...queueItems, newQueueItem]);
+  };
 
   // Determine which items to display based on active tab
   const displayItems = activeTab === 'main' ? queueItems : skippedItems;
@@ -65,7 +109,7 @@ const ManageQueuePage = () => {
             <h2>Currently Serving</h2>
             <h1>Queue No.</h1>
             <div className="queue-token-container">
-              <h1>XXX</h1>
+              <h1>{queueItems.find(item => item.current)?.number || 'XXX'}</h1>
             </div>
             <h2>Serving Time</h2>
             <h2>00:30:00</h2>
@@ -96,7 +140,7 @@ const ManageQueuePage = () => {
           <div className="queue-column">
             <div className='queue-list-container'>
               <div className='queue-list-header'>
-                <div>Waiting List (22)</div>
+                <div>Waiting List ({activeTab === 'main' ? queueItems.length : skippedItems.length})</div>
                 <div className='queue-list-subheader'>
                   {/* Update tabs to use the activeTab state */}
                   <div 
@@ -121,7 +165,7 @@ const ManageQueuePage = () => {
                   ))}
                 </div>
                 <div className='queue-add-button'>
-                  <button className="add-button">
+                  <button className="add-button" onClick={() => setIsModalOpen(true)}>
                     <AddIcon /> Add Queue
                   </button>
                 </div>
@@ -130,6 +174,14 @@ const ManageQueuePage = () => {
           </div>
         </div>
       </div>
+      
+      {/* Add Queue Modal */}
+      <AddQueueModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onAddQueue={handleAddQueue}
+      />
+      
       <Footer />
     </div>
   );
