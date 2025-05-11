@@ -800,19 +800,11 @@ function ScopeAdmissionRequirements() {
         </div>
       </header>
       <div className="scope-registration-content">
-        <SideNavigation
-          userData={userData}
-          registrationStatus={registrationStatus}
-          admissionRequirementsStatus={admissionRequirementsStatus}
-          admissionAdminFirstStatus={admissionAdminFirstStatus}
-          preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus} // Pass new prop
-          admissionExamDetailsStatus={admissionExamDetailsStatus}
-          approvedExamFeeStatus={approvedExamFeeStatus}
-          approvedExamInterviewResult={approvedExamInterviewResult} // Pass new prop
-          examInterviewResultStatus={examInterviewResultStatus}
-          onNavigate={closeSidebar}
-          isOpen={sidebarOpen}
-        />
+          <SideNavigation
+            userData={userData}
+            onNavigate={closeSidebar}
+            isOpen={sidebarOpen}
+          />
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">Loading...</div>

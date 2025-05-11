@@ -130,8 +130,8 @@ function ScopeAnnouncement() {
         setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
         setAdmissionAdminFirstStatus(
           admissionData.admissionAdminFirstStatus ||
-            registrationResponse.admissionAdminFirstStatus ||
-            'On-going'
+          registrationResponse.admissionAdminFirstStatus ||
+          'On-going'
         );
       } catch (err) {
         console.error('Error fetching admission data:', err);
@@ -279,14 +279,6 @@ function ScopeAnnouncement() {
         <div className="scope-dashboard-content">
           <SideNavigation
             userData={userData}
-            registrationStatus={registrationStatus}
-            admissionRequirementsStatus={admissionRequirementsStatus}
-            admissionAdminFirstStatus={admissionAdminFirstStatus}
-            preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus} // Pass new prop
-            admissionExamDetailsStatus={admissionExamDetailsStatus}
-            approvedExamFeeStatus={approvedExamFeeStatus}
-            approvedExamInterviewResult={approvedExamInterviewResult} // Pass new prop
-            examInterviewResultStatus={examInterviewResultStatus}
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />

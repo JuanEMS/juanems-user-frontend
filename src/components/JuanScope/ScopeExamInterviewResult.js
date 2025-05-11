@@ -363,19 +363,11 @@ function ScopeExamInterviewResult() {
         </div>
       </header>
       <div className="scope-registration-content">
-        <SideNavigation
-          userData={userData}
-          registrationStatus={registrationStatus}
-          admissionRequirementsStatus={admissionRequirementsStatus}
-          admissionAdminFirstStatus={admissionAdminFirstStatus}
-          preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus} // Added
-          admissionExamDetailsStatus={admissionExamDetailsStatus}
-          approvedExamFeeStatus={approvedExamFeeStatus}
-          approvedExamInterviewResult={approvedExamInterviewResult} // Added
-          examInterviewResultStatus={examInterviewResultStatus}
-          onNavigate={closeSidebar}
-          isOpen={sidebarOpen}
-        />
+          <SideNavigation
+            userData={userData}
+            onNavigate={closeSidebar}
+            isOpen={sidebarOpen}
+          />
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">

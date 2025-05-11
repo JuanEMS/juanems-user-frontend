@@ -524,20 +524,11 @@ function ScopeReservationPayment() {
         </div>
       </header>
       <div className="scope-registration-content">
-        <SideNavigation
-          userData={userData}
-          registrationStatus={registrationStatus}
-          admissionRequirementsStatus={admissionRequirementsStatus}
-          admissionAdminFirstStatus={admissionAdminFirstStatus}
-          preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus}
-          admissionExamDetailsStatus={admissionExamDetailsStatus}
-          approvedExamFeeStatus={approvedExamFeeStatus}
-          approvedExamInterviewResult={approvedExamInterviewResult}
-          examInterviewResultStatus={examInterviewResultStatus}
-          reservationFeePaymentStepStatus={reservationDetails.reservationFeePaymentStepStatus}
-          onNavigate={closeSidebar}
-          isOpen={sidebarOpen}
-        />
+          <SideNavigation
+            userData={userData}
+            onNavigate={closeSidebar}
+            isOpen={sidebarOpen}
+          />
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">

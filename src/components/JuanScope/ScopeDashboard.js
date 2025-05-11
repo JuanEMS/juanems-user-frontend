@@ -164,8 +164,8 @@ function ScopeDashboard() {
           setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
           setAdmissionAdminFirstStatus(
             admissionData.admissionAdminFirstStatus ||
-              registrationData.admissionAdminFirstStatus ||
-              'On-going'
+            registrationData.admissionAdminFirstStatus ||
+            'On-going'
           );
         } catch (err) {
           console.error('Error fetching admission data:', err);
@@ -199,9 +199,9 @@ function ScopeDashboard() {
           setReservationFeePaymentStepStatus(examDetailsData.reservationFeePaymentStepStatus || 'Incomplete'); // Set new state
           setAdmissionAdminFirstStatus(
             examDetailsData.admissionAdminFirstStatus ||
-              admissionData?.admissionAdminFirstStatus ||
-              registrationData.admissionAdminFirstStatus ||
-              'On-going'
+            admissionData?.admissionAdminFirstStatus ||
+            registrationData.admissionAdminFirstStatus ||
+            'On-going'
           );
         } catch (err) {
           console.error('Error fetching exam details:', err);
@@ -355,15 +355,6 @@ function ScopeDashboard() {
         <div className="scope-dashboard-content">
           <SideNavigation
             userData={userData}
-            registrationStatus={registrationStatus}
-            admissionRequirementsStatus={admissionRequirementsStatus}
-            admissionAdminFirstStatus={admissionAdminFirstStatus}
-            preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus}
-            admissionExamDetailsStatus={admissionExamDetailsStatus}
-            approvedExamFeeStatus={approvedExamFeeStatus}
-            approvedExamInterviewResult={approvedExamInterviewResult}
-            examInterviewResultStatus={examInterviewResultStatus}
-            reservationFeePaymentStepStatus={reservationFeePaymentStepStatus} // Pass new prop
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />
