@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import '../../css/JuanScope/EnrollmentProcess.css';
@@ -7,42 +7,9 @@ const EnrollmentProcess = ({
   registrationStatus,
   admissionRequirementsStatus,
   admissionExamDetailsStatus,
-  approvedExamFeeStatus, // New prop
+  approvedExamFeeStatus,
+  examInterviewResultStatus, // New prop
 }) => {
-  const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchExamInterviewStatus = async (retries = 3, delay = 1000) => {
-      try {
-        const userEmail = localStorage.getItem('userEmail');
-        if (!userEmail) {
-          setError('Please log in to view your exam and interview status.');
-          return;
-        }
-
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch exam and interview status');
-        }
-        const data = await response.json();
-        setExamInterviewStatus(data.preferredExamAndInterviewApplicationStatus || 'Incomplete');
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching exam and interview status:', err);
-        if (retries > 0) {
-          setTimeout(() => fetchExamInterviewStatus(retries - 1, delay * 2), delay);
-        } else {
-          setError('Unable to fetch exam and interview status. Please try again later.');
-        }
-      }
-    };
-
-    fetchExamInterviewStatus();
-  }, []);
-
   const steps = [
     {
       title: 'Step 1 of 14: Registration',
@@ -145,7 +112,6 @@ const EnrollmentProcess = ({
       <div className="enrollment-process-divider"></div>
 
       <div className="enrollment-process-container">
-        {error && <div className="error-message">{error}</div>}
         <div className="welcome-message">
           Welcome to the JuanEMS Enrollment System! Follow these fourteen (14) easy steps to successfully enroll at San Juan De Dios Educational Foundation.
         </div>
@@ -158,10 +124,11 @@ const EnrollmentProcess = ({
               <div className="step-number-circle">
                 <span>{index + 1}</span>
                 {(index === 0 && registrationStatus === 'Complete') ||
-                (index === 1 && examInterviewStatus === 'Complete') ||
+                (index === 1 && examInterviewResultStatus === 'Complete') ||
                 (index === 2 && admissionRequirementsStatus === 'Complete') ||
                 (index === 3 && admissionExamDetailsStatus === 'Complete') ||
-                (index === 4 && (approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived')) ? (
+                (index === 4 && (approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived')) ||
+                (index === 5 && examInterviewResultStatus === 'Complete') ? (
                   <FontAwesomeIcon icon={faCheckCircle} className="step-complete-icon" />
                 ) : null}
               </div>

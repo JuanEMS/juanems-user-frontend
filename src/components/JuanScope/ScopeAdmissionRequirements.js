@@ -17,6 +17,7 @@ function ScopeAdmissionRequirements() {
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
   const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -201,10 +202,12 @@ function ScopeAdmissionRequirements() {
           );
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
           setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+          setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
         } catch (err) {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
           setApprovedExamFeeStatus('Required');
+          setExamInterviewResultStatus('Incomplete');
         }
 
         if (admissionData && Array.isArray(admissionData.admissionRequirements) && admissionData.admissionRequirements.length > 0) {
@@ -785,6 +788,7 @@ function ScopeAdmissionRequirements() {
           admissionAdminFirstStatus={admissionAdminFirstStatus}
           admissionExamDetailsStatus={admissionExamDetailsStatus}
           approvedExamFeeStatus={approvedExamFeeStatus}
+          examInterviewResultStatus={examInterviewResultStatus}
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

@@ -31,7 +31,8 @@ function ScopeAnnouncement() {
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
-  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required'); // New state
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete'); // New state
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -135,18 +136,20 @@ function ScopeAnnouncement() {
         setAdmissionRequirementsStatus('Incomplete');
       }
 
-      // Fetch exam details for admissionExamDetailsStatus and approvedExamFeeStatus
+      // Fetch exam details for admissionExamDetailsStatus, approvedExamFeeStatus, and examInterviewResultStatus
       let examDetailsData;
       try {
         examDetailsData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
         );
         setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
-        setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required'); // Set approvedExamFeeStatus
+        setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+        setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete'); // Set new state
       } catch (err) {
         console.error('Error fetching exam details:', err);
         setAdmissionExamDetailsStatus('Incomplete');
         setApprovedExamFeeStatus('Required');
+        setExamInterviewResultStatus('Incomplete');
       }
 
       const response = await axiosWithRetry({
@@ -262,7 +265,8 @@ function ScopeAnnouncement() {
             admissionRequirementsStatus={admissionRequirementsStatus}
             admissionAdminFirstStatus={admissionAdminFirstStatus}
             admissionExamDetailsStatus={admissionExamDetailsStatus}
-            approvedExamFeeStatus={approvedExamFeeStatus} // Pass new prop
+            approvedExamFeeStatus={approvedExamFeeStatus}
+            examInterviewResultStatus={examInterviewResultStatus} // Pass new prop
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />

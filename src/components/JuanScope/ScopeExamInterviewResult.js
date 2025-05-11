@@ -1,31 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faTimes, faArrowLeft, faMoneyBillWave, faPrint, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faTimes, faArrowLeft, faCheckCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import SJDEFILogo from '../../images/SJDEFILogo.png';
 import '../../css/JuanScope/ScopeRegistration1.css';
 import SideNavigation from './SideNavigation';
 
-function ScopeExamFeePayment() {
+function ScopeExamInterviewResult() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [userData, setUserData] = useState({});
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
-  const [examDetails, setExamDetails] = useState({
-    approvedExamFeeStatus: 'Required',
-    approvedExamFeeAmount: null,
-  });
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending');
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [termsAgreed, setTermsAgreed] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState(null);
-  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -101,6 +96,7 @@ function ScopeExamFeePayment() {
         localStorage.setItem('lastName', applicantData.lastName || userDataResponse.lastName || '');
         localStorage.setItem('dob', applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '');
         localStorage.setItem('nationality', applicantData.nationality || '');
+        localStorage.setItem('academicStrand', applicantData.academicStrand || '');
 
         setUserData({
           email: userEmail,
@@ -111,6 +107,7 @@ function ScopeExamFeePayment() {
           nationality: applicantData.nationality || '',
           studentID: applicantData.studentID || userDataResponse.studentID || 'N/A',
           applicantID: applicantData.applicantID || userDataResponse.applicantID || 'N/A',
+          academicStrand: applicantData.academicStrand || 'STEM',
         });
 
         setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
@@ -124,6 +121,7 @@ function ScopeExamFeePayment() {
           setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
           setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || applicantData.admissionAdminFirstStatus || 'On-going');
         } catch (err) {
+          console.error('Failed to fetch admission requirements:', err.message);
           setAdmissionRequirementsStatus('Incomplete');
         }
 
@@ -131,20 +129,17 @@ function ScopeExamFeePayment() {
           const examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
           );
+          console.log('Exam details response:', examDetailsData);
           if (examDetailsData.message && examDetailsData.admissionAdminFirstStatus === 'On-going') {
-            setError('Exam fee details are not yet available. Your application is under review.');
-            setExamDetails({
-              approvedExamFeeStatus: 'Required',
-              approvedExamFeeAmount: null,
-            });
+            setError('Exam details are not yet available. Your application is under review.');
             setAdmissionExamDetailsStatus('Incomplete');
+            setApprovedExamFeeStatus('Required');
+            setApprovedExamInterviewResult('Pending');
             setExamInterviewResultStatus('Incomplete');
           } else {
-            setExamDetails({
-              approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'Required',
-              approvedExamFeeAmount: examDetailsData.approvedExamFeeAmount,
-            });
             setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+            setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+            setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
             setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
           }
           setAdmissionAdminFirstStatus(
@@ -154,41 +149,23 @@ function ScopeExamFeePayment() {
             'On-going'
           );
         } catch (err) {
+          console.error('Failed to fetch exam details:', err.message);
           if (err.message.includes('404')) {
-            setError('Exam fee details not found. Your application may not have fee details assigned yet.');
+            setError('Exam details not found. Your application may not have exam details assigned yet.');
             setAdmissionExamDetailsStatus('Incomplete');
-            setExamInterviewResultStatus('Incomplete');
           } else if (err.message.includes('NetworkError')) {
             setError('Network error. Please check your internet connection and try again.');
-            setExamInterviewResultStatus('Incomplete');
           } else {
-            setError('Failed to load exam fee details. Please try again later or contact support.');
-            setExamInterviewResultStatus('Incomplete');
+            setError('Failed to load exam details. Please try again later or contact support.');
           }
-        }
-
-        if (applicantData.registrationStatus !== 'Complete') {
-          navigate('/scope-registration-6');
-          return;
-        }
-
-        if (admissionData?.admissionRequirementsStatus !== 'Complete') {
-          navigate('/scope-admission-requirements');
-          return;
-        }
-
-        // Check for redirect from PayMongo
-        const query = new URLSearchParams(location.search);
-        const email = query.get('email') || userEmail;
-        const checkoutId = localStorage.getItem('checkoutId');
-        if (checkoutId && email) {
-          verifyPayment(email);
-        } else {
-          localStorage.removeItem('checkoutId');
+          setApprovedExamFeeStatus('Required');
+          setApprovedExamInterviewResult('Pending');
+          setExamInterviewResultStatus('Incomplete');
         }
 
         setLoading(false);
       } catch (err) {
+        console.error('Fetch data error:', err.message);
         setError('Failed to load user data. Please check your connection and try again.');
         setLoading(false);
       }
@@ -197,7 +174,33 @@ function ScopeExamFeePayment() {
     fetchData();
     const refreshInterval = setInterval(fetchData, 2 * 60 * 1000);
     return () => clearInterval(refreshInterval);
-  }, [navigate, location]);
+  }, [navigate]);
+
+  // Separate useEffect for navigation checks
+  useEffect(() => {
+    if (loading) return; // Wait until loading is complete
+    console.log('Navigation check - approvedExamFeeStatus:', approvedExamFeeStatus);
+    console.log('Navigation check - registrationStatus:', registrationStatus);
+    console.log('Navigation check - admissionRequirementsStatus:', admissionRequirementsStatus);
+
+    if (registrationStatus !== 'Complete') {
+      console.log('Redirecting to /scope-registration-6 due to incomplete registration');
+      navigate('/scope-registration-6');
+      return;
+    }
+
+    if (admissionRequirementsStatus !== 'Complete') {
+      console.log('Redirecting to /scope-admission-requirements due to incomplete admission requirements');
+      navigate('/scope-admission-requirements');
+      return;
+    }
+
+    if (!['Paid', 'Waived'].includes(approvedExamFeeStatus)) {
+      console.log('Redirecting to /scope-exam-fee-payment due to exam fee status:', approvedExamFeeStatus);
+      navigate('/scope-exam-fee-payment');
+      return;
+    }
+  }, [loading, registrationStatus, admissionRequirementsStatus, approvedExamFeeStatus, navigate]);
 
   useEffect(() => {
     const checkAccountStatus = async () => {
@@ -283,106 +286,50 @@ function ScopeExamFeePayment() {
   };
 
   const handleBack = () => {
-    navigate('/scope-admission-exam-details');
+    navigate('/scope-exam-fee-payment');
   };
 
-  const handleProceedToPayment = async () => {
-    if (!termsAgreed) {
-      setError('You must agree to the Terms & Conditions and Data Privacy Policy.');
-      return;
-    }
-    if (!examDetails.approvedExamFeeAmount) {
-      setError('Exam fee amount is not available.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/create-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userData.email,
-          amount: examDetails.approvedExamFeeAmount,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create payment link');
-      }
-
-      localStorage.setItem('checkoutId', data.checkoutId);
-      window.open(data.checkoutUrl, '_blank');
-      setLoading(false);
-    } catch (err) {
-      setError(`Payment initiation failed: ${err.message}`);
-      setLoading(false);
-    }
+  const handleNext = () => {
+    navigate('/scope-reservation-payment');
   };
 
-  const verifyPayment = async (email) => {
-    const checkoutId = localStorage.getItem('checkoutId');
-    if (!checkoutId || !email) {
-      setError('No payment session or email found. Please initiate payment again.');
-      setLoading(false);
-      localStorage.removeItem('checkoutId');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/verify-payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          checkoutId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to verify payment');
-      }
-
-      if (data.status === 'successful') {
-        setPaymentStatus('success');
-        setExamDetails((prev) => ({
-          ...prev,
-          approvedExamFeeStatus: 'Paid',
-        }));
-        localStorage.removeItem('checkoutId');
-      } else if (data.status === 'pending') {
-        // For pending, clear checkoutId and don't show a message
-        setPaymentStatus(null);
-        localStorage.removeItem('checkoutId');
-      } else {
-        setPaymentStatus(data.status);
-        setError(`Previous payment attempt ${data.status}. Please try again.`);
-        localStorage.removeItem('checkoutId');
-      }
-    } catch (err) {
-      setError(`Payment verification failed: ${err.message}`);
-      setPaymentStatus('failed');
-      localStorage.removeItem('checkoutId');
-    } finally {
-      setLoading(false);
+  const getStatusStyleAndMessage = () => {
+    const firstName = userData.firstName || 'Juan';
+    switch (approvedExamInterviewResult) {
+      case 'Pending':
+        return {
+          backgroundColor: '#686868',
+          textColor: '#686868',
+          message: `A Blessed day!\n\nDear ${firstName}, thank you for applying to our Senior High School (SHS) program. Your application is currently under review, and the results have not yet been released. We appreciate your patience as we carefully evaluate all submissions.\n\nWe will notify you as soon as your application status is available. If you have any questions, feel free to contact us.`,
+        };
+      case 'On Waiting List':
+        return {
+          backgroundColor: '#00245A',
+          textColor: '#00245A',
+          message: `A Blessed day!\n\nDear ${firstName}, thank you for applying to our Senior High School (SHS) program. At this time, we have received a high volume of applications, and while you meet the qualifications, available slots are currently full. You have been placed on our waiting list, and we will notify you if a spot becomes available.\n\nWe appreciate your patience and interest in our school. Should you have any questions, feel free to contact us.`,
+        };
+      case 'Rejected':
+        return {
+          backgroundColor: '#880D0C',
+          textColor: '#880D0C',
+          message: `A Blessed day!\n\nDear ${firstName}, thank you for your interest in our Senior High School (SHS) program. After careful evaluation, we regret to inform you that you did not meet the qualifications for admission. We appreciate the time and effort you invested in your application and encourage you to explore other opportunities that align with your goals.\n\nWishing you all the best in your future endeavors.`,
+        };
+      case 'Approved':
+        return {
+          backgroundColor: '#34A853',
+          textColor: '#34A853',
+          message: `Congratulations, ${firstName}. You have qualified for the ${userData.academicStrand || 'STEM'} strand. Secure your spot in our Senior High School (SHS) program as soon as possible, as we have limited slots for Grade 11 students.`,
+        };
+      default:
+        return {
+          backgroundColor: '#686868',
+          textColor: '#686868',
+          message: `A Blessed day!\n\nDear ${firstName}, thank you for applying to our Senior High School (SHS) program. Your application is currently under review, and the results have not yet been released. We appreciate your patience as we carefully evaluate all submissions.\n\nWe will notify you as soon as your application status is available. If you have any questions, feel free to contact us.`,
+        };
     }
   };
 
-  const handlePrintPermit = () => {
-    alert('Print permit functionality is not yet implemented.');
-  };
+  const statusStyle = getStatusStyleAndMessage();
 
   return (
     <div className="scope-registration-container">
@@ -406,7 +353,7 @@ function ScopeExamFeePayment() {
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
           admissionExamDetailsStatus={admissionExamDetailsStatus}
-          approvedExamFeeStatus={examDetails.approvedExamFeeStatus}
+          approvedExamFeeStatus={approvedExamFeeStatus}
           examInterviewResultStatus={examInterviewResultStatus}
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
@@ -420,112 +367,50 @@ function ScopeExamFeePayment() {
             <div className="scope-error">{error}</div>
           ) : (
             <div className="registration-content">
-              <h2 className="registration-title">Exam Fee Payment</h2>
+              <h2 className="registration-title">Exam & Interview Result</h2>
               <div className="registration-divider"></div>
               <div className="registration-container">
                 <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '1.5rem' }}>
-                  To secure your exam and interview, a non-refundable exam fee must be paid.
+                  After the entrance examination and interview, we are going to update the status and notify within 5 working days regarding the applicant’s status.
                 </div>
                 <div className="personal-info-section">
-                  <div className="personal-info-header">
-                    <FontAwesomeIcon icon={faMoneyBillWave} style={{ color: '#212121' }} />
-                    <h3>Payment Summary</h3>
+                  <div className="personal-info-header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FontAwesomeIcon icon={faCheckCircle} style={{ color: '#212121' }} />
+                    <h3>Status</h3>
+                    <span style={{ color: statusStyle.textColor, fontWeight: 'bold', fontSize: '16px' }}>
+                      {approvedExamInterviewResult}
+                    </span>
                   </div>
                   <div className="personal-info-divider"></div>
-                  <div className="reminder-box">
-                    <p>
-                      <strong>Reminders:</strong> A non-refundable exam fee is required to secure a slot. Student is not required to pay if the exam fee status is waived or already paid. Payments can be made at the Accounting Office or through our online payment.
-                    </p>
+                  <div
+                    className="reminder-box"
+                    style={{
+                      backgroundColor: statusStyle.backgroundColor,
+                      color: '#FFFFFF',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <p style={{ whiteSpace: 'pre-line' }}>{statusStyle.message}</p>
                   </div>
-                  {paymentStatus === 'success' && (
-                    <div style={{ marginTop: '1rem', fontSize: '14px', color: '#34A853' }}>
-                      <p>Payment successful! You can now print your permit.</p>
-                    </div>
-                  )}
-                  {(paymentStatus === 'failed' || paymentStatus === 'expired' || paymentStatus === 'cancelled') && (
-                    <div style={{ marginTop: '1rem', fontSize: '14px', color: '#D32F2F' }}>
-                      <p>Previous payment attempt {paymentStatus}. Please try again.</p>
-                    </div>
-                  )}
-                  {['Waived', 'Paid'].includes(examDetails.approvedExamFeeStatus) ? (
-                    <div style={{ marginTop: '1rem', fontSize: '14px', color: '#333' }}>
-                      <p>
-                        Since your Exam Fee Status is {examDetails.approvedExamFeeStatus}, you can print your permit. Best of luck!
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div
-                        style={{
-                          backgroundColor: '#D2D2D2',
-                          borderRadius: '8px',
-                          padding: '1rem',
-                          marginTop: '1rem',
-                          fontSize: '14px',
-                          color: '#333',
-                        }}
-                      >
-                        <strong>Exam Fee Amount:</strong>{' '}
-                        {examDetails.approvedExamFeeAmount != null
-                          ? `₱${examDetails.approvedExamFeeAmount.toFixed(2)}`
-                          : 'N/A'}
-                      </div>
-                      <div style={{ marginTop: '1.5rem', fontSize: '14px' }}>
-                        <p>
-                          You will be redirected to a secure payment page in a new tab where you can choose your preferred payment method (e.g., Credit Card, GCash).
-                        </p>
-                        <p>
-                          Before proceeding to payment, please read the full{' '}
-                          <a
-                            href="/terms-of-use"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: '#00245A', textDecoration: 'underline' }}
-                          >
-                            Terms & Conditions
-                          </a>{' '}
-                          and{' '}
-                          <a
-                            href="/privacy"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: '#00245A', textDecoration: 'underline' }}
-                          >
-                            Data Privacy Policy
-                          </a>:
-                        </p>
-                        <div className="checkbox-container" style={{ marginTop: '0.5rem' }}>
-                          <input
-                            type="checkbox"
-                            checked={termsAgreed}
-                            onChange={() => setTermsAgreed(!termsAgreed)}
-                          />
-                          <label>
-                            I agree to the Terms & Conditions and Data Privacy Policy.
-                          </label>
-                        </div>
-                      </div>
-                    </>
-                  )}
                   <div className="form-buttons" style={{ marginTop: '1.5rem' }}>
                     <button type="button" className="back-button" onClick={handleBack}>
                       <FontAwesomeIcon icon={faArrowLeft} />
                       Back
                     </button>
-                    {examDetails.approvedExamFeeStatus === 'Required' && (
-                      <button
-                        type="button"
-                        className="next-button"
-                        onClick={handleProceedToPayment}
-                        disabled={loading || !termsAgreed}
-                        style={{
-                          backgroundColor: loading || !termsAgreed ? '#d3d3d3' : '#34A853',
-                          cursor: loading || !termsAgreed ? 'not-allowed' : 'pointer',
-                        }}
-                      >
-                        Proceed to Payment
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="next-button"
+                      onClick={handleNext}
+                      disabled={approvedExamInterviewResult !== 'Approved'}
+                      style={{
+                        backgroundColor: approvedExamInterviewResult === 'Approved' ? '#34A853' : '#d3d3d3',
+                        cursor: approvedExamInterviewResult === 'Approved' ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      Next
+                    </button>
                   </div>
                 </div>
               </div>
@@ -556,4 +441,4 @@ function ScopeExamFeePayment() {
   );
 }
 
-export default ScopeExamFeePayment;
+export default ScopeExamInterviewResult;

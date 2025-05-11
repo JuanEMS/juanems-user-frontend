@@ -24,7 +24,8 @@ function ScopeDashboard() {
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
-  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required'); // New state
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -175,7 +176,8 @@ function ScopeDashboard() {
           );
           console.log('Exam details data:', examDetailsData);
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
-          setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required'); // Set approvedExamFeeStatus
+          setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+          setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete'); // Set new state
           setAdmissionAdminFirstStatus(
             examDetailsData.admissionAdminFirstStatus ||
               admissionData?.admissionAdminFirstStatus ||
@@ -186,6 +188,7 @@ function ScopeDashboard() {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
           setApprovedExamFeeStatus('Required');
+          setExamInterviewResultStatus('Incomplete');
         }
 
         const announcementsResponse = await axiosWithRetry({
@@ -283,7 +286,7 @@ function ScopeDashboard() {
         }
       );
 
-if (response.ok) {
+      if (response.ok) {
         localStorage.clear();
         navigate('/scope-login');
       } else {
@@ -335,7 +338,8 @@ if (response.ok) {
             admissionRequirementsStatus={admissionRequirementsStatus}
             admissionAdminFirstStatus={admissionAdminFirstStatus}
             admissionExamDetailsStatus={admissionExamDetailsStatus}
-            approvedExamFeeStatus={approvedExamFeeStatus} // Pass new prop
+            approvedExamFeeStatus={approvedExamFeeStatus}
+            examInterviewResultStatus={examInterviewResultStatus} // Pass new prop
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />
@@ -399,7 +403,8 @@ if (response.ok) {
               registrationStatus={registrationStatus}
               admissionRequirementsStatus={admissionRequirementsStatus}
               admissionExamDetailsStatus={admissionExamDetailsStatus}
-              approvedExamFeeStatus={approvedExamFeeStatus} // Pass new prop
+              approvedExamFeeStatus={approvedExamFeeStatus}
+              examInterviewResultStatus={examInterviewResultStatus} // Pass new prop
             />
           </main>
         </div>

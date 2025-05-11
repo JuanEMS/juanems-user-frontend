@@ -25,7 +25,8 @@ function SideNavigation({
   admissionRequirementsStatus,
   admissionAdminFirstStatus,
   admissionExamDetailsStatus,
-  approvedExamFeeStatus, // Add new prop
+  approvedExamFeeStatus,
+  examInterviewResultStatus, // Add new prop
   onNavigate, 
   isOpen 
 }) {
@@ -139,16 +140,16 @@ function SideNavigation({
       enabled: admissionExamDetailsStatus === 'Complete',
     },
     {
-      path: '/scope-exam-interview-result', // Update path
+      path: '/scope-exam-interview-result',
       icon: faChartBar,
       label: '6. Exam & Interview Result',
-      enabled: approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived', // Enable based on status
+      enabled: approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived',
     },
     {
-      path: '#',
+      path: '/scope-reservation-payment',
       icon: faMoneyBillWave,
       label: '7. Reservation Payment',
-      enabled: false,
+      enabled: examInterviewResultStatus === 'Complete',
     },
     {
       path: '#',

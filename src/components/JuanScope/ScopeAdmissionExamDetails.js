@@ -14,6 +14,7 @@ function ScopeAdmissionExamDetails() {
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
   const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
   const [examDetails, setExamDetails] = useState({
     approvedExamDate: null,
     approvedExamTime: '',
@@ -130,33 +131,35 @@ function ScopeAdmissionExamDetails() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-       try {
-  const examDetailsData = await fetchWithRetry(
-    `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
-  );
-  if (examDetailsData.message && examDetailsData.admissionAdminFirstStatus === 'On-going') {
-    setError('Exam details are not yet available. Your application is under review.');
-    setExamDetails({
-      approvedExamDate: null,
-      approvedExamTime: '',
-      approvedExamFeeStatus: 'Required',
-      approvedExamFeeAmount: null,
-      approvedExamRoom: '',
-    });
-    setAdmissionExamDetailsStatus('Incomplete');
-    setApprovedExamFeeStatus('Required');
-  } else {
-    setExamDetails({
-      approvedExamDate: examDetailsData.approvedExamDate || null,
-      approvedExamTime: examDetailsData.approvedExamTime || 'N/A',
-      approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'N/A',
-      approvedExamFeeAmount: examDetailsData.approvedExamFeeAmount || null,
-      approvedExamRoom: examDetailsData.approvedExamRoom || 'N/A',
-    });
-    setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
-    setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
-  }
-  setAdmissionRejectMessage(examDetailsData.admissionRejectMessage || '');
+        try {
+          const examDetailsData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
+          );
+          if (examDetailsData.message && examDetailsData.admissionAdminFirstStatus === 'On-going') {
+            setError('Exam details are not yet available. Your application is under review.');
+            setExamDetails({
+              approvedExamDate: null,
+              approvedExamTime: '',
+              approvedExamFeeStatus: 'Required',
+              approvedExamFeeAmount: null,
+              approvedExamRoom: '',
+            });
+            setAdmissionExamDetailsStatus('Incomplete');
+            setApprovedExamFeeStatus('Required');
+            setExamInterviewResultStatus('Incomplete');
+          } else {
+            setExamDetails({
+              approvedExamDate: examDetailsData.approvedExamDate || null,
+              approvedExamTime: examDetailsData.approvedExamTime || 'N/A',
+              approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'N/A',
+              approvedExamFeeAmount: examDetailsData.approvedExamFeeAmount || null,
+              approvedExamRoom: examDetailsData.approvedExamRoom || 'N/A',
+            });
+            setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+            setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+            setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
+          }
+          setAdmissionRejectMessage(examDetailsData.admissionRejectMessage || '');
 
           // Fetch payment details if exam fee status is 'Paid'
           if (examDetailsData.approvedExamFeeStatus === 'Paid') {
@@ -358,19 +361,19 @@ function ScopeAdmissionExamDetails() {
       const applicantName = `${userData.firstName || ''} ${userData.middleName ? userData.middleName + ' ' : ''}${userData.lastName || ''}`.trim() || 'N/A';
       const approvedDate = examDetails.approvedExamDate
         ? new Date(examDetails.approvedExamDate).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
         : 'N/A';
       const formattedTime = examDetails.approvedExamTime && examDetails.approvedExamTime !== 'N/A'
         ? (() => {
-            const [hours, minutes] = examDetails.approvedExamTime.split(':');
-            const hour = parseInt(hours, 10);
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const formattedHour = hour % 12 || 12;
-            return `${formattedHour}:${minutes} ${ampm}`;
-          })()
+          const [hours, minutes] = examDetails.approvedExamTime.split(':');
+          const hour = parseInt(hours, 10);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const formattedHour = hour % 12 || 12;
+          return `${formattedHour}:${minutes} ${ampm}`;
+        })()
         : 'N/A';
       const examFeeAmount = examDetails.approvedExamFeeAmount != null
         ? `₱${examDetails.approvedExamFeeAmount.toFixed(2)}`
@@ -464,16 +467,17 @@ function ScopeAdmissionExamDetails() {
         </div>
       </header>
       <div className="scope-registration-content">
-<SideNavigation
-  userData={userData}
-  registrationStatus={registrationStatus}
-  admissionRequirementsStatus={admissionRequirementsStatus}
-  admissionAdminFirstStatus={admissionAdminFirstStatus}
-  admissionExamDetailsStatus={admissionExamDetailsStatus}
-  approvedExamFeeStatus={approvedExamFeeStatus}
-  onNavigate={closeSidebar}
-  isOpen={sidebarOpen}
-/>
+        <SideNavigation
+          userData={userData}
+          registrationStatus={registrationStatus}
+          admissionRequirementsStatus={admissionRequirementsStatus}
+          admissionAdminFirstStatus={admissionAdminFirstStatus}
+          admissionExamDetailsStatus={admissionExamDetailsStatus}
+          approvedExamFeeStatus={approvedExamFeeStatus}
+          examInterviewResultStatus={examInterviewResultStatus}
+          onNavigate={closeSidebar}
+          isOpen={sidebarOpen}
+        />
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">
@@ -514,10 +518,10 @@ function ScopeAdmissionExamDetails() {
                         <span>
                           {examDetails.approvedExamDate
                             ? new Date(examDetails.approvedExamDate).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })
                             : 'N/A'}
                         </span>
                         <strong>Time:</strong>
