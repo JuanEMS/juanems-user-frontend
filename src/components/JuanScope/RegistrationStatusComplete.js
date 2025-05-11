@@ -13,7 +13,8 @@ function RegistrationStatusComplete() {
   const [registrationStatus, setRegistrationStatus] = useState('Complete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
-  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
+  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -133,16 +134,18 @@ function RegistrationStatusComplete() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-        // Fetch exam details for admissionExamDetailsStatus
+        // Fetch exam details for admissionExamDetailsStatus and approvedExamFeeStatus
         let examDetailsData;
         try {
           examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
           );
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+          setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
         } catch (err) {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
+          setApprovedExamFeeStatus('Required');
         }
 
         setFormData({
@@ -322,7 +325,8 @@ function RegistrationStatusComplete() {
           registrationStatus={registrationStatus}
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
-          admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
+          admissionExamDetailsStatus={admissionExamDetailsStatus}
+          approvedExamFeeStatus={approvedExamFeeStatus}
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

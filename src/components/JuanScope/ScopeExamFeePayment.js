@@ -400,6 +400,7 @@ function ScopeExamFeePayment() {
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
           admissionExamDetailsStatus={admissionExamDetailsStatus}
+          approvedExamFeeStatus={examDetails.approvedExamFeeStatus} // Add this prop
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

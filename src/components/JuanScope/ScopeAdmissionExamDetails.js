@@ -13,6 +13,7 @@ function ScopeAdmissionExamDetails() {
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
   const [examDetails, setExamDetails] = useState({
     approvedExamDate: null,
     approvedExamTime: '',
@@ -129,31 +130,33 @@ function ScopeAdmissionExamDetails() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-        try {
-          const examDetailsData = await fetchWithRetry(
-            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
-          );
-          if (examDetailsData.message && examDetailsData.admissionAdminFirstStatus === 'On-going') {
-            setError('Exam details are not yet available. Your application is under review.');
-            setExamDetails({
-              approvedExamDate: null,
-              approvedExamTime: '',
-              approvedExamFeeStatus: 'Required',
-              approvedExamFeeAmount: null,
-              approvedExamRoom: '',
-            });
-            setAdmissionExamDetailsStatus('Incomplete');
-          } else {
-            setExamDetails({
-              approvedExamDate: examDetailsData.approvedExamDate || null,
-              approvedExamTime: examDetailsData.approvedExamTime || 'N/A',
-              approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'N/A',
-              approvedExamFeeAmount: examDetailsData.approvedExamFeeAmount || null,
-              approvedExamRoom: examDetailsData.approvedExamRoom || 'N/A',
-            });
-            setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
-          }
-          setAdmissionRejectMessage(examDetailsData.admissionRejectMessage || '');
+       try {
+  const examDetailsData = await fetchWithRetry(
+    `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
+  );
+  if (examDetailsData.message && examDetailsData.admissionAdminFirstStatus === 'On-going') {
+    setError('Exam details are not yet available. Your application is under review.');
+    setExamDetails({
+      approvedExamDate: null,
+      approvedExamTime: '',
+      approvedExamFeeStatus: 'Required',
+      approvedExamFeeAmount: null,
+      approvedExamRoom: '',
+    });
+    setAdmissionExamDetailsStatus('Incomplete');
+    setApprovedExamFeeStatus('Required');
+  } else {
+    setExamDetails({
+      approvedExamDate: examDetailsData.approvedExamDate || null,
+      approvedExamTime: examDetailsData.approvedExamTime || 'N/A',
+      approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'N/A',
+      approvedExamFeeAmount: examDetailsData.approvedExamFeeAmount || null,
+      approvedExamRoom: examDetailsData.approvedExamRoom || 'N/A',
+    });
+    setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+    setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+  }
+  setAdmissionRejectMessage(examDetailsData.admissionRejectMessage || '');
 
           // Fetch payment details if exam fee status is 'Paid'
           if (examDetailsData.approvedExamFeeStatus === 'Paid') {
@@ -461,15 +464,16 @@ function ScopeAdmissionExamDetails() {
         </div>
       </header>
       <div className="scope-registration-content">
-        <SideNavigation
-          userData={userData}
-          registrationStatus={registrationStatus}
-          admissionRequirementsStatus={admissionRequirementsStatus}
-          admissionAdminFirstStatus={admissionAdminFirstStatus}
-          admissionExamDetailsStatus={admissionExamDetailsStatus}
-          onNavigate={closeSidebar}
-          isOpen={sidebarOpen}
-        />
+<SideNavigation
+  userData={userData}
+  registrationStatus={registrationStatus}
+  admissionRequirementsStatus={admissionRequirementsStatus}
+  admissionAdminFirstStatus={admissionAdminFirstStatus}
+  admissionExamDetailsStatus={admissionExamDetailsStatus}
+  approvedExamFeeStatus={approvedExamFeeStatus}
+  onNavigate={closeSidebar}
+  isOpen={sidebarOpen}
+/>
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">

@@ -24,7 +24,8 @@ function SideNavigation({
   registrationStatus, 
   admissionRequirementsStatus,
   admissionAdminFirstStatus,
-  admissionExamDetailsStatus, // Ensure this prop is received
+  admissionExamDetailsStatus,
+  approvedExamFeeStatus, // Add new prop
   onNavigate, 
   isOpen 
 }) {
@@ -135,13 +136,13 @@ function SideNavigation({
       path: '/scope-exam-fee-payment',
       icon: faMoneyBillWave,
       label: '5. Exam Fee Payment',
-      enabled: admissionExamDetailsStatus === 'Complete', // Enable when admissionExamDetailsStatus is Complete
+      enabled: admissionExamDetailsStatus === 'Complete',
     },
     {
-      path: '#',
+      path: '/scope-exam-interview-result', // Update path
       icon: faChartBar,
       label: '6. Exam & Interview Result',
-      enabled: false,
+      enabled: approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived', // Enable based on status
     },
     {
       path: '#',

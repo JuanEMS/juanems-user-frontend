@@ -24,6 +24,7 @@ function ScopeDashboard() {
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -174,6 +175,7 @@ function ScopeDashboard() {
           );
           console.log('Exam details data:', examDetailsData);
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+          setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required'); // Set approvedExamFeeStatus
           setAdmissionAdminFirstStatus(
             examDetailsData.admissionAdminFirstStatus ||
               admissionData?.admissionAdminFirstStatus ||
@@ -183,6 +185,7 @@ function ScopeDashboard() {
         } catch (err) {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
+          setApprovedExamFeeStatus('Required');
         }
 
         const announcementsResponse = await axiosWithRetry({
@@ -255,7 +258,7 @@ function ScopeDashboard() {
     checkAccountStatus();
     return () => clearInterval(interval);
   }, [navigate]);
-  
+
   const handleLogout = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -280,7 +283,7 @@ function ScopeDashboard() {
         }
       );
 
-      if (response.ok) {
+if (response.ok) {
         localStorage.clear();
         navigate('/scope-login');
       } else {
@@ -332,6 +335,7 @@ function ScopeDashboard() {
             admissionRequirementsStatus={admissionRequirementsStatus}
             admissionAdminFirstStatus={admissionAdminFirstStatus}
             admissionExamDetailsStatus={admissionExamDetailsStatus}
+            approvedExamFeeStatus={approvedExamFeeStatus} // Pass new prop
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />
@@ -395,6 +399,7 @@ function ScopeDashboard() {
               registrationStatus={registrationStatus}
               admissionRequirementsStatus={admissionRequirementsStatus}
               admissionExamDetailsStatus={admissionExamDetailsStatus}
+              approvedExamFeeStatus={approvedExamFeeStatus} // Pass new prop
             />
           </main>
         </div>

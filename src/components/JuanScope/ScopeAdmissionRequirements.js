@@ -16,6 +16,7 @@ function ScopeAdmissionRequirements() {
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -30,6 +31,7 @@ function ScopeAdmissionRequirements() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const {
     DocumentVerification,
@@ -192,16 +194,17 @@ function ScopeAdmissionRequirements() {
           admissionData = null;
         }
 
-        // Fetch exam details for admissionExamDetailsStatus
         let examDetailsData;
         try {
           examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
           );
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+          setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
         } catch (err) {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
+          setApprovedExamFeeStatus('Required');
         }
 
         if (admissionData && Array.isArray(admissionData.admissionRequirements) && admissionData.admissionRequirements.length > 0) {
@@ -781,6 +784,7 @@ function ScopeAdmissionRequirements() {
           admissionRequirementsStatus={admissionRequirementsStatus}
           admissionAdminFirstStatus={admissionAdminFirstStatus}
           admissionExamDetailsStatus={admissionExamDetailsStatus}
+          approvedExamFeeStatus={approvedExamFeeStatus}
           onNavigate={closeSidebar}
           isOpen={sidebarOpen}
         />

@@ -7,6 +7,7 @@ const EnrollmentProcess = ({
   registrationStatus,
   admissionRequirementsStatus,
   admissionExamDetailsStatus,
+  approvedExamFeeStatus, // New prop
 }) => {
   const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
   const [error, setError] = useState(null);
@@ -73,7 +74,7 @@ const EnrollmentProcess = ({
       title: 'Step 5 of 14: Exam Fee Payment',
       content:
         'Proceed to admission by paying your exam fee through our payment options.\n\nChoose your preferred payment method: Credit Card/Debit Card or E-Wallet',
-      note: 'This step will be marked as complete once payment is confirmed.',
+      note: 'This step will be marked as complete once payment is confirmed or waived.',
     },
     {
       title: 'Step 6 of 14: Exam and Interview Result',
@@ -159,7 +160,8 @@ const EnrollmentProcess = ({
                 {(index === 0 && registrationStatus === 'Complete') ||
                 (index === 1 && examInterviewStatus === 'Complete') ||
                 (index === 2 && admissionRequirementsStatus === 'Complete') ||
-                (index === 3 && admissionExamDetailsStatus === 'Complete') ? (
+                (index === 3 && admissionExamDetailsStatus === 'Complete') ||
+                (index === 4 && (approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived')) ? (
                   <FontAwesomeIcon icon={faCheckCircle} className="step-complete-icon" />
                 ) : null}
               </div>
