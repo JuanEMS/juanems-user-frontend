@@ -50,7 +50,7 @@ import Admin_CreateSubject from './components/UserAdmin/CreateSubject';
 import Admin_AccessControl from './components/UserAdmin/AccessControl';
 import Admin_VerifyEmail from './components/UserAdmin/VerifyEmail';
 import Admin_ForgotPassword from './components/UserAdmin/ForgotPassword';
-
+import Admin_QueueHistory from './components/UserAdmin/QueueHistory';
 
 function App() {
   return (
@@ -97,6 +97,7 @@ function App() {
           <Route path="/admin/manage-payments" element={<Admin_ManagePaymentsPage />} />
           <Route path="/admin/manage-program" element={<Admin_ManageProgramPage />} />
           <Route path="/admin/manage-queue" element={<Admin_ManageQueuePage />} />
+          <Route path="/admin/queue-history" element={<Admin_QueueHistory />} />
           <Route path="/admin/manage-schedule" element={<Admin_ManageSchedulePage />} />
           <Route path="/admin/manage-student-schedule" element={<Admin_ManageStudentSchedule />} />
           <Route path="/admin/manage-faculty-schedule" element={<Admin_ManageFacultySchedule />} />
