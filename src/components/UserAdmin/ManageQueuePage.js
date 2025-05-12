@@ -4,6 +4,7 @@ import utc from 'dayjs/plugin/utc';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
+import { Modal, Input } from 'antd';
 
 import '../../css/UserAdmin/Global.css';
 import '../../css/UserAdmin/ManageQueuePage.css';
@@ -23,6 +24,40 @@ const AddIcon = () => (
   </svg>
 );
 
+const RemoveQueueModal = ({ 
+  isOpen, 
+  onClose, 
+  onRemove, 
+  queueToRemove 
+}) => {
+  const [removalReason, setRemovalReason] = useState('');
+
+  const handleRemove = () => {
+    onRemove(queueToRemove, removalReason);
+    onClose();
+  };
+
+  return (
+    <Modal
+      title="Remove Queue"
+      open={isOpen}
+      onOk={handleRemove}
+      onCancel={onClose}
+      okText="Remove"
+      okButtonProps={{ danger: true }}
+    >
+      <p>Are you sure you want to remove queue number {queueToRemove}?</p>
+      <Input 
+        placeholder="Reason for removal (optional)"
+        value={removalReason}
+        onChange={(e) => setRemovalReason(e.target.value)}
+        style={{ marginTop: '16px' }}
+      />
+    </Modal>
+  );
+};
+
+
 const ManageQueuePage = () => {
   const navigate = useNavigate();
   const handleBack = () => navigate('/admin/dashboard');
@@ -37,6 +72,8 @@ const ManageQueuePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasAcceptedQueue, setHasAcceptedQueue] = useState(false);
+ const [removeModalOpen, setRemoveModalOpen] = useState(false);
+  const [queueToRemove, setQueueToRemove] = useState(null);
 
   // Sample skipped queue items
   const [skippedItems, setSkippedItems] = useState([
@@ -260,6 +297,50 @@ const ManageQueuePage = () => {
     }
   };
 
+   const handleRemoveQueue = async (queueNumber, removalReason) => {
+    if (!currentlyServing) {
+      message.warning('No queue is currently being served');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/removeQueue/${currentlyServing}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          removedBy: localStorage.getItem('userID') || 'admin',
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error removing queue: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Reset serving state
+      setCurrentlyServing(null);
+      setServingStartTime(null);
+      setServingTime(0);
+
+      // Refresh the queues data
+      fetchPendingQueues(department);
+
+      message.success(`Queue number ${currentlyServing} has been removed`);
+
+      // If there's a next queue, you might want to handle it
+      if (data.remainingQueueCount > 0 && data.nextQueue) {
+        message.info(`Next queue is ${data.nextQueue.queueNumber}`);
+      }
+    } catch (err) {
+      console.error('Failed to remove queue:', err);
+      setError(err.message);
+      message.error('Failed to remove queue');
+    }
+  };
+
   // Handle finishing the current queue
   const handleFinishQueue = async () => {
     if (!currentlyServing) {
@@ -369,8 +450,15 @@ const ManageQueuePage = () => {
               <div className='queue-button' onClick={handleHistory}>History</div>
               <div
                 className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
+                onClick={() => {
+                  if (currentlyServing) {
+                    setRemoveModalOpen(true);
+                  }
+                }}
                 style={{ opacity: currentlyServing ? 1 : 0.5, cursor: currentlyServing ? 'pointer' : 'not-allowed' }}
-              >Remove</div>
+              >
+                Remove
+              </div>
               <div
                 className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
                 style={{ opacity: currentlyServing ? 1 : 0.5, cursor: currentlyServing ? 'pointer' : 'not-allowed' }}
@@ -451,6 +539,13 @@ const ManageQueuePage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddQueue={handleAddQueue}
+      />
+
+        <RemoveQueueModal
+        isOpen={removeModalOpen}
+        onClose={() => setRemoveModalOpen(false)}
+        onRemove={handleRemoveQueue}
+        queueToRemove={currentlyServing}
       />
 
       <Footer />
