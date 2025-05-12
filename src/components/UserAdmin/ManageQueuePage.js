@@ -24,11 +24,11 @@ const AddIcon = () => (
   </svg>
 );
 
-const RemoveQueueModal = ({ 
-  isOpen, 
-  onClose, 
-  onRemove, 
-  queueToRemove 
+const RemoveQueueModal = ({
+  isOpen,
+  onClose,
+  onRemove,
+  queueToRemove
 }) => {
   const [removalReason, setRemovalReason] = useState('');
 
@@ -47,7 +47,7 @@ const RemoveQueueModal = ({
       okButtonProps={{ danger: true }}
     >
       <p>Are you sure you want to remove queue number {queueToRemove}?</p>
-      <Input 
+      <Input
         placeholder="Reason for removal (optional)"
         value={removalReason}
         onChange={(e) => setRemovalReason(e.target.value)}
@@ -72,14 +72,8 @@ const ManageQueuePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasAcceptedQueue, setHasAcceptedQueue] = useState(false);
- const [removeModalOpen, setRemoveModalOpen] = useState(false);
-  const [queueToRemove, setQueueToRemove] = useState(null);
-
-  // Sample skipped queue items
-  const [skippedItems, setSkippedItems] = useState([
-    { id: 101, number: 'XYZ', time: '9:45 AM', name: 'Michael Taylor', mobileNumber: '90876543' },
-    { id: 102, number: 'ABC', time: '9:50 AM', name: 'Sophie Wong', mobileNumber: '81239876' }
-  ]);
+  const [removeModalOpen, setRemoveModalOpen] = useState(false);
+  const [skippedItems, setSkippedItems] = useState([]);
 
   // Function to check if there is an accepted queue
   const checkAcceptedQueue = (items, serving) => {
@@ -102,6 +96,7 @@ const ManageQueuePage = () => {
     // Fetch pending queues for this department
     fetchPendingQueues(userDepartment);
     fetchCurrentlyServing(userDepartment);
+    fetchSkippedQueues(userDepartment);
   }, [navigate]);
 
   // Timer for serving time
@@ -167,6 +162,34 @@ const ManageQueuePage = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch skipped queues
+  const fetchSkippedQueues = async (dept) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/skippedQueues?department=${dept}`);
+
+      if (!response.ok) {
+        throw new Error(`Error fetching skipped queues: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Transform the data into the format expected by the component
+      const formattedSkippedItems = data.map(item => ({
+        id: item._id,
+        number: item.queueNumber,
+        time: dayjs(item.skippedAt).format('h:mm A'),
+        skippedBy: item.skippedBy,
+        guestUserId: item.guestUserId,
+        status: 'skipped'
+      }));
+
+      setSkippedItems(formattedSkippedItems);
+    } catch (err) {
+      console.error('Failed to fetch skipped queues:', err);
+      message.error('Failed to fetch skipped queues');
     }
   };
 
@@ -297,7 +320,7 @@ const ManageQueuePage = () => {
     }
   };
 
-   const handleRemoveQueue = async (queueNumber, removalReason) => {
+  const handleRemoveQueue = async (queueNumber, removalReason) => {
     if (!currentlyServing) {
       message.warning('No queue is currently being served');
       return;
@@ -338,6 +361,73 @@ const ManageQueuePage = () => {
       console.error('Failed to remove queue:', err);
       setError(err.message);
       message.error('Failed to remove queue');
+    }
+  };
+
+  const handleSkipQueue = async () => {
+    if (!currentlyServing) {
+      message.warning('No queue is currently being served');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/skipQueue/${currentlyServing}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          skippedBy: localStorage.getItem('userID') || 'admin'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error skipping queue: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Reset serving state
+      setCurrentlyServing(null);
+      setServingStartTime(null);
+      setServingTime(0);
+
+      // Refresh the queues data
+      fetchPendingQueues(department);
+      fetchSkippedQueues(department);
+
+      message.success(`Queue number ${currentlyServing} has been skipped`);
+    } catch (err) {
+      console.error('Failed to skip queue:', err);
+      setError(err.message);
+      message.error('Failed to skip queue');
+    }
+  };
+
+  // Add a method to reintegrate a skipped queue
+  const handleReintegrateQueue = async (queueNumber) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/reintegrateQueue/${queueNumber}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error reintegrating queue: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Refresh the queues data
+      fetchPendingQueues(department);
+      fetchSkippedQueues(department);
+
+      message.success(`Queue number ${queueNumber} has been reintegrated`);
+    } catch (err) {
+      console.error('Failed to reintegrate queue:', err);
+      message.error('Failed to reintegrate queue');
     }
   };
 
@@ -465,8 +555,11 @@ const ManageQueuePage = () => {
               >Transfer</div>
               <div
                 className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
+                onClick={currentlyServing ? handleSkipQueue : undefined}
                 style={{ opacity: currentlyServing ? 1 : 0.5, cursor: currentlyServing ? 'pointer' : 'not-allowed' }}
-              >Skip</div>
+              >
+                Skip
+              </div>
               <div
                 className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
                 style={{ opacity: currentlyServing ? 1 : 0.5, cursor: currentlyServing ? 'pointer' : 'not-allowed' }}
@@ -504,11 +597,14 @@ const ManageQueuePage = () => {
                   {sortedQueueItems.map(item => (
                     <div
                       key={item.id}
-                      className={`queue-item ${item.number === currentlyServing ? 'current' : ''}`}
+                      className={`queue-item ${activeTab === 'main' && item.number === currentlyServing ? 'current' : ''
+                        }`}
                     >
                       <div className="queue-number">{item.number}</div>
                       <div className="queue-time">{item.time}</div>
-                      {item.number !== currentlyServing && (
+
+                      {/* Conditionally render accept button only for main (pending) queue */}
+                      {activeTab === 'main' && item.number !== currentlyServing && (
                         <button
                           className={`accept-button ${hasAcceptedQueue ? 'disabled' : ''}`}
                           onClick={() => !hasAcceptedQueue && handleAcceptQueue(item.number)}
@@ -520,6 +616,19 @@ const ManageQueuePage = () => {
                         >
                           Accept
                         </button>
+                      )}
+
+                      {/* Render skipped queue details for skipped tab */}
+                      {activeTab === 'skipped' && (
+                        <>
+                          <div className="queue-skipped-by">Skipped by: {item.skippedBy}</div>
+                          <button
+                            className="reintegrate-button"
+                            onClick={() => handleReintegrateQueue(item.number)}
+                          >
+                            Reintegrate
+                          </button>
+                        </>
                       )}
                     </div>
                   ))}
@@ -541,7 +650,7 @@ const ManageQueuePage = () => {
         onAddQueue={handleAddQueue}
       />
 
-        <RemoveQueueModal
+      <RemoveQueueModal
         isOpen={removeModalOpen}
         onClose={() => setRemoveModalOpen(false)}
         onRemove={handleRemoveQueue}
