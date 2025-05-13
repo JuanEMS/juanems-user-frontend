@@ -57,6 +57,62 @@ const RemoveQueueModal = ({
   );
 };
 
+const TransferQueueModal = ({
+  isOpen,
+  onClose,
+  onTransfer,
+  queueToTransfer
+}) => {
+  const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [transferReason, setTransferReason] = useState('');
+  const departments = ['Admissions', 'Registrar', 'Accounting'];
+
+  const handleTransfer = () => {
+    if (!selectedDepartment) {
+      message.error('Please select a department');
+      return;
+    }
+    onTransfer(queueToTransfer, selectedDepartment, transferReason);
+    onClose();
+  };
+
+  return (
+    <Modal
+      title="Transfer Queue"
+      open={isOpen}
+      onOk={handleTransfer}
+      onCancel={onClose}
+      okText="Transfer"
+      okButtonProps={{ disabled: !selectedDepartment }}
+    >
+      <p>Select the department to transfer queue number {queueToTransfer}:</p>
+      <div style={{ marginBottom: '16px', marginTop: '16px' }}>
+        {departments.map((dept) => (
+          <div key={dept} style={{ marginBottom: '8px' }}>
+            <label>
+              <input
+                type="radio"
+                name="department"
+                value={dept}
+                checked={selectedDepartment === dept}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                style={{ marginRight: '8px' }}
+              />
+              {dept}
+            </label>
+          </div>
+        ))}
+      </div>
+      <Input
+        placeholder="Reason for transfer (optional)"
+        value={transferReason}
+        onChange={(e) => setTransferReason(e.target.value)}
+        style={{ marginTop: '16px' }}
+      />
+    </Modal>
+  );
+};
+
 
 const ManageQueuePage = () => {
   const navigate = useNavigate();
@@ -73,6 +129,7 @@ const ManageQueuePage = () => {
   const [error, setError] = useState(null);
   const [hasAcceptedQueue, setHasAcceptedQueue] = useState(false);
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [skippedItems, setSkippedItems] = useState([]);
 
   // Function to check if there is an accepted queue
@@ -476,6 +533,47 @@ const ManageQueuePage = () => {
     return 0;
   });
 
+  const handleTransferQueue = async (queueNumber, targetDepartment, transferReason) => {
+    if (!currentlyServing) {
+      message.warning('No queue is currently being served');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/transferQueue/${currentlyServing}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetDepartment,
+          transferredBy: localStorage.getItem('userID') || 'admin',
+          transferReason,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error transferring queue: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Reset serving state
+      setCurrentlyServing(null);
+      setServingStartTime(null);
+      setServingTime(0);
+
+      // Refresh the queues data
+      fetchPendingQueues(department);
+
+      message.success(`Queue number ${queueNumber} has been transferred to ${targetDepartment}`);
+    } catch (err) {
+      console.error('Failed to transfer queue:', err);
+      setError(err.message);
+      message.error('Failed to transfer queue');
+    }
+  };
+
   if (loading) {
     return (
       <div className="main main-container">
@@ -551,19 +649,21 @@ const ManageQueuePage = () => {
               </div>
               <div
                 className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
+                onClick={() => {
+                  if (currentlyServing) {
+                    setTransferModalOpen(true);
+                  }
+                }}
                 style={{ opacity: currentlyServing ? 1 : 0.5, cursor: currentlyServing ? 'pointer' : 'not-allowed' }}
-              >Transfer</div>
+              >
+                Transfer
+              </div>
               <div
                 className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
                 onClick={currentlyServing ? handleSkipQueue : undefined}
                 style={{ opacity: currentlyServing ? 1 : 0.5, cursor: currentlyServing ? 'pointer' : 'not-allowed' }}
               >
                 Skip
-              </div>
-              <div
-                className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
-                style={{ opacity: currentlyServing ? 1 : 0.5, cursor: currentlyServing ? 'pointer' : 'not-allowed' }}
-              >Notify
               </div>
               <div
                 className={`queue-button ${!currentlyServing ? 'disabled' : ''}`}
@@ -655,6 +755,13 @@ const ManageQueuePage = () => {
         onClose={() => setRemoveModalOpen(false)}
         onRemove={handleRemoveQueue}
         queueToRemove={currentlyServing}
+      />
+
+      <TransferQueueModal
+        isOpen={transferModalOpen}
+        onClose={() => setTransferModalOpen(false)}
+        onTransfer={handleTransferQueue}
+        queueToTransfer={currentlyServing}
       />
 
       <Footer />
