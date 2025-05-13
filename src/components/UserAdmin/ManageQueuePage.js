@@ -131,6 +131,11 @@ const ManageQueuePage = () => {
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [skippedItems, setSkippedItems] = useState([]);
+  const [queueStats, setQueueStats] = useState({
+    totalServed: 0,
+    avgServingTime: '0.0',
+    avgWaitingTime: '0.0'
+  });
 
   // Function to check if there is an accepted queue
   const checkAcceptedQueue = (items, serving) => {
@@ -154,7 +159,10 @@ const ManageQueuePage = () => {
     fetchPendingQueues(userDepartment);
     fetchCurrentlyServing(userDepartment);
     fetchSkippedQueues(userDepartment);
+    fetchQueueStatistics(userDepartment);
   }, [navigate]);
+
+
 
   // Timer for serving time
   useEffect(() => {
@@ -190,6 +198,26 @@ const ManageQueuePage = () => {
       seconds.toString().padStart(2, '0')
     ].join(':');
   };
+
+  const fetchQueueStatistics = async (dept) => {
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/statistics?department=${dept}`);
+
+    if (!response.ok) {
+      throw new Error(`Error fetching statistics: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    setQueueStats({
+      totalServed: data.totalServed || 0,
+      avgServingTime: data.avgServingTime || '0.0',
+      avgWaitingTime: data.avgWaitingTime || '0.0'
+    });
+  } catch (err) {
+    console.error('Failed to fetch queue statistics:', err);
+    message.error('Failed to fetch queue statistics');
+  }
+};
 
   // Fetch pending queues from the API
   const fetchPendingQueues = async (dept) => {
@@ -286,13 +314,14 @@ const ManageQueuePage = () => {
   };
 
   // Refreshes data every 30 seconds
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (department) {
-        fetchPendingQueues(department);
-        fetchCurrentlyServing(department);
-      }
-    }, 30000);
+ useEffect(() => {
+  const intervalId = setInterval(() => {
+    if (department) {
+      fetchPendingQueues(department);
+      fetchCurrentlyServing(department);
+      fetchQueueStatistics(department);
+    }
+  }, 30000);
 
     return () => clearInterval(intervalId);
   }, [department]);
@@ -490,38 +519,50 @@ const ManageQueuePage = () => {
 
   // Handle finishing the current queue
   const handleFinishQueue = async () => {
-    if (!currentlyServing) {
-      message.warning('No queue is currently being served');
-      return;
-    }
+  if (!currentlyServing) {
+    message.warning('No queue is currently being served');
+    return;
+  }
 
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/finishQueue/${currentlyServing}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error finishing queue: ${response.statusText}`);
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/finishQueue/${currentlyServing}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
       }
+    });
 
-      // Reset serving state
-      setCurrentlyServing(null);
-      setServingStartTime(null);
-      setServingTime(0);
-
-      // Refresh the queues data which will update hasAcceptedQueue through the effect
-      fetchPendingQueues(department);
-
-      message.success(`Finished serving queue number ${currentlyServing}`);
-    } catch (err) {
-      console.error('Failed to finish queue:', err);
-      setError(err.message);
-      message.error('Failed to finish queue');
+    if (!response.ok) {
+      throw new Error(`Error finishing queue: ${response.statusText}`);
     }
-  };
+    
+    const data = await response.json();
+
+    // Reset serving state
+    setCurrentlyServing(null);
+    setServingStartTime(null);
+    setServingTime(0);
+
+    // Refresh all data including stats
+    fetchPendingQueues(department);
+    fetchQueueStatistics(department);
+
+    // Update stats directly from response if available
+    if (data.stats) {
+      setQueueStats({
+        totalServed: data.stats.totalServed || 0,
+        avgServingTime: data.stats.avgServingTime || '0.0',
+        avgWaitingTime: data.stats.avgWaitingTime || '0.0'
+      });
+    }
+
+    message.success(`Finished serving queue number ${currentlyServing}`);
+  } catch (err) {
+    console.error('Failed to finish queue:', err);
+    setError(err.message);
+    message.error('Failed to finish queue');
+  }
+};
 
   // Determine which items to display based on active tab
   const displayItems = activeTab === 'main' ? queueItems : skippedItems;
@@ -623,12 +664,12 @@ const ManageQueuePage = () => {
             <div className="queue-details-container">
               <div className="queue-details-box">
                 <h2>Served Queue</h2>
-                <h2>12</h2>
+                <h2>{queueStats.totalServed}</h2>
               </div>
               <div className="vertical-divider" />
               <div className="queue-details-box">
                 <h2>Avg Serving Time</h2>
-                <h2>5.2 min</h2>
+                <h2>{queueStats.avgServingTime} min</h2>
               </div>
             </div>
           </div>
