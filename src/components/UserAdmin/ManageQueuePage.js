@@ -471,8 +471,6 @@ const ManageQueuePage = () => {
         throw new Error(`Error skipping queue: ${response.statusText}`);
       }
 
-      const data = await response.json();
-
       // Reset serving state
       setCurrentlyServing(null);
       setServingStartTime(null);
@@ -503,8 +501,6 @@ const ManageQueuePage = () => {
       if (!response.ok) {
         throw new Error(`Error reintegrating queue: ${response.statusText}`);
       }
-
-      const data = await response.json();
 
       // Refresh the queues data
       fetchPendingQueues(department);
@@ -596,8 +592,6 @@ const ManageQueuePage = () => {
       if (!response.ok) {
         throw new Error(`Error transferring queue: ${response.statusText}`);
       }
-
-      const data = await response.json();
 
       // Reset serving state
       setCurrentlyServing(null);
@@ -774,11 +768,13 @@ const ManageQueuePage = () => {
                     </div>
                   ))}
                 </div>
-                <div className='queue-add-button'>
-                  <button className="add-button" onClick={() => setIsModalOpen(true)}>
-                    <AddIcon /> Add Queue
-                  </button>
-                </div>
+                {department !== 'Administration' && department !== 'IT' && (
+                  <div className='queue-add-button'>
+                    <button className="add-button" onClick={() => setIsModalOpen(true)}>
+                      <AddIcon /> Add Queue
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
