@@ -541,6 +541,9 @@ function ScopeReservationPayment() {
               <h2 className="registration-title">Reservation Payment</h2>
               <div className="registration-divider"></div>
               <div className="registration-container">
+                <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '1.5rem' }}>
+                  To secure your enrollment, a non-refundable reservation fee can be paid. Alternatively, you may skip this step and pay the tuition amount during the tuition payment step.
+                </div>
                 <div className="reminder-box">
                   <p>
                     <strong>Reminders:</strong> A non-refundable reservation fee is required to secure a slot:

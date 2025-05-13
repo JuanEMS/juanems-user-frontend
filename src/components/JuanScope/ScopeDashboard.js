@@ -35,6 +35,8 @@ function ScopeDashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
+  const [admissionApprovalStatus, setAdmissionApprovalStatus] = useState('Incomplete');
+  const [admissionApprovalAdminStatus, setAdmissionApprovalAdminStatus] = useState('Pending');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -186,7 +188,6 @@ function ScopeDashboard() {
           setPreferredExamAndInterviewApplicationStatus('Incomplete');
         }
 
-        // Fetch exam details status
         try {
           const examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
@@ -196,7 +197,9 @@ function ScopeDashboard() {
           setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
           setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
           setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
-          setReservationFeePaymentStepStatus(examDetailsData.reservationFeePaymentStepStatus || 'Incomplete'); // Set new state
+          setReservationFeePaymentStepStatus(examDetailsData.reservationFeePaymentStepStatus || 'Incomplete');
+          setAdmissionApprovalStatus(examDetailsData.admissionApprovalStatus || 'Incomplete'); // New
+          setAdmissionApprovalAdminStatus(examDetailsData.admissionApprovalAdminStatus || 'Pending'); // New
           setAdmissionAdminFirstStatus(
             examDetailsData.admissionAdminFirstStatus ||
             admissionData?.admissionAdminFirstStatus ||
@@ -209,7 +212,9 @@ function ScopeDashboard() {
           setApprovedExamFeeStatus('Required');
           setApprovedExamInterviewResult('Pending');
           setExamInterviewResultStatus('Incomplete');
-          setReservationFeePaymentStepStatus('Incomplete'); // Default to Incomplete
+          setReservationFeePaymentStepStatus('Incomplete');
+          setAdmissionApprovalStatus('Incomplete'); // New
+          setAdmissionApprovalAdminStatus('Pending'); // New
         }
 
         const announcementsResponse = await axiosWithRetry({
@@ -423,6 +428,7 @@ function ScopeDashboard() {
               approvedExamInterviewResult={approvedExamInterviewResult}
               examInterviewResultStatus={examInterviewResultStatus}
               reservationFeePaymentStepStatus={reservationFeePaymentStepStatus} // Pass new prop
+              admissionApprovalStatus={admissionApprovalStatus}
             />
           </main>
         </div>

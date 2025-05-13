@@ -12,7 +12,7 @@ function ScopeExamInterviewResult() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
-  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete'); // Added
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
   const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
   const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending');
@@ -98,6 +98,7 @@ function ScopeExamInterviewResult() {
         localStorage.setItem('dob', applicantData.dob ? new Date(applicantData.dob).toISOString().split('T')[0] : '');
         localStorage.setItem('nationality', applicantData.nationality || '');
         localStorage.setItem('academicStrand', applicantData.academicStrand || '');
+        localStorage.setItem('approvedAcademicStrand', applicantData.approvedAcademicStrand || ''); // Added
 
         setUserData({
           email: userEmail,
@@ -109,6 +110,7 @@ function ScopeExamInterviewResult() {
           studentID: applicantData.studentID || userDataResponse.studentID || 'N/A',
           applicantID: applicantData.applicantID || userDataResponse.applicantID || 'N/A',
           academicStrand: applicantData.academicStrand || 'STEM',
+          approvedAcademicStrand: applicantData.approvedAcademicStrand || applicantData.academicStrand || 'STEM', // Added
         });
 
         setRegistrationStatus(applicantData.registrationStatus || 'Incomplete');
@@ -311,6 +313,7 @@ function ScopeExamInterviewResult() {
 
   const getStatusStyleAndMessage = () => {
     const firstName = userData.firstName || 'Juan';
+    const strand = userData.approvedAcademicStrand || userData.academicStrand || 'STEM'; // Modified
     switch (approvedExamInterviewResult) {
       case 'Pending':
         return {
@@ -334,7 +337,7 @@ function ScopeExamInterviewResult() {
         return {
           backgroundColor: '#34A853',
           textColor: '#34A853',
-          message: `Congratulations, ${firstName}. You have qualified for the ${userData.academicStrand || 'STEM'} strand. Secure your spot in our Senior High School (SHS) program as soon as possible, as we have limited slots for Grade 11 students.`,
+          message: `Congratulations, ${firstName}. You have qualified for the ${strand} strand. Secure your spot in our Senior High School (SHS) program as soon as possible, as we have limited slots for Grade 11 students.`,
         };
       default:
         return {
@@ -363,11 +366,19 @@ function ScopeExamInterviewResult() {
         </div>
       </header>
       <div className="scope-registration-content">
-          <SideNavigation
-            userData={userData}
-            onNavigate={closeSidebar}
-            isOpen={sidebarOpen}
-          />
+        <SideNavigation
+          userData={userData}
+          onNavigate={closeSidebar}
+          isOpen={sidebarOpen}
+          registrationStatus={registrationStatus}
+          admissionRequirementsStatus={admissionRequirementsStatus}
+          admissionAdminFirstStatus={admissionAdminFirstStatus}
+          preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus}
+          admissionExamDetailsStatus={admissionExamDetailsStatus}
+          approvedExamFeeStatus={approvedExamFeeStatus}
+          approvedExamInterviewResult={approvedExamInterviewResult}
+          examInterviewResultStatus={examInterviewResultStatus}
+        />
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">

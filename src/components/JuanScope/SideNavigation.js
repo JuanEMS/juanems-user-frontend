@@ -34,6 +34,7 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
     approvedExamInterviewResult: 'Pending',
     examInterviewResultStatus: 'Incomplete',
     reservationFeePaymentStepStatus: 'Incomplete',
+    admissionApprovalStatus: 'Incomplete', // New
   });
 
   const formatEmail = (email) => {
@@ -158,7 +159,8 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
             approvedExamInterviewResult: 'Pending',
             examInterviewResultStatus: 'Incomplete',
             reservationFeePaymentStepStatus: 'Incomplete',
-            admissionAdminFirstStatus: 'On-going'
+            admissionAdminFirstStatus: 'On-going',
+            admissionApprovalStatus: 'Incomplete', // New
           };
         }
 
@@ -172,6 +174,7 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
           approvedExamInterviewResult: examDetailsData.approvedExamInterviewResult || 'Pending',
           examInterviewResultStatus: examDetailsData.examInterviewResultStatus || 'Incomplete',
           reservationFeePaymentStepStatus: examDetailsData.reservationFeePaymentStepStatus || 'Incomplete',
+          admissionApprovalStatus: examDetailsData.admissionApprovalStatus || 'Incomplete', // New
         });
 
         setLoading(false);
@@ -183,7 +186,6 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
     };
 
     fetchStatuses();
-    // Optional: Refresh statuses periodically (e.g., every 5 minutes)
     const refreshInterval = setInterval(fetchStatuses, 5 * 60 * 1000);
     return () => clearInterval(refreshInterval);
   }, [navigate]);
@@ -238,10 +240,10 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
       enabled: statuses.reservationFeePaymentStepStatus === 'Complete',
     },
     {
-      path: '#',
+      path: '/scope-enrollment-requirements',
       icon: faClipboardList,
       label: '9. Enrollment Requirements',
-      enabled: false,
+      enabled: statuses.admissionApprovalStatus === 'Complete',
     },
     {
       path: '#',

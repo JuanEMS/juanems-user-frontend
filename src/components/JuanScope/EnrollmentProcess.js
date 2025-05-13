@@ -12,6 +12,7 @@ const EnrollmentProcess = ({
   approvedExamInterviewResult,
   examInterviewResultStatus,
   reservationFeePaymentStepStatus, // New prop
+  admissionApprovalStatus, // New prop
 }) => {
   const steps = [
     {
@@ -122,7 +123,7 @@ const EnrollmentProcess = ({
         <div className="steps-container">
           <div className="steps-line"></div>
 
-          {steps.map((step, index) => (
+{steps.map((step, index) => (
             <div key={index} className="step-item">
               <div className="step-number-circle">
                 <span>{index + 1}</span>
@@ -132,7 +133,8 @@ const EnrollmentProcess = ({
                 (index === 3 && admissionExamDetailsStatus === 'Complete') ||
                 (index === 4 && (approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived')) ||
                 (index === 5 && approvedExamInterviewResult === 'Approved') ||
-                (index === 6 && reservationFeePaymentStepStatus === 'Complete') ? ( // Updated condition for Step 7
+                (index === 6 && reservationFeePaymentStepStatus === 'Complete') ||
+                (index === 7 && admissionApprovalStatus === 'Complete') ? ( // New condition for Step 8
                   <FontAwesomeIcon icon={faCheckCircle} className="step-complete-icon" />
                 ) : null}
               </div>
