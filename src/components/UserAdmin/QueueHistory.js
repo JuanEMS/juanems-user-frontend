@@ -25,29 +25,52 @@ const { RangePicker } = DatePicker;
 
 const QueueHistory = () => {
   const navigate = useNavigate();
-
+  const [department, setDepartment] = useState('');
   const [dataSource, setDataSource] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [tableFilters, setTableFilters] = useState({});
   const [sorter, setSorter] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/admin');
+      return;
+    }
+
+    const userRole = localStorage.getItem('role') || 'ROLE';
+    const userDepartment = userRole.replace(/\s*\([^)]*\)\s*/g, '');
+    setDepartment(userDepartment);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (department) {
+      fetchArchivedQueueHistory();
+    }
+  }, [department]);
 
   const fetchArchivedQueueHistory = async (search = '') => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/queue/archived`);
+      // Only include department parameter if it's not IT or Administration
+      const url = department && ['IT', 'Administration'].includes(department)
+        ? `${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/queue/archived`
+        : `${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/queue/archived?department=${encodeURIComponent(department)}`;
+
+      const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
-      console.log("API response:", result); // Log the response to check what you're receiving
+      console.log("API response:", result);
 
       // Apply search filter if provided
-      const filteredData = result.data.filter(item => {
+      const searchFiltered = result.data.filter(item => {
         const archivedAtFormatted = dayjs(item.archivedAt).isValid()
           ? dayjs(item.archivedAt).format('MMM D, YYYY h:mm A').toLowerCase()
           : '';
 
-        // Only apply search filter if there is actually a search term
         if (search === '') return true;
 
         return (
@@ -59,25 +82,86 @@ const QueueHistory = () => {
         );
       });
 
-      const formattedData = filteredData.map((item, index) => ({
+      const formattedData = searchFiltered.map((item, index) => ({
         ...item,
         key: item._id || index,
-        // Handle missing totalTimeMinutes with a dash
         totalTimeMinutes: item.totalTimeMinutes || '—'
       }));
 
       setDataSource(formattedData);
+      applyFiltersToData(formattedData);
     } catch (error) {
       console.error('Error fetching archived queue history:', error);
       setDataSource([]);
+      setFilteredData([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Function to apply local filters to data
+  const applyFiltersToData = (data) => {
+    if (!data || data.length === 0) {
+      setFilteredData([]);
+      return;
+    }
+
+    let filtered = [...data];
+
+    if (tableFilters.department?.length) {
+      filtered = filtered.filter(record => 
+        tableFilters.department.includes(record.department)
+      );
+    }
+
+    if (tableFilters.status?.length) {
+      filtered = filtered.filter(record => 
+        tableFilters.status.includes(record.status)
+      );
+    }
+
+    if (tableFilters.exitReason?.length) {
+      filtered = filtered.filter(record => 
+        tableFilters.exitReason.includes(record.exitReason)
+      );
+    }
+
+    // Apply date range filter
+    if (tableFilters.archivedAt?.length) {
+      const [start, end] = tableFilters.archivedAt[0].split('|');
+      filtered = filtered.filter(record => 
+        isInDateRange(tableFilters.archivedAt[0], record.archivedAt)
+      );
+    }
+
+    // Apply sorting if needed
+    if (sorter.columnKey && sorter.order) {
+      filtered = [...filtered].sort((a, b) => {
+        const key = sorter.columnKey;
+        
+        if (key === 'archivedAt') {
+          return sorter.order === 'ascend' 
+            ? dayjs(a[key]).unix() - dayjs(b[key]).unix()
+            : dayjs(b[key]).unix() - dayjs(a[key]).unix();
+        } else if (key === 'totalTimeMinutes') {
+          return sorter.order === 'ascend'
+            ? a[key] - b[key]
+            : b[key] - a[key];
+        } else {
+          return sorter.order === 'ascend'
+            ? a[key].localeCompare(b[key])
+            : b[key].localeCompare(a[key]);
+        }
+      });
+    }
+
+    setFilteredData(filtered);
+  };
+
+  // Apply filter changes when tableFilters or sorter changes
   useEffect(() => {
-    fetchArchivedQueueHistory(); // Initial fetch on page load
-  }, []);
+    applyFiltersToData(dataSource);
+  }, [tableFilters, sorter]);
 
   const handleSearch = (value) => {
     setSearchTerm(value);
@@ -91,15 +175,15 @@ const QueueHistory = () => {
     fetchArchivedQueueHistory('');
   };
 
-const handleExport = () => {
+  const handleExport = () => {
     const currentDate = new Date().toISOString().split('T')[0];
     const fileName = `archived-queue-history-report-${currentDate}.pdf`;
-    
+
     // Get values from localStorage without parsing as JSON
     const fullName = localStorage.getItem('fullName');
     const role = localStorage.getItem('role');
     const userID = localStorage.getItem('userID');
-    
+
     // Include user data in the request URL as query parameters
     fetch(`${process.env.REACT_APP_API_URL}/api/admin/export/queue-history?userID=${encodeURIComponent(userID)}&fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(role)}`, {
       method: 'GET',
@@ -113,7 +197,7 @@ const handleExport = () => {
         document.body.appendChild(link);
         link.click();
         link.remove();
-        
+
         // Log the export action in system logs
         const logData = {
           userID: userID,
@@ -122,7 +206,7 @@ const handleExport = () => {
           action: 'Export',
           detail: `Exported archived queue history report: ${fileName}`
         };
-        
+
         fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
           method: 'POST',
           headers: {
@@ -145,6 +229,13 @@ const handleExport = () => {
   };
 
   const handleBack = () => navigate('/admin/manage-queue');
+
+  // Helper to check if record is in range
+  const isInDateRange = (value, dateField) => {
+    const [start, end] = value.split('|');
+    const recordDate = dayjs(dateField);
+    return recordDate.isValid() && recordDate.isBetween(dayjs(start), dayjs(end).endOf('day'), null, '[]');
+  };
 
   // Table column definitions
   const columns = [
@@ -258,13 +349,6 @@ const handleExport = () => {
     </div>
   );
 
-  // Helper to check if record is in range
-  const isInDateRange = (value, dateField) => {
-    const [start, end] = value.split('|');
-    const recordDate = dayjs(dateField);
-    return recordDate.isValid() && recordDate.isBetween(dayjs(start), dayjs(end).endOf('day'), null, '[]');
-  };
-
   return (
     <div className="main main-container">
       <Header />
@@ -294,11 +378,11 @@ const handleExport = () => {
           </div>
         </div>
 
-        {/* System Logs Table */}
+        {/* Queue History Table */}
         <Table
-          style={{ width: '100%', flex: 1 }} // You can use any shade you want
+          style={{ width: '100%', flex: 1 }}
           columns={columns}
-          dataSource={Array.isArray(dataSource) ? dataSource : []}
+          dataSource={filteredData.length > 0 ? filteredData : dataSource}
           loading={loading}
           scroll={{ x: true }}
           pagination
@@ -311,7 +395,7 @@ const handleExport = () => {
       </div>
       <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default QueueHistory
+export default QueueHistory;

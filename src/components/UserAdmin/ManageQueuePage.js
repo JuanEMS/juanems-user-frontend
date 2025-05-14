@@ -199,25 +199,53 @@ const ManageQueuePage = () => {
     ].join(':');
   };
 
-  const fetchQueueStatistics = async (dept) => {
-  try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/statistics?department=${dept}`);
+  const fetchQueueStatistics = async (dept, selectedDate = null) => {
+    try {
+      // Helper function to get date in YYYY-MM-DD format using local timezone
+      function getLocalDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Add 1 since months are 0-indexed
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
 
-    if (!response.ok) {
-      throw new Error(`Error fetching statistics: ${response.statusText}`);
+      // Get today's date in YYYY-MM-DD format using local timezone
+      const queryDate = selectedDate || getLocalDate();
+      console.log(`Fetching queue statistics for department: ${dept}, date: ${queryDate}`);
+
+      // Build the URL with query parameters
+      const url = new URL(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/statistics`);
+      url.searchParams.append('department', dept);
+      url.searchParams.append('date', queryDate); // Always send a date to ensure timezone consistency
+
+      const response = await fetch(url.toString());
+
+      if (!response.ok) {
+        throw new Error(`Error fetching statistics: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Queue statistics received:', data);
+
+      // Update state with the enhanced data from our improved endpoint
+      setQueueStats({
+        totalServed: data.totalServed || 0,
+        avgServingTime: data.avgServingTime || '0.0',
+        avgWaitingTime: data.avgWaitingTime || '0.0',
+        // New fields available from our improved endpoint
+        weeklyTotalServed: data.weeklyTotalServed || 0,
+        weeklyAvgServingTime: data.weeklyAvgServingTime || '0.0',
+        pendingCount: data.pendingCount || 0,
+        currentlyServing: data.currentlyServing || null,
+        date: data.date // The date used for the query
+      });
+
+    } catch (err) {
+      console.error('Failed to fetch queue statistics:', err);
+      message.error('Failed to fetch queue statistics');
     }
-
-    const data = await response.json();
-    setQueueStats({
-      totalServed: data.totalServed || 0,
-      avgServingTime: data.avgServingTime || '0.0',
-      avgWaitingTime: data.avgWaitingTime || '0.0'
-    });
-  } catch (err) {
-    console.error('Failed to fetch queue statistics:', err);
-    message.error('Failed to fetch queue statistics');
-  }
-};
+  };
 
   // Fetch pending queues from the API
   const fetchPendingQueues = async (dept) => {
@@ -314,14 +342,14 @@ const ManageQueuePage = () => {
   };
 
   // Refreshes data every 30 seconds
- useEffect(() => {
-  const intervalId = setInterval(() => {
-    if (department) {
-      fetchPendingQueues(department);
-      fetchCurrentlyServing(department);
-      fetchQueueStatistics(department);
-    }
-  }, 30000);
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (department) {
+        fetchPendingQueues(department);
+        fetchCurrentlyServing(department);
+        fetchQueueStatistics(department);
+      }
+    }, 30000);
 
     return () => clearInterval(intervalId);
   }, [department]);
@@ -515,50 +543,50 @@ const ManageQueuePage = () => {
 
   // Handle finishing the current queue
   const handleFinishQueue = async () => {
-  if (!currentlyServing) {
-    message.warning('No queue is currently being served');
-    return;
-  }
-
-  try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/finishQueue/${currentlyServing}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error finishing queue: ${response.statusText}`);
+    if (!currentlyServing) {
+      message.warning('No queue is currently being served');
+      return;
     }
-    
-    const data = await response.json();
 
-    // Reset serving state
-    setCurrentlyServing(null);
-    setServingStartTime(null);
-    setServingTime(0);
-
-    // Refresh all data including stats
-    fetchPendingQueues(department);
-    fetchQueueStatistics(department);
-
-    // Update stats directly from response if available
-    if (data.stats) {
-      setQueueStats({
-        totalServed: data.stats.totalServed || 0,
-        avgServingTime: data.stats.avgServingTime || '0.0',
-        avgWaitingTime: data.stats.avgWaitingTime || '0.0'
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/finishQueue/${currentlyServing}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
-    }
 
-    message.success(`Finished serving queue number ${currentlyServing}`);
-  } catch (err) {
-    console.error('Failed to finish queue:', err);
-    setError(err.message);
-    message.error('Failed to finish queue');
-  }
-};
+      if (!response.ok) {
+        throw new Error(`Error finishing queue: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Reset serving state
+      setCurrentlyServing(null);
+      setServingStartTime(null);
+      setServingTime(0);
+
+      // Refresh all data including stats
+      fetchPendingQueues(department);
+      fetchQueueStatistics(department);
+
+      // Update stats directly from response if available
+      if (data.stats) {
+        setQueueStats({
+          totalServed: data.stats.totalServed || 0,
+          avgServingTime: data.stats.avgServingTime || '0.0',
+          avgWaitingTime: data.stats.avgWaitingTime || '0.0'
+        });
+      }
+
+      message.success(`Finished serving queue number ${currentlyServing}`);
+    } catch (err) {
+      console.error('Failed to finish queue:', err);
+      setError(err.message);
+      message.error('Failed to finish queue');
+    }
+  };
 
   // Determine which items to display based on active tab
   const displayItems = activeTab === 'main' ? queueItems : skippedItems;

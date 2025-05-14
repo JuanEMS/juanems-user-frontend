@@ -57,15 +57,14 @@ const NoticeBoard = () => {
           responseBody = responseText;
         }
 
-        // Store debug info for troubleshooting
-        setDebugInfo({
-          status: response.status,
-          statusText: response.statusText,
-          contentType: response.headers.get("content-type"),
-          responseBody: responseBody
-        });
-
+        // Only store debug info if there's an actual error
         if (!response.ok) {
+          setDebugInfo({
+            status: response.status,
+            statusText: response.statusText,
+            contentType: response.headers.get("content-type"),
+            responseBody: responseBody
+          });
           throw new Error(`Server returned ${response.status}: ${response.statusText}`);
         }
 
@@ -84,14 +83,6 @@ const NoticeBoard = () => {
               const isActive = announcement.status === "Active" &&
                 startDate <= now &&
                 endDate >= now;
-
-              // Enhanced debugging for each announcement
-              // console.log(`Announcement: ${announcement.subject}`);
-              // console.log(`  - Audience: ${announcement.audience}`);
-              // console.log(`  - Status: ${announcement.status}`);
-              // console.log(`  - Date range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
-              // console.log(`  - Is active date range: ${isActive}`);
-              // console.log(`  - Is accessible audience: ${accessibleAudiences.includes(announcement.audience)}`);
 
               // Check if user has access to this announcement based on audience
               const hasAccess = accessibleAudiences.includes(announcement.audience);
@@ -140,7 +131,6 @@ const NoticeBoard = () => {
   // Function to determine which audiences a role has access to
   const getRoleAccessMap = (role) => {
     // Map role to accessible audience types
-    // This mapping is based on your provided role access definition
     switch (role) {
       case 'Student':
         return ['Students', 'All Users'];
@@ -174,9 +164,9 @@ const NoticeBoard = () => {
     );
   };
 
-  // Show debug panel if there's an error
+  // Show debug panel only if there's an error and it's not simply "no announcements"
   const renderDebugPanel = () => {
-    if (!debugInfo && !error) return null;
+    if (!debugInfo) return null;
 
     return (
       <div className="debug-panel" style={{
@@ -218,6 +208,7 @@ const NoticeBoard = () => {
     return <div className="noticeboard"><p>Loading notices...</p></div>;
   }
 
+  // Only show debug info for actual errors, not for "no announcements" case
   if (error) {
     return (
       <div className="noticeboard">
@@ -227,11 +218,44 @@ const NoticeBoard = () => {
     );
   }
 
+  // Clean "no announcements" display with proper notice board styling
   if (notices.length === 0) {
     return (
       <div className="noticeboard">
-        <p>No announcements available at this time.</p>
-        {renderDebugPanel()}
+        <div className="notification-count">0</div>
+
+        <div className="noticeboard-header">
+          <p className="subheading">Notice Board</p>
+          <div className="arrows">
+            <div className="arrow-btn disabled">
+              <MdOutlineKeyboardArrowLeft style={{ opacity: 0.5 }} />
+            </div>
+            <div className="arrow-btn disabled">
+              <MdOutlineKeyboardArrowRight style={{ opacity: 0.5 }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        <div className="notice-item">
+          <div className="notice-badge">
+            NOTICE
+          </div>
+
+          <h3 className="notice-title">No Announcements</h3>
+          <p className="notice-message">There are no current announcements for your department at this time.</p>
+
+          <div className="postedby">
+            <div className="postedby-pfp">
+              <FaUser style={{ fontSize: '1.5rem', color: '#95a5a6' }} />
+            </div>
+            <div className="postedby-descrip">
+              <p className="postedby-name">System</p>
+              <p>{new Date().toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

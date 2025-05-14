@@ -1,21 +1,29 @@
 import { AiFillSchedule } from "react-icons/ai";
-import { FaLayerGroup, FaPen, FaStamp, FaUser } from "react-icons/fa";
+import { FaHistory, FaLayerGroup, FaPen, FaStamp, FaUser, FaUserCheck, FaUserClock } from "react-icons/fa";
 import { FaMoneyCheckDollar, FaPersonWalkingDashedLineArrowRight } from "react-icons/fa6";
 import { IoDocuments } from "react-icons/io5";
 import { MdOutlineSecurity, MdTableChart } from "react-icons/md";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../css/UserAdmin/DashboardPage.css';
 import '../../css/UserAdmin/Global.css';
 import CardModule from './CardModule';
-import NoticeBoard from './NoticeBoard';
 import Footer from './Footer';
 import Header from './Header';
+import NoticeBoard from './NoticeBoard';
 
 const Dashboard = () => {
   const [authorizedModules, setAuthorizedModules] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasQueueAccess, setHasQueueAccess] = useState(false);
+  const [department, setDepartment] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
+
+  // Move id and userRole inside the component using useState
+  const [id, setId] = useState('');
+  const [userRole, setUserRole] = useState('ROLE');
 
   const formattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -24,8 +32,59 @@ const Dashboard = () => {
     day: 'numeric',
   });
 
-  const userRole = localStorage.getItem('role') || 'ROLE';
-  const id = localStorage.getItem('id') || '';
+  // Initialize id and userRole from localStorage
+  useEffect(() => {
+    const storedId = localStorage.getItem('id') || '';
+    const storedUserRole = localStorage.getItem('role') || 'ROLE';
+    const userDepartment = storedUserRole.replace(/\s*\([^)]*\)\s*/g, '');
+
+    setId(storedId);
+    setUserRole(storedUserRole);
+    setDepartment(userDepartment);
+  }, []);
+
+  // Fetch queue statistics when department is set
+  useEffect(() => {
+    if (department && hasQueueAccess) {
+      fetchQueueStatistics();
+    }
+  }, [department, hasQueueAccess]);
+
+  // Updated Dashboard Component's fetchQueueStatistics function with timezone fix
+  const fetchQueueStatistics = async () => {
+    try {
+      // Get today's date in YYYY-MM-DD format using local timezone
+      function getLocalDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Add 1 since months are 0-indexed
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      const today = getLocalDate();
+      console.log(`Fetching queue statistics for department: ${department}, date: ${today}`);
+
+      // Fetch statistics endpoint to get completed count and pending count
+      const statsResponse = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/admin/guestQueueData/statistics?department=${department}&date=${today}`
+      );
+
+      if (!statsResponse.ok) {
+        throw new Error(`Failed to fetch queue statistics. Status: ${statsResponse.status}`);
+      }
+
+      const statsData = await statsResponse.json();
+      console.log('Queue statistics received:', statsData);
+
+      // Update state with the fetched data
+      setPendingCount(statsData.pendingCount || 0);
+      setCompletedCount(statsData.totalServed || 0);
+
+    } catch (err) {
+      console.error('Error fetching queue statistics:', err);
+    }
+  };
 
   // Module definitions with their icons and paths
   const allModules = {
@@ -64,11 +123,6 @@ const Dashboard = () => {
       path: "/admin/manage-payments",
       icon: FaMoneyCheckDollar
     },
-    "Manage Queue": {
-      description: "Control and update queuing system",
-      path: "/admin/manage-queue",
-      icon: FaPersonWalkingDashedLineArrowRight
-    },
     "Overall System Logs": {
       description: "Monitor logins, account updates, and system changes.",
       path: "/admin/manage-overall-system-logs",
@@ -85,6 +139,12 @@ const Dashboard = () => {
     const fetchModules = async () => {
       try {
         setIsLoading(true);
+
+        if (!id) {
+          setError('User ID not found. Please log in again.');
+          setIsLoading(false);
+          return;
+        }
 
         const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/accounts/${id}`);
 
@@ -104,7 +164,9 @@ const Dashboard = () => {
 
         // If user has custom access, use their custom modules
         if (hasCustomAccess) {
-          setAuthorizedModules(customModules || []);
+          const modules = customModules || [];
+          setAuthorizedModules(modules);
+          setHasQueueAccess(modules.includes("Manage Queue"));
         } else {
           // Get modules based on user role - also updated with API_BASE_URL
           const roleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/roles/${encodeURIComponent(role || userRole)}`);
@@ -120,9 +182,12 @@ const Dashboard = () => {
           const roleData = await roleResponse.json();
 
           if (roleData.data && roleData.data.modules) {
-            setAuthorizedModules(roleData.data.modules);
+            const modules = roleData.data.modules;
+            setAuthorizedModules(modules);
+            setHasQueueAccess(modules.includes("Manage Queue"));
           } else {
             setAuthorizedModules([]);
+            setHasQueueAccess(false);
           }
         }
       } catch (err) {
@@ -135,9 +200,6 @@ const Dashboard = () => {
 
     if (id) {
       fetchModules();
-    } else {
-      setError('User ID not found. Please log in again.');
-      setIsLoading(false);
     }
   }, [id, userRole]);
 
@@ -155,7 +217,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <p className='section-title'>PROCESS MANAGEMENT</p>
+        <div className="section-wrapper">
+          <p className='section-title'>PROCESS MANAGEMENT</p>
+        </div>
         <div className='content-process'>
           {isLoading ? (
             <div className="loading-indicator">Loading modules...</div>
@@ -166,7 +230,6 @@ const Dashboard = () => {
               {authorizedModules.map((moduleName) => {
                 const moduleInfo = allModules[moduleName];
 
-                // Only render modules that have configuration in allModules
                 if (moduleInfo) {
                   return (
                     <CardModule
@@ -183,6 +246,38 @@ const Dashboard = () => {
             </div>
           )}
         </div>
+
+        {hasQueueAccess && (
+          <>
+            <div className="section-wrapper">
+              <p className='section-title'>QUEUE OVERVIEW</p>
+              <div className='content-process'>
+                <div className='card-container'>
+                  <CardModule
+                    title={'Manage Queue'}
+                    description={'Control and update queuing system'}
+                    icon={FaPersonWalkingDashedLineArrowRight}
+                    path={'/admin/manage-queue'}
+                  />
+                  <CardModule
+                    title={'Waiting'}
+                    description={'Total people waiting'}
+                    icon={FaUserClock}
+                    statistics={pendingCount.toString()}
+                    path={'/admin/manage-queue'}
+                  />
+                  <CardModule
+                    title={'Completed'}
+                    description={'Total people served'}
+                    icon={FaUserCheck}
+                    statistics={completedCount.toString()}
+                    path={'/admin/queue-history'}
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
       <Footer />
     </div>

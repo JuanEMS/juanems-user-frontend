@@ -12,7 +12,6 @@ import '../../css/UserAdmin/Global.css';
 import Footer from './Footer';
 import Header from './Header';
 
-// Define module structures - copied from AccessControl.js
 const admissionsModules = {
   'Manage Applications': [
     'Manage Student Applications',
@@ -20,6 +19,7 @@ const admissionsModules = {
     'Manage Exam and Interview Results',
     'Manage Enrollment Period',
   ],
+  'Manage Queue': [],
   'Create Announcements': [],
 };
 

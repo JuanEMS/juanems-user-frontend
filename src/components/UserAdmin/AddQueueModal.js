@@ -103,6 +103,36 @@ const AddQueueModal = ({ isOpen, onClose, onAddQueue }) => {
             form.resetFields();
             setMobileNumber('');
             onClose();
+
+            // Get values from localStorage for system log
+            const fullName = localStorage.getItem('fullName');
+            const role = localStorage.getItem('role');
+            const userID = localStorage.getItem('userID');
+
+            // Prepare system log data
+            const logData = {
+                userID: userID,
+                accountName: fullName,
+                role: role,
+                action: 'Create',
+                detail: `Created queue for guest ${values.name} (${finalMobileNumber}) in ${department} department with queue number ${queueData.data.queueNumber}`,
+            };
+
+            // Record system log (fire-and-forget, don't wait for response)
+            fetch(`${process.env.REACT_APP_API_URL}/api/admin/system-logs`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(logData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('System log recorded:', data);
+                })
+                .catch(error => {
+                    console.error('Failed to record system log:', error);
+                });
         } catch (error) {
             console.error('Error joining queue:', error);
             message.error(error.message || 'Failed to join queue');
