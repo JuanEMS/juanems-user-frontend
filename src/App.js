@@ -24,7 +24,9 @@ import ScopeExamInterviewApplication from './components/JuanScope/ScopeExamInter
 import ScopeAdmissionRequirements from './components/JuanScope/ScopeAdmissionRequirements';
 import ScopeAdmissionExamDetails from './components/JuanScope/ScopeAdmissionExamDetails';
 import ScopeExamFeePayment from './components/JuanScope/ScopeExamFeePayment';
-
+import ScopeExamInterviewResult from './components/JuanScope/ScopeExamInterviewResult';
+import ScopeReservationPayment from './components/JuanScope/ScopeReservationPayment';
+import ScopeAdmissionApproval from './components/JuanScope/ScopeAdmissionApproval';
 
 import Admin_LoginPage from './components/UserAdmin/LoginPage';
 import Admin_DashboardPage from './components/UserAdmin/DashboardPage';
@@ -84,6 +86,10 @@ function App() {
           <Route path="/scope-admission-requirements" element={<SessionManager><ScopeAdmissionRequirements /></SessionManager>} />
           <Route path="/scope-admission-exam-details" element={<SessionManager><ScopeAdmissionExamDetails /></SessionManager>} />
           <Route path="/scope-exam-fee-payment" element={<SessionManager><ScopeExamFeePayment /></SessionManager>} />
+          <Route path="/scope-exam-interview-result" element={<SessionManager><ScopeExamInterviewResult /></SessionManager>} />
+          <Route path="/scope-reservation-payment" element={<SessionManager><ScopeReservationPayment /></SessionManager>} />
+          <Route path="/scope-admission-approval" element={<SessionManager><ScopeAdmissionApproval /></SessionManager>} />
+
 
           {/* Admin Routes */}
           <Route path="/admin" element={<Admin_LoginPage />} />

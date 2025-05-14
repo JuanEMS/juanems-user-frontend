@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faBell, 
-  faBars, 
-  faTimes, 
-  faBullhorn, 
+import {
+  faBell,
+  faBars,
+  faTimes,
+  faBullhorn,
   faSearch,
   faArrowUp,
-  faArrowDown
+  faArrowDown,
 } from '@fortawesome/free-solid-svg-icons';
 import SJDEFILogo from '../../images/SJDEFILogo.png';
 import '../../css/JuanScope/ScopeAnnouncement.css';
@@ -25,12 +25,16 @@ function ScopeAnnouncement() {
     firstName: localStorage.getItem('firstName') || 'User',
     middleName: localStorage.getItem('middleName') || '',
     lastName: localStorage.getItem('lastName') || '',
-    applicantID: localStorage.getItem('applicantID') || 'N/A'
+    applicantID: localStorage.getItem('applicantID') || 'N/A',
   });
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
-  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete'); // New state
+  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending'); // New state
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,7 +44,7 @@ function ScopeAnnouncement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({
     key: 'startDate',
-    direction: 'desc'
+    direction: 'desc',
   });
 
   const debouncedSearch = useCallback(
@@ -72,7 +76,7 @@ function ScopeAnnouncement() {
       setLoading(true);
       setError(null);
       const userEmail = localStorage.getItem('userEmail');
-      
+
       if (!userEmail) {
         navigate('/scope-login', { state: { error: 'No active session found. Please log in.' } });
         return;
@@ -84,7 +88,7 @@ function ScopeAnnouncement() {
           return response;
         } catch (error) {
           if (retries > 0 && error.response?.status !== 400) {
-            await new Promise(resolve => setTimeout(resolve, delay));
+            await new Promise((resolve) => setTimeout(resolve, delay));
             return axiosWithRetry(config, retries - 1, delay);
           }
           throw error;
@@ -100,7 +104,7 @@ function ScopeAnnouncement() {
           return await response.json();
         } catch (error) {
           if (retries > 0) {
-            await new Promise(resolve => setTimeout(resolve, delay));
+            await new Promise((resolve) => setTimeout(resolve, delay));
             return fetchWithRetry(url, retries - 1, delay);
           }
           throw error;
@@ -124,22 +128,46 @@ function ScopeAnnouncement() {
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
         );
         setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
-        setAdmissionAdminFirstStatus(admissionData.admissionAdminFirstStatus || registrationResponse.admissionAdminFirstStatus || 'On-going');
+        setAdmissionAdminFirstStatus(
+          admissionData.admissionAdminFirstStatus ||
+          registrationResponse.admissionAdminFirstStatus ||
+          'On-going'
+        );
       } catch (err) {
         console.error('Error fetching admission data:', err);
         setAdmissionRequirementsStatus('Incomplete');
       }
 
-      // Fetch exam details for admissionExamDetailsStatus
+      // Fetch exam and interview application status
+      let examInterviewData;
+      try {
+        examInterviewData = await fetchWithRetry(
+          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
+        );
+        setPreferredExamAndInterviewApplicationStatus(
+          examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete'
+        );
+      } catch (err) {
+        console.error('Error fetching exam interview data:', err);
+        setPreferredExamAndInterviewApplicationStatus('Incomplete');
+      }
+
+      // Fetch exam details for admissionExamDetailsStatus, approvedExamFeeStatus, approvedExamInterviewResult, and examInterviewResultStatus
       let examDetailsData;
       try {
         examDetailsData = await fetchWithRetry(
           `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
         );
         setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+        setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+        setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
+        setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
       } catch (err) {
         console.error('Error fetching exam details:', err);
         setAdmissionExamDetailsStatus('Incomplete');
+        setApprovedExamFeeStatus('Required');
+        setApprovedExamInterviewResult('Pending');
+        setExamInterviewResultStatus('Incomplete');
       }
 
       const response = await axiosWithRetry({
@@ -153,30 +181,30 @@ function ScopeAnnouncement() {
           sortOrder: sortConfig.direction,
           status: 'Active',
           audience: 'Applicants',
-          userEmail
-        }
+          userEmail,
+        },
       });
-      
+
       const validAnnouncements = response.data.announcements.filter(
-        announcement => announcement.audience === 'Applicants' && announcement.status === 'Active'
+        (announcement) => announcement.audience === 'Applicants' && announcement.status === 'Active'
       );
-      
+
       setAnnouncements(validAnnouncements);
       setTotalPages(response.data.totalPages || 1);
       setTotalItems(response.data.totalItems || response.data.announcements.length);
-      
-      const viewPromises = validAnnouncements.map(announcement =>
+
+      const viewPromises = validAnnouncements.map((announcement) =>
         axiosWithRetry({
           method: 'post',
           url: `${process.env.REACT_APP_API_URL}/api/announcements/view`,
           data: {
             userEmail,
-            announcementId: announcement._id
-          }
+            announcementId: announcement._id,
+          },
         })
       );
       await Promise.all(viewPromises);
-      
+
       setLoading(false);
     } catch (err) {
       console.error('Error fetching announcements:', err);
@@ -218,12 +246,12 @@ function ScopeAnnouncement() {
   };
 
   const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
@@ -233,18 +261,14 @@ function ScopeAnnouncement() {
       <div className="scope-dashboard-container">
         <header className="juan-register-header">
           <div className="juan-header-left">
-            <img
-              src={SJDEFILogo}
-              alt="SJDEFI Logo"
-              className="juan-logo-register"
-            />
+            <img src={SJDEFILogo} alt="SJDEFI Logo" className="juan-logo-register" />
             <div className="juan-header-text">
               <h1>JUAN SCOPE</h1>
             </div>
           </div>
           <div className="hamburger-menu">
-            <button 
-              className="hamburger-button" 
+            <button
+              className="hamburger-button"
               onClick={toggleSidebar}
               aria-label="Toggle navigation menu"
             >
@@ -253,12 +277,8 @@ function ScopeAnnouncement() {
           </div>
         </header>
         <div className="scope-dashboard-content">
-          <SideNavigation 
-            userData={userData} 
-            registrationStatus={registrationStatus}
-            admissionRequirementsStatus={admissionRequirementsStatus}
-            admissionAdminFirstStatus={admissionAdminFirstStatus}
-            admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
+          <SideNavigation
+            userData={userData}
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />
@@ -267,7 +287,7 @@ function ScopeAnnouncement() {
               <div className="announcement-content">
                 <h2 className="announcement-title">Announcements</h2>
                 <div className="announcement-divider"></div>
-                
+
                 <div className="announcement-banner">
                   Stay updated with important news, reminders, and university updates.
                 </div>
@@ -285,8 +305,8 @@ function ScopeAnnouncement() {
                         aria-label="Search announcements"
                       />
                       {searchTerm && (
-                        <button 
-                          className="search-clear-button" 
+                        <button
+                          className="search-clear-button"
                           onClick={clearSearch}
                           aria-label="Clear search"
                         >
@@ -298,29 +318,29 @@ function ScopeAnnouncement() {
 
                   <div className="sort-controls">
                     <span className="sort-label">Sort by: </span>
-                    <button 
+                    <button
                       onClick={() => requestSort('startDate')}
                       className={`sort-button ${sortConfig.key === 'startDate' ? 'active' : ''}`}
                       aria-label="Sort by date"
                     >
                       Date
                       {sortConfig.key === 'startDate' && (
-                        <FontAwesomeIcon 
-                          icon={sortConfig.direction === 'asc' ? faArrowUp : faArrowDown} 
-                          className="sort-icon" 
+                        <FontAwesomeIcon
+                          icon={sortConfig.direction === 'asc' ? faArrowUp : faArrowDown}
+                          className="sort-icon"
                         />
                       )}
                     </button>
-                    <button 
+                    <button
                       onClick={() => requestSort('subject')}
                       className={`sort-button ${sortConfig.key === 'subject' ? 'active' : ''}`}
                       aria-label="Sort by title"
                     >
                       Title
                       {sortConfig.key === 'subject' && (
-                        <FontAwesomeIcon 
-                          icon={sortConfig.direction === 'asc' ? faArrowUp : faArrowDown} 
-                          className="sort-icon" 
+                        <FontAwesomeIcon
+                          icon={sortConfig.direction === 'asc' ? faArrowUp : faArrowDown}
+                          className="sort-icon"
                         />
                       )}
                     </button>
@@ -337,10 +357,7 @@ function ScopeAnnouncement() {
                 {error && (
                   <div className="announcement-error">
                     <p>{error}</p>
-                    <button 
-                      onClick={() => fetchAnnouncements()}
-                      className="retry-button"
-                    >
+                    <button onClick={() => fetchAnnouncements()} className="retry-button">
                       Try Again
                     </button>
                   </div>
@@ -350,7 +367,7 @@ function ScopeAnnouncement() {
                   <>
                     <div className="announcement-list">
                       {announcements.length > 0 ? (
-                        announcements.map(announcement => (
+                        announcements.map((announcement) => (
                           <div className="announcement-item" key={announcement._id}>
                             <div className="announcement-header">
                               <div className="announcement-uploader">
@@ -361,9 +378,7 @@ function ScopeAnnouncement() {
                               </div>
                               <h3 className="announcement-item-title">{announcement.subject}</h3>
                             </div>
-                            <p className="announcement-item-content">
-                              {announcement.content}
-                            </p>
+                            <p className="announcement-item-content">{announcement.content}</p>
                             <div className="announcement-footer">
                               <span className="announcement-item-date">
                                 Posted: {formatDate(announcement.startDate)}
@@ -397,11 +412,14 @@ function ScopeAnnouncement() {
                         >
                           Back
                         </button>
-                        
+
                         <div className="pagination-info">
-                          <span> {currentPage} of {totalPages} </span>
+                          <span>
+                            {' '}
+                            {currentPage} of {totalPages}{' '}
+                          </span>
                         </div>
-                        
+
                         <button
                           onClick={() => {
                             const newPage = Math.min(currentPage + 1, totalPages);
@@ -421,9 +439,7 @@ function ScopeAnnouncement() {
             </div>
           </main>
         </div>
-        {sidebarOpen && (
-          <div className="sidebar-overlay active" onClick={toggleSidebar}></div>
-        )}
+        {sidebarOpen && <div className="sidebar-overlay active" onClick={toggleSidebar}></div>}
       </div>
     </SessionManager>
   );

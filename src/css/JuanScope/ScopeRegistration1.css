@@ -989,3 +989,154 @@
     font-size: 14px;
     color: #333;
 }
+
+/* Voucher Selection */
+.voucher-selection {
+    margin-top: 1rem;
+}
+
+.voucher-selection p {
+    font-size: clamp(12px, 1.5vw, 14px);
+    margin-bottom: 0.5rem;
+}
+
+/* Payment Instructions */
+.payment-instructions {
+    margin-top: 1.5rem;
+}
+
+.payment-instructions p {
+    font-size: clamp(12px, 1.5vw, 14px);
+    margin: 0.5rem 0;
+}
+
+.payment-instructions .link {
+    color: #00245A;
+    text-decoration: underline;
+}
+
+.payment-instructions .checkbox-container {
+    margin-top: 0.5rem;
+}
+
+/* Payment Status */
+.payment-status {
+    margin-top: 1rem;
+    font-size: clamp(12px, 1.5vw, 14px);
+}
+
+.payment-status p {
+    margin: 0;
+}
+
+.payment-status:not(.error) {
+    color: #34A853;
+}
+
+.payment-status.error {
+    color: #D32F2F;
+}
+
+/* Action Buttons Container */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+/* Button Styles */
+.skip-button {
+    background-color: #FFC107;
+    color: black;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 10px;
+    font-size: clamp(12px, 1.5vw, 14px);
+    cursor: pointer;
+    flex: 1;
+    max-width: 150px;
+}
+
+.skip-button:hover {
+    background-color: #e0a800;
+}
+
+.proceed-button {
+    background-color: #34A853;
+    color: white;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 10px;
+    font-size: clamp(12px, 1.5vw, 14px);
+    cursor: pointer;
+    flex: 1;
+    max-width: 150px;
+}
+
+.proceed-button:disabled {
+    background-color: #d3d3d3;
+    cursor: not-allowed;
+}
+
+.proceed-button:hover:not(:disabled) {
+    background-color: #2e8b57;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .form-buttons {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .action-buttons {
+        flex: 1;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-buttons {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+
+    .back-button,
+    .skip-button,
+    .proceed-button {
+        max-width: none;
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .skip-button,
+    .proceed-button {
+        width: 100%;
+    }
+
+    .voucher-selection p,
+    .payment-instructions p,
+    .payment-status p {
+        font-size: clamp(10px, 1.5vw, 12px);
+    }
+
+    .radio-group label {
+        font-size: clamp(10px, 1.5vw, 12px);
+    }
+
+    .fee-amount-container {
+        font-size: clamp(10px, 1.5vw, 12px);
+    }
+}

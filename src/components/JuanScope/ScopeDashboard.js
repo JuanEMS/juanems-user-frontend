@@ -23,13 +23,20 @@ function ScopeDashboard() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete');
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending');
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
+  const [reservationFeePaymentStepStatus, setReservationFeePaymentStepStatus] = useState('Incomplete'); // New state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unviewedCount, setUnviewedCount] = useState(0);
+  const [admissionApprovalStatus, setAdmissionApprovalStatus] = useState('Incomplete');
+  const [admissionApprovalAdminStatus, setAdmissionApprovalAdminStatus] = useState('Pending');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -159,30 +166,55 @@ function ScopeDashboard() {
           setAdmissionRequirementsStatus(admissionData.admissionRequirementsStatus || 'Incomplete');
           setAdmissionAdminFirstStatus(
             admissionData.admissionAdminFirstStatus ||
-              registrationData.admissionAdminFirstStatus ||
-              'On-going'
+            registrationData.admissionAdminFirstStatus ||
+            'On-going'
           );
         } catch (err) {
           console.error('Error fetching admission data:', err);
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-        // Fetch exam details status
+        // Fetch exam and interview application status
+        try {
+          const examInterviewData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
+          );
+          console.log('Exam interview data:', examInterviewData);
+          setPreferredExamAndInterviewApplicationStatus(
+            examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete'
+          );
+        } catch (err) {
+          console.error('Error fetching exam interview data:', err);
+          setPreferredExamAndInterviewApplicationStatus('Incomplete');
+        }
+
         try {
           const examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
           );
           console.log('Exam details data:', examDetailsData);
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+          setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+          setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
+          setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
+          setReservationFeePaymentStepStatus(examDetailsData.reservationFeePaymentStepStatus || 'Incomplete');
+          setAdmissionApprovalStatus(examDetailsData.admissionApprovalStatus || 'Incomplete'); // New
+          setAdmissionApprovalAdminStatus(examDetailsData.admissionApprovalAdminStatus || 'Pending'); // New
           setAdmissionAdminFirstStatus(
             examDetailsData.admissionAdminFirstStatus ||
-              admissionData?.admissionAdminFirstStatus ||
-              registrationData.admissionAdminFirstStatus ||
-              'On-going'
+            admissionData?.admissionAdminFirstStatus ||
+            registrationData.admissionAdminFirstStatus ||
+            'On-going'
           );
         } catch (err) {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
+          setApprovedExamFeeStatus('Required');
+          setApprovedExamInterviewResult('Pending');
+          setExamInterviewResultStatus('Incomplete');
+          setReservationFeePaymentStepStatus('Incomplete');
+          setAdmissionApprovalStatus('Incomplete'); // New
+          setAdmissionApprovalAdminStatus('Pending'); // New
         }
 
         const announcementsResponse = await axiosWithRetry({
@@ -255,7 +287,7 @@ function ScopeDashboard() {
     checkAccountStatus();
     return () => clearInterval(interval);
   }, [navigate]);
-  
+
   const handleLogout = async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
@@ -328,10 +360,6 @@ function ScopeDashboard() {
         <div className="scope-dashboard-content">
           <SideNavigation
             userData={userData}
-            registrationStatus={registrationStatus}
-            admissionRequirementsStatus={admissionRequirementsStatus}
-            admissionAdminFirstStatus={admissionAdminFirstStatus}
-            admissionExamDetailsStatus={admissionExamDetailsStatus}
             onNavigate={closeSidebar}
             isOpen={sidebarOpen}
           />
@@ -394,7 +422,13 @@ function ScopeDashboard() {
             <EnrollmentProcess
               registrationStatus={registrationStatus}
               admissionRequirementsStatus={admissionRequirementsStatus}
+              preferredExamAndInterviewApplicationStatus={preferredExamAndInterviewApplicationStatus}
               admissionExamDetailsStatus={admissionExamDetailsStatus}
+              approvedExamFeeStatus={approvedExamFeeStatus}
+              approvedExamInterviewResult={approvedExamInterviewResult}
+              examInterviewResultStatus={examInterviewResultStatus}
+              reservationFeePaymentStepStatus={reservationFeePaymentStepStatus} // Pass new prop
+              admissionApprovalStatus={admissionApprovalStatus}
             />
           </main>
         </div>

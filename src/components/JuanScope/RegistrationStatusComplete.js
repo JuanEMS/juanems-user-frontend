@@ -13,7 +13,11 @@ function RegistrationStatusComplete() {
   const [registrationStatus, setRegistrationStatus] = useState('Complete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
-  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete'); // New state
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete'); // New state
+  const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending'); // New state
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -75,7 +79,7 @@ function RegistrationStatusComplete() {
           (createdAt &&
             Math.abs(
               new Date(verificationData.createdAt).getTime() -
-                new Date(createdAt).getTime()
+              new Date(createdAt).getTime()
             ) > 1000)
         ) {
           handleLogout();
@@ -133,16 +137,35 @@ function RegistrationStatusComplete() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
-        // Fetch exam details for admissionExamDetailsStatus
+        // Fetch exam and interview application status
+        try {
+          const examInterviewData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
+          );
+          setPreferredExamAndInterviewApplicationStatus(
+            examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete'
+          );
+        } catch (err) {
+          console.error('Error fetching exam interview data:', err);
+          setPreferredExamAndInterviewApplicationStatus('Incomplete');
+        }
+
+        // Fetch exam details for admissionExamDetailsStatus, approvedExamFeeStatus, approvedExamInterviewResult, and examInterviewResultStatus
         let examDetailsData;
         try {
           examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
           );
           setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+          setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+          setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
+          setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
         } catch (err) {
           console.error('Error fetching exam details:', err);
           setAdmissionExamDetailsStatus('Incomplete');
+          setApprovedExamFeeStatus('Required');
+          setApprovedExamInterviewResult('Pending');
+          setExamInterviewResultStatus('Incomplete');
         }
 
         setFormData({
@@ -317,15 +340,11 @@ function RegistrationStatusComplete() {
         </div>
       </header>
       <div className="scope-registration-content">
-        <SideNavigation
-          userData={userData}
-          registrationStatus={registrationStatus}
-          admissionRequirementsStatus={admissionRequirementsStatus}
-          admissionAdminFirstStatus={admissionAdminFirstStatus}
-          admissionExamDetailsStatus={admissionExamDetailsStatus} // Pass new prop
-          onNavigate={closeSidebar}
-          isOpen={sidebarOpen}
-        />
+          <SideNavigation
+            userData={userData}
+            onNavigate={closeSidebar}
+            isOpen={sidebarOpen}
+          />
         <main
           className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}
         >

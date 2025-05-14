@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import '../../css/JuanScope/EnrollmentProcess.css';
@@ -6,42 +6,14 @@ import '../../css/JuanScope/EnrollmentProcess.css';
 const EnrollmentProcess = ({
   registrationStatus,
   admissionRequirementsStatus,
+  preferredExamAndInterviewApplicationStatus,
   admissionExamDetailsStatus,
+  approvedExamFeeStatus,
+  approvedExamInterviewResult,
+  examInterviewResultStatus,
+  reservationFeePaymentStepStatus, // New prop
+  admissionApprovalStatus, // New prop
 }) => {
-  const [examInterviewStatus, setExamInterviewStatus] = useState('Incomplete');
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchExamInterviewStatus = async (retries = 3, delay = 1000) => {
-      try {
-        const userEmail = localStorage.getItem('userEmail');
-        if (!userEmail) {
-          setError('Please log in to view your exam and interview status.');
-          return;
-        }
-
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch exam and interview status');
-        }
-        const data = await response.json();
-        setExamInterviewStatus(data.preferredExamAndInterviewApplicationStatus || 'Incomplete');
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching exam and interview status:', err);
-        if (retries > 0) {
-          setTimeout(() => fetchExamInterviewStatus(retries - 1, delay * 2), delay);
-        } else {
-          setError('Unable to fetch exam and interview status. Please try again later.');
-        }
-      }
-    };
-
-    fetchExamInterviewStatus();
-  }, []);
-
   const steps = [
     {
       title: 'Step 1 of 14: Registration',
@@ -55,7 +27,7 @@ const EnrollmentProcess = ({
       content:
         'All applicants wishing to enroll in San Juan De Dios Educational Foundation, Inc. are required to take the exam and undergo an interview before becoming an official SJDCIAN.\n\nJuan Scope allows you to select your preferred examination and interview schedule.',
       reminders: ['Generate and bring your test permit on your examination date.'],
-      note: 'This step will be marked as complete once you have generated your test permit.',
+      note: 'This step will be marked as complete once you have selected your preferred exam and interview schedule.',
     },
     {
       title: 'Step 3 of 14: Admission Requirements',
@@ -73,7 +45,7 @@ const EnrollmentProcess = ({
       title: 'Step 5 of 14: Exam Fee Payment',
       content:
         'Proceed to admission by paying your exam fee through our payment options.\n\nChoose your preferred payment method: Credit Card/Debit Card or E-Wallet',
-      note: 'This step will be marked as complete once payment is confirmed.',
+      note: 'This step will be marked as complete once payment is confirmed or waived.',
     },
     {
       title: 'Step 6 of 14: Exam and Interview Result',
@@ -144,7 +116,6 @@ const EnrollmentProcess = ({
       <div className="enrollment-process-divider"></div>
 
       <div className="enrollment-process-container">
-        {error && <div className="error-message">{error}</div>}
         <div className="welcome-message">
           Welcome to the JuanEMS Enrollment System! Follow these fourteen (14) easy steps to successfully enroll at San Juan De Dios Educational Foundation.
         </div>
@@ -152,14 +123,18 @@ const EnrollmentProcess = ({
         <div className="steps-container">
           <div className="steps-line"></div>
 
-          {steps.map((step, index) => (
+{steps.map((step, index) => (
             <div key={index} className="step-item">
               <div className="step-number-circle">
                 <span>{index + 1}</span>
                 {(index === 0 && registrationStatus === 'Complete') ||
-                (index === 1 && examInterviewStatus === 'Complete') ||
+                (index === 1 && preferredExamAndInterviewApplicationStatus === 'Complete') ||
                 (index === 2 && admissionRequirementsStatus === 'Complete') ||
-                (index === 3 && admissionExamDetailsStatus === 'Complete') ? (
+                (index === 3 && admissionExamDetailsStatus === 'Complete') ||
+                (index === 4 && (approvedExamFeeStatus === 'Paid' || approvedExamFeeStatus === 'Waived')) ||
+                (index === 5 && approvedExamInterviewResult === 'Approved') ||
+                (index === 6 && reservationFeePaymentStepStatus === 'Complete') ||
+                (index === 7 && admissionApprovalStatus === 'Complete') ? ( // New condition for Step 8
                   <FontAwesomeIcon icon={faCheckCircle} className="step-complete-icon" />
                 ) : null}
               </div>

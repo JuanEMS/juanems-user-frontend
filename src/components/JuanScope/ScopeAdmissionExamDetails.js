@@ -12,7 +12,11 @@ function ScopeAdmissionExamDetails() {
   const [registrationStatus, setRegistrationStatus] = useState('Incomplete');
   const [admissionRequirementsStatus, setAdmissionRequirementsStatus] = useState('Incomplete');
   const [admissionAdminFirstStatus, setAdmissionAdminFirstStatus] = useState('On-going');
+  const [preferredExamAndInterviewApplicationStatus, setPreferredExamAndInterviewApplicationStatus] = useState('Incomplete'); // New state
   const [admissionExamDetailsStatus, setAdmissionExamDetailsStatus] = useState('Incomplete');
+  const [approvedExamFeeStatus, setApprovedExamFeeStatus] = useState('Required');
+  const [approvedExamInterviewResult, setApprovedExamInterviewResult] = useState('Pending'); // New state
+  const [examInterviewResultStatus, setExamInterviewResultStatus] = useState('Incomplete');
   const [examDetails, setExamDetails] = useState({
     approvedExamDate: null,
     approvedExamTime: '',
@@ -129,6 +133,20 @@ function ScopeAdmissionExamDetails() {
           setAdmissionRequirementsStatus('Incomplete');
         }
 
+        // Fetch exam and interview application status
+        let examInterviewData;
+        try {
+          examInterviewData = await fetchWithRetry(
+            `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
+          );
+          setPreferredExamAndInterviewApplicationStatus(
+            examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete'
+          );
+        } catch (err) {
+          console.error('Error fetching exam interview data:', err);
+          setPreferredExamAndInterviewApplicationStatus('Incomplete');
+        }
+
         try {
           const examDetailsData = await fetchWithRetry(
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
@@ -143,6 +161,9 @@ function ScopeAdmissionExamDetails() {
               approvedExamRoom: '',
             });
             setAdmissionExamDetailsStatus('Incomplete');
+            setApprovedExamFeeStatus('Required');
+            setApprovedExamInterviewResult('Pending');
+            setExamInterviewResultStatus('Incomplete');
           } else {
             setExamDetails({
               approvedExamDate: examDetailsData.approvedExamDate || null,
@@ -152,6 +173,9 @@ function ScopeAdmissionExamDetails() {
               approvedExamRoom: examDetailsData.approvedExamRoom || 'N/A',
             });
             setAdmissionExamDetailsStatus(examDetailsData.admissionExamDetailsStatus || 'Incomplete');
+            setApprovedExamFeeStatus(examDetailsData.approvedExamFeeStatus || 'Required');
+            setApprovedExamInterviewResult(examDetailsData.approvedExamInterviewResult || 'Pending');
+            setExamInterviewResultStatus(examDetailsData.examInterviewResultStatus || 'Incomplete');
           }
           setAdmissionRejectMessage(examDetailsData.admissionRejectMessage || '');
 
@@ -355,19 +379,19 @@ function ScopeAdmissionExamDetails() {
       const applicantName = `${userData.firstName || ''} ${userData.middleName ? userData.middleName + ' ' : ''}${userData.lastName || ''}`.trim() || 'N/A';
       const approvedDate = examDetails.approvedExamDate
         ? new Date(examDetails.approvedExamDate).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
         : 'N/A';
       const formattedTime = examDetails.approvedExamTime && examDetails.approvedExamTime !== 'N/A'
         ? (() => {
-            const [hours, minutes] = examDetails.approvedExamTime.split(':');
-            const hour = parseInt(hours, 10);
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const formattedHour = hour % 12 || 12;
-            return `${formattedHour}:${minutes} ${ampm}`;
-          })()
+          const [hours, minutes] = examDetails.approvedExamTime.split(':');
+          const hour = parseInt(hours, 10);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const formattedHour = hour % 12 || 12;
+          return `${formattedHour}:${minutes} ${ampm}`;
+        })()
         : 'N/A';
       const examFeeAmount = examDetails.approvedExamFeeAmount != null
         ? `₱${examDetails.approvedExamFeeAmount.toFixed(2)}`
@@ -461,15 +485,11 @@ function ScopeAdmissionExamDetails() {
         </div>
       </header>
       <div className="scope-registration-content">
-        <SideNavigation
-          userData={userData}
-          registrationStatus={registrationStatus}
-          admissionRequirementsStatus={admissionRequirementsStatus}
-          admissionAdminFirstStatus={admissionAdminFirstStatus}
-          admissionExamDetailsStatus={admissionExamDetailsStatus}
-          onNavigate={closeSidebar}
-          isOpen={sidebarOpen}
-        />
+          <SideNavigation
+            userData={userData}
+            onNavigate={closeSidebar}
+            isOpen={sidebarOpen}
+          />
         <main className={`scope-main-content ${sidebarOpen ? 'sidebar-open' : ''}`}>
           {loading ? (
             <div className="scope-loading">
@@ -510,10 +530,10 @@ function ScopeAdmissionExamDetails() {
                         <span>
                           {examDetails.approvedExamDate
                             ? new Date(examDetails.approvedExamDate).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })
                             : 'N/A'}
                         </span>
                         <strong>Time:</strong>
