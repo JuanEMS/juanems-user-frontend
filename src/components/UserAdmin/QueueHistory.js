@@ -1,4 +1,4 @@
-import { Button, DatePicker, Input, Table, Tag } from 'antd';
+import { Button, DatePicker, Input, Table, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import utc from 'dayjs/plugin/utc';
@@ -6,11 +6,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { BiExport } from 'react-icons/bi';
-import { FaPen, FaPlus, FaSearch, FaUserCheck, FaUserTimes } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
 import { FiFilter } from 'react-icons/fi';
-import { GrPowerReset } from "react-icons/gr";
 import { HiOutlineRefresh } from 'react-icons/hi';
-import { MdOutlineKeyboardArrowLeft, MdOutlineManageAccounts } from 'react-icons/md';
+import { MdOutlineKeyboardArrowLeft } from 'react-icons/md';
 
 import '../../css/UserAdmin/Global.css';
 import '../../css/UserAdmin/ManageAccountsPage.css';
@@ -85,7 +84,9 @@ const QueueHistory = () => {
       const formattedData = searchFiltered.map((item, index) => ({
         ...item,
         key: item._id || index,
-        totalTimeMinutes: item.totalTimeMinutes || '—'
+        totalTimeMinutes: item.totalTimeMinutes || '—',
+        waitingTimeMinutes: item.waitingTimeMinutes || '—',
+        servingTimeMinutes: item.servingTimeMinutes || '—'
       }));
 
       setDataSource(formattedData);
@@ -109,19 +110,19 @@ const QueueHistory = () => {
     let filtered = [...data];
 
     if (tableFilters.department?.length) {
-      filtered = filtered.filter(record => 
+      filtered = filtered.filter(record =>
         tableFilters.department.includes(record.department)
       );
     }
 
     if (tableFilters.status?.length) {
-      filtered = filtered.filter(record => 
+      filtered = filtered.filter(record =>
         tableFilters.status.includes(record.status)
       );
     }
 
     if (tableFilters.exitReason?.length) {
-      filtered = filtered.filter(record => 
+      filtered = filtered.filter(record =>
         tableFilters.exitReason.includes(record.exitReason)
       );
     }
@@ -129,7 +130,7 @@ const QueueHistory = () => {
     // Apply date range filter
     if (tableFilters.archivedAt?.length) {
       const [start, end] = tableFilters.archivedAt[0].split('|');
-      filtered = filtered.filter(record => 
+      filtered = filtered.filter(record =>
         isInDateRange(tableFilters.archivedAt[0], record.archivedAt)
       );
     }
@@ -138,23 +139,26 @@ const QueueHistory = () => {
     if (sorter.columnKey && sorter.order) {
       filtered = [...filtered].sort((a, b) => {
         const key = sorter.columnKey;
-        
-        if (key === 'archivedAt') {
-          return sorter.order === 'ascend' 
+
+        if (['archivedAt', 'timestamp', 'servingStartTime', 'servingEndTime'].includes(key)) {
+          return sorter.order === 'ascend'
             ? dayjs(a[key]).unix() - dayjs(b[key]).unix()
             : dayjs(b[key]).unix() - dayjs(a[key]).unix();
-        } else if (key === 'totalTimeMinutes') {
+        } else if (['totalTimeMinutes', 'waitingTimeMinutes', 'servingTimeMinutes'].includes(key)) {
+          // Handle cases where value is '—' (dash)
+          const valueA = a[key] === '—' ? -1 : a[key];
+          const valueB = b[key] === '—' ? -1 : b[key];
+          
           return sorter.order === 'ascend'
-            ? a[key] - b[key]
-            : b[key] - a[key];
+            ? valueA - valueB
+            : valueB - valueA;
         } else {
           return sorter.order === 'ascend'
-            ? a[key].localeCompare(b[key])
-            : b[key].localeCompare(a[key]);
+            ? (a[key] || '').toString().localeCompare((b[key] || '').toString())
+            : (b[key] || '').toString().localeCompare((a[key] || '').toString());
         }
       });
     }
-
     setFilteredData(filtered);
   };
 
@@ -237,6 +241,24 @@ const QueueHistory = () => {
     return recordDate.isValid() && recordDate.isBetween(dayjs(start), dayjs(end).endOf('day'), null, '[]');
   };
 
+  // Helper to format time
+  const formatTimeMinutes = (time) => {
+    // Check if time is '—' (dash) or not a valid number
+    if (time === '—' || isNaN(parseFloat(time))) {
+      return time;
+    }
+    
+    // Convert time to a readable format
+    const minutes = Math.floor(parseFloat(time));
+    const seconds = Math.round((parseFloat(time) - minutes) * 60);
+
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
   // Table column definitions
   const columns = [
     {
@@ -304,18 +326,77 @@ const QueueHistory = () => {
       filteredValue: tableFilters.exitReason || null,
     },
     {
-      title: 'Total Time (min)',
+      title: 'Waiting Time',
+      width: 120,
+      dataIndex: 'waitingTimeMinutes',
+      key: 'waitingTimeMinutes',
+      sorter: (a, b) => {
+        const valueA = a.waitingTimeMinutes === '—' ? -1 : a.waitingTimeMinutes;
+        const valueB = b.waitingTimeMinutes === '—' ? -1 : b.waitingTimeMinutes;
+        return valueA - valueB;
+      },
+      sortDirections: ['ascend', 'descend'],
+      sortOrder: sorter.columnKey === 'waitingTimeMinutes' ? sorter.order : null,
+      render: (time, record) => {
+        const formattedTime = formatTimeMinutes(time);
+        const hasNoWaitingTime = time === '—';
+        
+        return (
+          <Tooltip title={hasNoWaitingTime ? "No waiting time data available" : null}>
+            <span className={hasNoWaitingTime ? "text-muted" : ""}>{formattedTime}</span>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      title: 'Serving Time',
+      width: 120,
+      dataIndex: 'servingTimeMinutes',
+      key: 'servingTimeMinutes',
+      sorter: (a, b) => {
+        const valueA = a.servingTimeMinutes === '—' ? -1 : a.servingTimeMinutes;
+        const valueB = b.servingTimeMinutes === '—' ? -1 : b.servingTimeMinutes;
+        return valueA - valueB;
+      },
+      sortDirections: ['ascend', 'descend'],
+      sortOrder: sorter.columnKey === 'servingTimeMinutes' ? sorter.order : null,
+      render: (time, record) => {
+        const formattedTime = formatTimeMinutes(time);
+        const hasNoServingTime = time === '—';
+        
+        return (
+          <Tooltip title={hasNoServingTime ? "No serving time data available" : null}>
+            <span className={hasNoServingTime ? "text-muted" : ""}>{formattedTime}</span>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      title: 'Total Time',
       width: 120,
       dataIndex: 'totalTimeMinutes',
       key: 'totalTimeMinutes',
-      sorter: (a, b) => a.totalTimeMinutes - b.totalTimeMinutes,
+      sorter: (a, b) => {
+        const valueA = a.totalTimeMinutes === '—' ? -1 : a.totalTimeMinutes;
+        const valueB = b.totalTimeMinutes === '—' ? -1 : b.totalTimeMinutes;
+        return valueA - valueB;
+      },
       sortDirections: ['ascend', 'descend'],
       sortOrder: sorter.columnKey === 'totalTimeMinutes' ? sorter.order : null,
+      render: (time, record) => {
+        const formattedTime = formatTimeMinutes(time);
+        const hasNoTotalTime = time === '—';
+        
+        return (
+          <Tooltip title={hasNoTotalTime ? "No total time data available" : null}>
+            <span className={hasNoTotalTime ? "text-muted" : ""}>{formattedTime}</span>
+          </Tooltip>
+        );
+      }
     },
-
     {
       title: 'Archived At',
-      width: 90,
+      width: 160,
       dataIndex: 'archivedAt',
       key: 'archivedAt',
       render: (text) => {

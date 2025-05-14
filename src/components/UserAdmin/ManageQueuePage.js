@@ -3,7 +3,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 import utc from 'dayjs/plugin/utc';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
+import { MdOutlineKeyboardArrowLeft, MdRefresh } from "react-icons/md";
 import { Modal, Input } from 'antd';
 
 import '../../css/UserAdmin/Global.css';
@@ -136,6 +136,7 @@ const ManageQueuePage = () => {
     avgServingTime: '0.0',
     avgWaitingTime: '0.0'
   });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Function to check if there is an accepted queue
   const checkAcceptedQueue = (items, serving) => {
@@ -155,14 +156,27 @@ const ManageQueuePage = () => {
     const userDepartment = userRole.replace(/\s*\([^)]*\)\s*/g, '');
     setDepartment(userDepartment);
 
-    // Fetch pending queues for this department
-    fetchPendingQueues(userDepartment);
-    fetchCurrentlyServing(userDepartment);
-    fetchSkippedQueues(userDepartment);
-    fetchQueueStatistics(userDepartment);
+    // Fetch data on initial load
+    fetchAllData(userDepartment);
   }, [navigate]);
 
-
+  // Single function to fetch all data
+  const fetchAllData = async (dept) => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        fetchPendingQueues(dept),
+        fetchCurrentlyServing(dept),
+        fetchSkippedQueues(dept),
+        fetchQueueStatistics(dept)
+      ]);
+    } catch (err) {
+      console.error('Error refreshing data:', err);
+      message.error('Failed to refresh data');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Timer for serving time
   useEffect(() => {
@@ -340,19 +354,6 @@ const ManageQueuePage = () => {
       // Don't set error state here to avoid overriding pending queues error
     }
   };
-
-  // Refreshes data every 30 seconds
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (department) {
-        fetchPendingQueues(department);
-        fetchCurrentlyServing(department);
-        fetchQueueStatistics(department);
-      }
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, [department]);
 
   // Function to handle adding a new queue item
   const handleAddQueue = (guestInfo) => {
@@ -588,6 +589,13 @@ const ManageQueuePage = () => {
     }
   };
 
+  // Refresh all data manually
+  const handleRefreshData = () => {
+    if (department) {
+      fetchAllData(department);
+    }
+  };
+
   // Determine which items to display based on active tab
   const displayItems = activeTab === 'main' ? queueItems : skippedItems;
 
@@ -741,7 +749,25 @@ const ManageQueuePage = () => {
           <div className="queue-column">
             <div className='queue-list-container'>
               <div className='queue-list-header'>
-                <div>Waiting List ({activeTab === 'main' ? queueItems.length : skippedItems.length})</div>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem'}}>
+                  <span>Waiting List ({activeTab === 'main' ? queueItems.length : skippedItems.length})</span>
+                  <button 
+                    onClick={handleRefreshData}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'white',
+                      fontSize: '1.2rem',
+                      marginRight: '12px'
+                    }}
+                    disabled={isRefreshing}
+                  >
+                    <MdRefresh size={24} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+                  </button>
+                </div>
                 <div className='queue-list-subheader'>
                   <div
                     className={activeTab === 'main' ? 'active' : ''}
