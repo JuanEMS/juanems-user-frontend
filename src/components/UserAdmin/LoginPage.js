@@ -200,7 +200,7 @@ const LoginPage = () => {
           </div>
           
           {/* Cloudflare Turnstile Captcha */}
-          <div className="turnstile-container" style={{ marginTop: '15px', marginBottom: '15px', justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection:'column' }}>
+          <div className="turnstile-container" style={{ marginTop: '15px', marginBottom: '15px'}}>
             {isTurnstileReady && (
               <Turnstile
                 siteKey={process.env.REACT_APP_TURNSTILE_SITE_KEY}
