@@ -1,30 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt, faPhone, faEnvelope, faClock, faCheck, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { faFacebookSquare } from '@fortawesome/free-brands-svg-icons';
-import { Turnstile } from '@marsidev/react-turnstile';
-import '../../css/JuanScope/Register.css';
-import SJDEFILogo from '../../images/SJDEFILogo.png';
-import JuanEMSLogo from '../../images/JuanEMSlogo.png';
-import registrationPersonImg from '../../images/registrationperson.png';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faMapMarkerAlt,
+  faPhone,
+  faEnvelope,
+  faClock,
+  faCheck,
+  faArrowLeft,
+} from "@fortawesome/free-solid-svg-icons";
+import { faFacebookSquare } from "@fortawesome/free-brands-svg-icons";
+import { Turnstile } from "@marsidev/react-turnstile";
+import "../../css/JuanScope/Register.css";
+import SJDEFILogo from "../../images/SJDEFILogo.png";
+import JuanEMSLogo from "../../images/JuanEMSlogo.png";
+import registrationPersonImg from "../../images/registrationperson.png";
 
 function Register3() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const formData = location.state?.formData || {
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    dob: '',
-    email: '',
-    mobile: '',
-    nationality: '',
-    academicYear: '',
-    academicTerm: '',
-    applyingFor: '',
-    academicStrand: ''
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    dob: "",
+    email: "",
+    mobile: "",
+    nationality: "",
+    academicYear: "",
+    academicTerm: "",
+    applyingFor: "",
+    academicStrand: "",
   };
 
   const [errors, setErrors] = useState({});
@@ -36,12 +43,14 @@ function Register3() {
 
   // Check for required info on load
   useEffect(() => {
-    if (!location.state?.formData ||
+    if (
+      !location.state?.formData ||
       !location.state.formData.firstName ||
       !location.state.formData.lastName ||
       !location.state.formData.academicYear ||
-      !location.state.formData.academicTerm) {
-      navigate('/register');
+      !location.state.formData.academicTerm
+    ) {
+      navigate("/register");
     }
 
     // Set Turnstile as ready after component mounts
@@ -55,24 +64,24 @@ function Register3() {
   const handleCheckboxChange = (e) => {
     setIsChecked(e.target.checked);
     if (errors.agreement) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        agreement: null
+        agreement: null,
       }));
     }
   };
 
   const handleTurnstileError = () => {
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      captcha: 'An error occurred while verifying CAPTCHA. Please try again.'
+      captcha: "An error occurred while verifying CAPTCHA. Please try again.",
     }));
   };
 
   const handleTurnstileExpire = () => {
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      captcha: 'CAPTCHA expired. Please verify again.'
+      captcha: "CAPTCHA expired. Please verify again.",
     }));
     setCaptchaToken(null);
   };
@@ -81,11 +90,11 @@ function Register3() {
     const newErrors = {};
 
     if (!isChecked) {
-      newErrors.agreement = 'You must agree to the data privacy agreement';
+      newErrors.agreement = "You must agree to the data privacy agreement";
     }
 
     if (!captchaToken) {
-      newErrors.captcha = 'Please complete the captcha verification';
+      newErrors.captcha = "Please complete the captcha verification";
     }
 
     setErrors(newErrors);
@@ -100,7 +109,7 @@ function Register3() {
   };
 
   const handleBack = () => {
-    navigate('/register2', { state: { formData } });
+    navigate("/register2", { state: { formData } });
   };
 
   // In handleSubmit function, update the submit confirmation function
@@ -115,7 +124,7 @@ function Register3() {
       const trimmedFormData = {
         ...formData,
         firstName: formData.firstName.trim(),
-        middleName: formData.middleName?.trim() || '',
+        middleName: formData.middleName?.trim() || "",
         lastName: formData.lastName.trim(),
         email: formData.email.trim(),
         mobile: formData.mobile.trim(),
@@ -123,67 +132,90 @@ function Register3() {
         academicStrand: formData.academicStrand.trim(),
         academicLevel: formData.applyingFor.trim(),
         academicTerm: formData.academicTerm.trim(),
-        academicYear: formData.academicYear.trim()
+        academicYear: formData.academicYear.trim(),
+        captchaToken: captchaToken,
       };
+
+      console.log("trimmedFormData", trimmedFormData);
 
       const emailToCheck = trimmedFormData.email;
 
       // Check for existing active/pending email before submitting
-      const emailCheck = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/check-email/${encodeURIComponent(emailToCheck)}`);
-
+      const emailCheck = await fetch(
+        `${
+          process.env.REACT_APP_API_URL
+        }/api/enrollee-applicants/check-email/${encodeURIComponent(
+          emailToCheck
+        )}`
+      );
+      console.log("emailCheck", emailCheck);
       if (emailCheck.status === 409) {
         const { message } = await emailCheck.json();
-        setErrors({ submit: message || 'Email is already in use with an active or pending application' });
+        setErrors({
+          submit:
+            message ||
+            "Email is already in use with an active or pending application",
+        });
         setIsSubmitting(false);
         setShowConfirmModal(false);
         return;
       }
 
       const emailCheckData = await emailCheck.json();
-      if (emailCheckData.status === 'Inactive') {
-        console.log('Inactive account found, proceeding with new registration');
+      if (emailCheckData.status === "Inactive") {
+        console.log("Inactive account found, proceeding with new registration");
       }
+
+      console.log("emailCheckData", emailCheckData);
 
       if (!emailCheck.ok) {
-        throw new Error('Failed to check email uniqueness. Please try again.');
+        throw new Error("Failed to check email uniqueness. Please try again.");
       }
 
-      // Proceed with submission
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...trimmedFormData,
-          captchaToken
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMessage = data.error || data.message || 'Failed to submit registration';
-        if (response.status === 400) {
-          throw new Error(`Invalid submission data: ${errorMessage}`);
-        } else if (response.status === 429) {
-          throw new Error('Too many requests. Please try again later.');
-        } else {
-          throw new Error(errorMessage);
+      // Send OTP before navigating to verification
+      console.log('Sending OTP...');
+      const otpResponse = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/send-signup-otp`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: trimmedFormData.email,
+            firstName: trimmedFormData.firstName,
+            lastName: trimmedFormData.lastName
+          })
         }
+      );
+
+      const otpData = await otpResponse.json();
+      console.log('OTP Response:', otpData);
+
+      if (!otpResponse.ok) {
+        throw new Error(otpData.error || 'Failed to send OTP. Please try again.');
       }
 
-      navigate('/verify-email', {
+      // Navigate to OTP verification page with registration data
+      navigate("/verify-otp", {
         state: {
-          email: formData.email,
-          firstName: formData.firstName,
+          email: trimmedFormData.email,
+          firstName: trimmedFormData.firstName,
+          lastName: trimmedFormData.lastName,
           fromRegistration: true,
-          studentID: data.data.studentID || '',
-          expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) // 5 days from now
-        }
+          message: otpData.message || "Please check your email for the verification code.",
+          registrationData: {
+            ...trimmedFormData,
+            captchaToken,
+          },
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes expiry, matching backend
+        },
       });
-
     } catch (error) {
-      console.error('Registration error:', error);
-      setErrors({ submit: error.message || 'Registration failed. Please check your connection and try again.' });
+      console.error("Registration error:", error);
+      setErrors({
+        submit:
+          error.message ||
+          "Registration failed. Please check your connection and try again.",
+      });
     } finally {
       setIsSubmitting(false);
       setShowConfirmModal(false);
@@ -227,10 +259,26 @@ function Register3() {
               {/* Step indicator */}
               <div className="juan-step-indicator">
                 <div className="juan-step-circles">
-                  <div className="juan-step-circle" style={{ backgroundColor: '#34A853' }}>1</div>
-                  <div className="juan-step-line" style={{ backgroundColor: '#34A853' }}></div>
-                  <div className="juan-step-circle" style={{ backgroundColor: '#34A853' }}>2</div>
-                  <div className="juan-step-line" style={{ backgroundColor: '#34A853' }}></div>
+                  <div
+                    className="juan-step-circle"
+                    style={{ backgroundColor: "#34A853" }}
+                  >
+                    1
+                  </div>
+                  <div
+                    className="juan-step-line"
+                    style={{ backgroundColor: "#34A853" }}
+                  ></div>
+                  <div
+                    className="juan-step-circle"
+                    style={{ backgroundColor: "#34A853" }}
+                  >
+                    2
+                  </div>
+                  <div
+                    className="juan-step-line"
+                    style={{ backgroundColor: "#34A853" }}
+                  ></div>
                   <div className="juan-step-circle active">3</div>
                 </div>
                 <div className="juan-step-text">Step 3 of 3</div>
@@ -244,65 +292,98 @@ function Register3() {
               <form onSubmit={handleSubmit}>
                 <div className="juan-form-grid">
                   {/* Data Privacy Agreement Checkbox */}
-                  <div className="juan-form-group" style={{ gridColumn: '1 / -1' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <div
+                    className="juan-form-group"
+                    style={{ gridColumn: "1 / -1" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "8px",
+                      }}
+                    >
                       <input
                         type="checkbox"
                         id="agreement"
                         checked={isChecked}
                         onChange={handleCheckboxChange}
                         style={{
-                          width: '16px',
-                          height: '16px',
-                          margin: '2px 0 0 0',
-                          flexShrink: 0
+                          width: "16px",
+                          height: "16px",
+                          margin: "2px 0 0 0",
+                          flexShrink: 0,
                         }}
-                        className={`juan-custom-checkbox ${errors.agreement ? 'juan-input-error' : ''}`}
+                        className={`juan-custom-checkbox ${
+                          errors.agreement ? "juan-input-error" : ""
+                        }`}
                       />
                       <label
                         htmlFor="agreement"
                         style={{
-                          textAlign: 'justify',
-                          whiteSpace: 'normal',
-                          wordWrap: 'break-word',
-                          display: 'inline-block',
-                          width: '100%',
-                          fontWeight: 'normal',
-                          fontSize: '13px',
-                          margin: 0
+                          textAlign: "justify",
+                          whiteSpace: "normal",
+                          wordWrap: "break-word",
+                          display: "inline-block",
+                          width: "100%",
+                          fontWeight: "normal",
+                          fontSize: "13px",
+                          margin: 0,
                         }}
                       >
-                        I submit this form affirming that all of the information I provided are true and correct to the best of my ability, with the consent and approval of my parents/guardian. Any information found to be incorrect, would mean the cancellation of my application and subject to perjury as accorded by law. Likewise, consistent to the Data Privacy Act of 2012, San Juan de Dios Educational Foundation Inc. - College, will safeguard these data solely in compliance to the purpose of the admission process.
+                        I submit this form affirming that all of the information
+                        I provided are true and correct to the best of my
+                        ability, with the consent and approval of my
+                        parents/guardian. Any information found to be incorrect,
+                        would mean the cancellation of my application and
+                        subject to perjury as accorded by law. Likewise,
+                        consistent to the Data Privacy Act of 2012, San Juan de
+                        Dios Educational Foundation Inc. - College, will
+                        safeguard these data solely in compliance to the purpose
+                        of the admission process.
                       </label>
                     </div>
-                    {errors.agreement && <span className="juan-error-message" style={{ display: 'block', marginTop: '5px' }}>{errors.agreement}</span>}
+                    {errors.agreement && (
+                      <span
+                        className="juan-error-message"
+                        style={{ display: "block", marginTop: "5px" }}
+                      >
+                        {errors.agreement}
+                      </span>
+                    )}
                   </div>
                   {/* Cloudflare Turnstile Captcha */}
-                  <div className="juan-form-group" style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+                  <div
+                    className="juan-form-group"
+                    style={{ gridColumn: "1 / -1", marginTop: "20px" }}
+                  >
                     {isTurnstileReady && (
                       <Turnstile
                         siteKey={process.env.REACT_APP_TURNSTILE_SITE_KEY}
                         onSuccess={(token) => {
                           setCaptchaToken(token);
-                          setErrors(prev => ({ ...prev, captcha: null }));
+                          setErrors((prev) => ({ ...prev, captcha: null }));
                         }}
                         onError={handleTurnstileError}
                         onExpire={handleTurnstileError}
                         options={{
-                          theme: 'light',
-                          size: 'normal',
-                          retry: 'auto',
-                          retryInterval: 3000
+                          theme: "light",
+                          size: "normal",
+                          retry: "auto",
+                          retryInterval: 3000,
                         }}
                         scriptOptions={{
                           async: true,
                           defer: true,
-                          appendTo: 'head'
+                          appendTo: "head",
                         }}
                       />
                     )}
                     {errors.captcha && (
-                      <span className="juan-error-message" style={{ display: 'block', marginTop: '5px' }}>
+                      <span
+                        className="juan-error-message"
+                        style={{ display: "block", marginTop: "5px" }}
+                      >
                         {errors.captcha}
                       </span>
                     )}
@@ -336,7 +417,10 @@ function Register3() {
         <div className="juan-modal-overlay">
           <div className="juan-confirm-modal">
             <h3>Confirm Registration</h3>
-            <p>Are you sure all the information you provided is correct and final? You won't be able to make changes after submission.</p>
+            <p>
+              Are you sure all the information you provided is correct and
+              final? You won't be able to make changes after submission.
+            </p>
             <div className="juan-modal-buttons">
               <button
                 className="juan-modal-cancel"
@@ -350,11 +434,14 @@ function Register3() {
                 onClick={confirmRegistration}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Submitting...' : 'Yes, Submit'}
+                {isSubmitting ? "Submitting..." : "Yes, Submit"}
               </button>
             </div>
             {errors.submit && (
-              <div className="juan-error-message" style={{ marginTop: '10px', textAlign: 'center' }}>
+              <div
+                className="juan-error-message"
+                style={{ marginTop: "10px", textAlign: "center" }}
+              >
                 {errors.submit}
               </div>
             )}
@@ -373,7 +460,9 @@ function Register3() {
           />
           <div className="juan-footer-text">
             <h1>JuanEMS - JUAN SCOPE</h1>
-            <p className="juan-footer-motto">© 2025. San Juan De Dios Educational Foundation Inc.</p>
+            <p className="juan-footer-motto">
+              © 2025. San Juan De Dios Educational Foundation Inc.
+            </p>
           </div>
         </div>
 
@@ -381,11 +470,17 @@ function Register3() {
         <div className="juan-footer-content">
           {/* About, Terms, Privacy links */}
           <div className="juan-footer-links">
-            <a href="/about" className="footer-link">About</a>
+            <a href="/about" className="footer-link">
+              About
+            </a>
             <span className="footer-link-separator">|</span>
-            <a href="/terms-of-use" className="footer-link">Terms of Use</a>
+            <a href="/terms-of-use" className="footer-link">
+              Terms of Use
+            </a>
             <span className="footer-link-separator">|</span>
-            <a href="/privacy" className="footer-link">Privacy</a>
+            <a href="/privacy" className="footer-link">
+              Privacy
+            </a>
           </div>
 
           {/* Footer content remains the same */}
@@ -395,7 +490,10 @@ function Register3() {
             rel="noopener noreferrer"
             className="juan-footer-social-link"
           >
-            <FontAwesomeIcon icon={faFacebookSquare} className="juan-social-icon" />
+            <FontAwesomeIcon
+              icon={faFacebookSquare}
+              className="juan-social-icon"
+            />
             <div className="juan-social-text">
               <span className="juan-social-find">Find us on</span>
               <span className="juan-social-platform">Facebook</span>
@@ -418,11 +516,17 @@ function Register3() {
               </div>
               <div className="juan-contact-item">
                 <FontAwesomeIcon icon={faEnvelope} />
-                <span>admission_office@sjdefi.edu.ph | registrarsoffice@sjdefi.edu.ph</span>
+                <span>
+                  admission_office@sjdefi.edu.ph |
+                  registrarsoffice@sjdefi.edu.ph
+                </span>
               </div>
               <div className="juan-contact-item">
                 <FontAwesomeIcon icon={faClock} />
-                <span>Monday to Thursday - 7:00 AM to 5:00 PM | Friday - 7:00 AM to 4:00 PM</span>
+                <span>
+                  Monday to Thursday - 7:00 AM to 5:00 PM | Friday - 7:00 AM to
+                  4:00 PM
+                </span>
               </div>
             </div>
           </div>

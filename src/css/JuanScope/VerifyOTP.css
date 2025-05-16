@@ -1,0 +1,72 @@
+.juan-otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.juan-otp-input {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  transition: border-color 0.3s ease;
+}
+
+.juan-otp-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.juan-otp-message {
+  text-align: center;
+  margin: 20px 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+.juan-otp-message strong {
+  color: #007bff;
+}
+
+.juan-info-message {
+  color: #28a745;
+  margin-top: 10px;
+}
+
+.juan-resend-otp {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.juan-resend-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+.juan-resend-button:hover {
+  color: #0056b3;
+}
+
+.juan-resend-button:disabled {
+  color: #6c757d;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.juan-error-message {
+  color: #dc3545;
+  text-align: center;
+  margin: 10px 0;
+  font-size: 14px;
+}

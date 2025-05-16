@@ -1,269 +1,295 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock, faEye, faEyeSlash, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import '../../css/JuanScope/ScopeLogin.css';
-import SJDEFILogo from '../../images/SJDEFILogo.png';
-import JuanEMSLogo from '../../images/JuanEMSlogo.png';
-import ScopeImage from '../../images/scope.png';
-import PasswordNotification from '../JuanScope/PasswordNotification';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEnvelope,
+  faLock,
+  faEye,
+  faEyeSlash,
+  faSpinner,
+} from "@fortawesome/free-solid-svg-icons";
+import PasswordNotification from "../JuanScope/PasswordNotification";
+import "../../css/JuanScope/ScopeLogin.css";
+import SJDEFILogo from "../../images/SJDEFILogo.png";
+import JuanEMSLogo from "../../images/JuanEMSlogo.png";
+import ScopeImage from "../../images/scope.png";
+
+// Form validation schema
+const loginSchema = z.object({
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .min(1, "Email is required"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .min(1, "Password is required"),
+});
 
 function ScopeLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
+  // Form state using React Hook Form
+  const {
+    register,
+    handleSubmit: validateForm,
+    formState: { errors },
+    watch,
+    setValue,
+    trigger,
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // Component state
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [loginError, setLoginError] = useState('');
+  const [loginError, setLoginError] = useState("");
   const [lastResetRequest, setLastResetRequest] = useState(null);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // New state for tracking form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Watched values
+  const email = watch("email");
 
   useEffect(() => {
+    // Handle redirects with state
     if (location.state?.fromPasswordReset) {
-      setLoginError('');
-      alert('Password reset successful. Please check your email for the new password.');
+      setLoginError("");
+      alert(
+        "Password reset successful. Please check your email for the new password."
+      );
     }
 
     if (location.state?.accountInactive) {
-      setLoginError('Your session was invalidated. Please login again.');
+      setLoginError("Your session was invalidated. Please login again.");
     }
 
     if (location.state?.sessionExpired) {
-      setLoginError('Your session has expired due to inactivity. Please login again.');
+      setLoginError(
+        "Your session has expired due to inactivity. Please login again."
+      );
     }
   }, [location.state]);
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+  // Utility function for API requests with retry logic
+  const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      if (retries > 0 && !error.message.includes("400")) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return fetchWithRetry(url, options, retries - 1, delay);
+      }
+      throw error;
     }
-
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
-  // Replace the checkAccountStatus function
+  // Check account verification status
   const checkAccountStatus = async (email) => {
     if (!email) return;
-
-    const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
-        }
-        return await response.json();
-      } catch (error) {
-        if (retries > 0) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return fetchWithRetry(url, retries - 1, delay);
-        }
-        throw error;
-      }
-    };
 
     try {
       const data = await fetchWithRetry(
         `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verification-status/${email}`
       );
 
-      if (data.status === 'Pending Verification') {
-        navigate('/verify-email', {
+      if (data.status === "Pending Verification") {
+        navigate("/verify-email", {
           state: {
             email: email,
             firstName: data.firstName,
             fromRegistration: false,
-            fromLogin: true
-          }
+            fromLogin: true,
+          },
         });
       }
     } catch (error) {
-      console.error('Error checking account status:', error);
-      setLoginError('Unable to verify account status. Please try again.');
+      console.error("Error checking account status:", error);
+      setLoginError("Unable to verify account status. Please try again.");
     }
   };
 
-  // Replace the handleSubmit function
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoginError('');
+  // Handle email input blur to check account status
+  const handleEmailBlur = () => {
+    trigger("email").then((isValid) => {
+      if (isValid) {
+        checkAccountStatus(email);
+      }
+    });
+  };
+
+  // Send OTP code for sign in verification
+  const sendOtpCode = async (email) => {
+    try {
+      console.log("Sending OTP to:", email);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/send-signin-otp`,
+        { email: email.trim() }
+      );
+
+      console.log("OTP send response:", {
+        status: response.status,
+        message: response.data.message,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Failed to send OTP:", error);
+      if (error.response) {
+        throw new Error(
+          error.response.data.error || "Failed to send verification code"
+        );
+      }
+      throw new Error("Failed to send verification code. Please try again.");
+    }
+  };
+
+  // Handle login form submission
+  const onSubmit = async (formData) => {
+    setLoginError("");
 
     if (isSubmitting) {
       return;
     }
 
-    if (!validateForm()) {
-      return;
-    }
-
     setIsSubmitting(true);
 
-    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-      try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
-        }
-        return await response.json();
-      } catch (error) {
-        if (retries > 0 && !error.message.includes('400')) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return fetchWithRetry(url, options, retries - 1, delay);
-        }
-        throw error;
-      }
-    };
-
     try {
-      const data = await fetchWithRetry(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/login`,
+      console.log("Login form data:", formData);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/signin-applicant`,
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            password: password.trim()
-          }),
+          email: formData.email.trim(),
+          password: formData.password.trim(),
         }
       );
 
-      navigate('/verify-email', {
+      const data = response.data;
+      console.log("Login response:", {
+        status: response.status,
+        data: data,
+      });
+
+      // After successful sign in, send OTP
+      await sendOtpCode(formData.email);
+
+      // Navigate to verify email for OTP verification
+      navigate("/verify-email", {
         state: {
-          email: data.email,
-          firstName: data.firstName,
+          email: formData.email.trim(),
+          isLoginOtp: true,
           fromLogin: true,
-          isLoginOtp: true
-        }
+        },
       });
     } catch (err) {
-      console.error('Login error:', err);
-      if (err.message.includes('400')) {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/login`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: email.trim(),
-              password: password.trim()
-            }),
-          }
-        );
-        const data = await response.json();
-        if (data.errorType === 'pending_verification') {
-          navigate('/verify-email', {
-            state: {
-              email: data.email,
-              firstName: data.firstName,
-              fromRegistration: false,
-              fromLogin: true
-            }
-          });
-          return;
-        }
-        if (data.errorType === 'account_inactive') {
-          setLoginError('Your account is inactive. Please contact support.');
-        } else {
-          setLoginError(data.message || 'Invalid email or password.');
-        }
-      } else if (err.message.includes('429')) {
-        setLoginError('Too many login attempts. Please try again later.');
+      console.error("Login error:", err);
+
+      if (err.response) {
+        // Server responded with error
+        const errorMessage =
+          err.response.data.error || "Invalid email or password";
+        setLoginError(errorMessage);
+        console.log("Server error response:", {
+          status: err.response.status,
+          data: err.response.data,
+        });
+      } else if (err.request) {
+        // Request made but no response
+        setLoginError("No response from server. Please check your connection.");
+        console.log("No response from server:", err.request);
       } else {
-        setLoginError('Login failed. Please check your connection and try again.');
+        // Error setting up request
+        setLoginError("Failed to make login request");
+        console.log("Request setup error:", err.message);
       }
+    } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Handle forgot password request
   const handleForgotPassword = async () => {
     if (!email) {
-      setErrors({ email: 'Email is required to reset password' });
+      setValue("email", "", { shouldValidate: true });
       return;
     }
 
     const now = new Date();
-    if (lastResetRequest && (now - new Date(lastResetRequest) < 24 * 60 * 60 * 1000)) {
-      setLoginError('You can only request a password reset once per day. Please try again later.');
+    if (
+      lastResetRequest &&
+      now - new Date(lastResetRequest) < 24 * 60 * 60 * 1000
+    ) {
+      setLoginError(
+        "You can only request a password reset once per day. Please try again later."
+      );
       return;
     }
 
     setShowResetConfirmation(true);
   };
 
-  // Replace the handleConfirmedForgotPassword function
+  // Handle confirmed password reset
   const handleConfirmedForgotPassword = async () => {
     if (isSubmitting) return;
-    
-    setShowResetConfirmation(false);
-    setLoginError('');
-    setIsSubmitting(true);
 
-    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-      try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
-        }
-        return await response.json();
-      } catch (error) {
-        if (retries > 0 && !error.message.includes('400')) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return fetchWithRetry(url, options, retries - 1, delay);
-        }
-        throw error;
-      }
-    };
+    setShowResetConfirmation(false);
+    setLoginError("");
+    setIsSubmitting(true);
 
     try {
       const data = await fetchWithRetry(
         `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/request-password-reset`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ email }),
         }
       );
 
-      navigate('/verify-email', {
+      console.log("Password reset request successful:", data);
+
+      navigate("/verify-email", {
         state: {
           email,
           isPasswordReset: true,
-          fromLogin: true
-        }
+          fromLogin: true,
+        },
       });
     } catch (err) {
-      console.error('Password reset error:', err);
-      if (err.message.includes('400')) {
-        setLoginError('Invalid email or account not found.');
-      } else if (err.message.includes('429')) {
-        setLoginError('Too many reset requests. Please try again later.');
+      console.error("Password reset error:", err);
+
+      if (err.message.includes("400")) {
+        setLoginError("Invalid email or account not found.");
+      } else if (err.message.includes("429")) {
+        setLoginError("Too many reset requests. Please try again later.");
       } else {
-        setLoginError('Failed to process password reset request. Please check your connection.');
+        setLoginError(
+          "Failed to process password reset request. Please check your connection."
+        );
       }
+    } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Navigate to home page
   const handleGoToHome = () => {
-    navigate('/home');
+    navigate("/home");
   };
 
   return (
@@ -274,16 +300,28 @@ function ScopeLogin() {
           <div className="scope-login-image-overlay"></div>
           <div className="scope-login-left-content">
             <div className="scope-login-top-logo">
-              <img src={SJDEFILogo} alt="SJDEFI Logo" className="scope-login-sjdefi-logo" />
+              <img
+                src={SJDEFILogo}
+                alt="SJDEFI Logo"
+                className="scope-login-sjdefi-logo"
+              />
               <div className="scope-login-top-text">
                 <h1>SAN JUAN DE DIOS EDUCATIONAL FOUNDATION, INC.</h1>
-                <p className="scope-login-motto">Where faith and reason are expressed in Charity.</p>
+                <p className="scope-login-motto">
+                  Where faith and reason are expressed in Charity.
+                </p>
               </div>
             </div>
             <div className="scope-login-center-logo">
-              <img src={JuanEMSLogo} alt="JuanEMS Logo" className="scope-login-ems-logo" />
+              <img
+                src={JuanEMSLogo}
+                alt="JuanEMS Logo"
+                className="scope-login-ems-logo"
+              />
               <h2 className="scope-login-ems-title">JuanEMS</h2>
-              <p className="scope-login-ems-subtitle">Juan Enrollment Management System</p>
+              <p className="scope-login-ems-subtitle">
+                Juan Enrollment Management System
+              </p>
             </div>
           </div>
         </div>
@@ -291,42 +329,65 @@ function ScopeLogin() {
       <div className="scope-login-right-side">
         <div className="scope-login-form-container">
           <div className="scope-login-scope-title">
-            <h1>JUANSC<img src={ScopeImage} alt="O" className="scope-login-scope-image" />PE</h1>
-            <p className="scope-login-scope-subtitle">Online Admission Application</p>
+            <h1>
+              JUANSC
+              <img
+                src={ScopeImage}
+                alt="O"
+                className="scope-login-scope-image"
+              />
+              PE
+            </h1>
+            <p className="scope-login-scope-subtitle">
+              Online Admission Application
+            </p>
           </div>
           <div className="scope-login-login-form">
             <h2 className="scope-login-form-title">Enroll Now!</h2>
-            {loginError && <div className="scope-login-error-message">{loginError}</div>}
-            <form onSubmit={handleSubmit}>
+
+            {loginError && (
+              <div className="scope-login-error-message">{loginError}</div>
+            )}
+
+            <form onSubmit={validateForm(onSubmit)}>
               <div className="scope-login-form-group">
                 <div className="scope-login-input-label">
-                  <FontAwesomeIcon icon={faEnvelope} className="scope-login-input-icon" />
+                  <FontAwesomeIcon
+                    icon={faEnvelope}
+                    className="scope-login-input-icon"
+                  />
                   <label>Email</label>
                 </div>
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onBlur={(e) => checkAccountStatus(e.target.value)}
                   placeholder="Enter your email"
                   className="scope-login-input-field"
                   disabled={isSubmitting}
+                  {...register("email")}
+                  onBlur={handleEmailBlur}
                 />
-                {errors.email && <span className="scope-login-error-message">{errors.email}</span>}
+                {errors.email && (
+                  <span className="scope-login-error-message">
+                    {errors.email.message}
+                  </span>
+                )}
               </div>
+
               <div className="scope-login-form-group">
                 <div className="scope-login-input-label">
-                  <FontAwesomeIcon icon={faLock} className="scope-login-input-icon" />
+                  <FontAwesomeIcon
+                    icon={faLock}
+                    className="scope-login-input-icon"
+                  />
                   <label>Password</label>
                 </div>
                 <div className="scope-login-password-container">
                   <input
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     className="scope-login-input-field"
                     disabled={isSubmitting}
+                    {...register("password")}
                   />
                   <button
                     type="button"
@@ -337,8 +398,13 @@ function ScopeLogin() {
                     <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                   </button>
                 </div>
-                {errors.password && <span className="scope-login-error-message">{errors.password}</span>}
+                {errors.password && (
+                  <span className="scope-login-error-message">
+                    {errors.password.message}
+                  </span>
+                )}
               </div>
+
               <div className="scope-login-links-container">
                 <button
                   type="button"
@@ -357,29 +423,40 @@ function ScopeLogin() {
                   Forgot Password?
                 </button>
               </div>
-              <button 
-                type="submit" 
-                className={`scope-login-login-button ${isSubmitting ? 'scope-login-button-loading' : ''}`}
+
+              <button
+                type="submit"
+                className={`scope-login-login-button ${
+                  isSubmitting ? "scope-login-button-loading" : ""
+                }`}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <FontAwesomeIcon icon={faSpinner} spin className="scope-login-spinner" />
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      spin
+                      className="scope-login-spinner"
+                    />
                     <span>Processing...</span>
                   </>
                 ) : (
-                  'Login'
+                  "Login"
                 )}
               </button>
             </form>
           </div>
         </div>
       </div>
+
       {showResetConfirmation && (
         <div className="scope-login-modal">
           <div className="scope-login-modal-content">
             <h3>Confirm Password Reset</h3>
-            <p>Are you sure you want to reset your password? A verification code will be sent to your email.</p>
+            <p>
+              Are you sure you want to reset your password? A verification code
+              will be sent to your email.
+            </p>
             <div className="scope-login-modal-buttons">
               <button
                 onClick={() => setShowResetConfirmation(false)}
@@ -395,11 +472,15 @@ function ScopeLogin() {
               >
                 {isSubmitting ? (
                   <>
-                    <FontAwesomeIcon icon={faSpinner} spin className="scope-login-spinner" />
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      spin
+                      className="scope-login-spinner"
+                    />
                     <span>Processing...</span>
                   </>
                 ) : (
-                  'Confirm'
+                  "Confirm"
                 )}
               </button>
             </div>

@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faUser,
+  faBars,
   faBell,
   faCalendarAlt,
-  faBars,
   faTimes,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
-import SJDEFILogo from '../../images/SJDEFILogo.png';
-import dashboardBg from '../../images/dashboard background.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../../css/JuanScope/ScopeDashboard.css';
+import SJDEFILogo from '../../images/SJDEFILogo.png';
+import EnrollmentProcess from '../JuanScope/EnrollmentProcess';
 import SessionManager from '../JuanScope/SessionManager';
 import SideNavigation from './SideNavigation';
-import axios from 'axios';
-import EnrollmentProcess from '../JuanScope/EnrollmentProcess';
 
 function ScopeDashboard() {
   const navigate = useNavigate();

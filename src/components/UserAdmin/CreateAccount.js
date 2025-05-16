@@ -11,171 +11,35 @@ import '../../css/UserAdmin/CreateAccount.css';
 import '../../css/UserAdmin/Global.css';
 import Footer from './Footer';
 import Header from './Header';
+import { defaultRoleModules } from "./CreateAccount/utils";
 
-const admissionsModules = {
-  'Manage Applications': [
-    'Manage Student Applications',
-    'Manage Exam and Interview Schedules',
-    'Manage Exam and Interview Results',
-    'Manage Enrollment Period',
-  ],
-  'Manage Queue': [],
-  'Create Announcements': [],
-};
 
-const registrarModules = {
-  'Manage Student Records': [
-    'Manage Students',
-    'Attendance Summary',
-    'Behavior Summary',
-    'Grade Summary',
-    'Enrollment Summary',
-    'Quarterly Ranking',
-    'Yearly Ranking',
-  ],
-  'Manage Enrollment': [],
-  'Manage Schedule': [
-    'Student Schedule',
-    'Faculty Schedule',
-  ],
-  'Manage Program': [
-    'Manage Strands',
-    'Manage Subjects',
-    'Manage Sections',
-  ],
-  'Manage Queue': [],
-  'Create Announcements': [],
-};
-
-const accountingModules = {
-  'Manage Payments': [
-    'Manage Fees',
-    'Payment History',
-  ],
-  'Manage Queue': [],
-  'Create Announcements': [],
-};
-
-const subAdminModules = {
-  'Manage Accounts': [],
-  'Manage Schedule': [
-    'Student Schedule',
-    'Faculty Schedule',
-  ],
-  'Manage Program': [
-    'Manage Strands',
-    'Manage Subjects',
-    'Manage Sections',
-  ],
-  'Manage Student Records': [
-    'Manage Students',
-    'Attendance Summary',
-    'Behavior Summary',
-    'Grade Summary',
-    'Enrollment Summary',
-    'Quarterly Ranking',
-    'Yearly Ranking',
-  ],
-  'Manage Enrollment': [],
-  'Manage Payments': [
-    'Manage Fees',
-    'Payment History',
-  ],
-  'Overall System Logs': [],
-  'Create Announcements': [],
-};
-
-// Define all staff modules for the super admin
-const allStaffModules = {
-  'Manage Applications': [
-    'Manage Student Applications',
-    'Manage Exam and Interview Schedules',
-    'Manage Exam and Interview Results',
-    'Manage Enrollment Period',
-  ],
-  'Manage Accounts': [],
-  'Create Announcements': [],
-  'Manage Enrollment': [],
-  'Manage Schedule': [
-    'Student Schedule',
-    'Faculty Schedule',
-  ],
-  'Overall System Logs': [],
-  'Manage Payments': [
-    'Manage Fees',
-    'Payment History',
-  ],
-  'Manage Program': [
-    'Manage Strands',
-    'Manage Subjects',
-    'Manage Sections',
-  ],
-  'Manage Queue': [],
-  'Manage Student Records': [
-    'Manage Students',
-    'Attendance Summary',
-    'Behavior Summary',
-    'Grade Summary',
-    'Enrollment Summary',
-    'Quarterly Ranking',
-    'Yearly Ranking',
-  ],
-};
-
-const defaultRoleModules = {
-  Faculty: {
-    'Class Schedule': [],
-    'Class Information': [],
-    'Handling of Grades': [],
-    'Viewing of OTE': [],
-    'Teacher Documents': [],
-  },
-  Student: {
-    'Student Handbook': [],
-    'Certificate of Registration': [],
-    'Flowchart': [],
-    'Online Class Registration': [],
-    'Viewing of Grades': [],
-    'Class Schedule': [],
-    'Online Teacher\'s Evaluation': [],
-    'Student Ledger': [],
-    'Enrollment': [],
-    'Joining Queue': [],
-    'Pay Bills': [],
-  },
-  'Admissions (Staff)': admissionsModules,
-  'Registrar (Staff)': registrarModules,
-  'Accounting (Staff)': accountingModules,
-  'Administration (Sub-Admin)': subAdminModules,
-  'IT (Super Admin)': allStaffModules,
-};
-
-const moduleIcons = {
+export const moduleIcons = {
   'Class Schedule': <CalendarOutlined style={{ color: '#C68A00' }} />,
-  'Class Information': <BookOutlined style={{ color: '#C68A00' }} />,
-  'Handling of Grades': <FormOutlined style={{ color: '#C68A00' }} />,
-  'Viewing of OTE': <LineChartOutlined style={{ color: '#C68A00' }} />,
-  'Teacher Documents': <FileTextOutlined style={{ color: '#C68A00' }} />,
-  'Manage Applications': <UsergroupAddOutlined style={{ color: '#C68A00' }} />,
-  'Manage Accounts': <TeamOutlined style={{ color: '#C68A00' }} />,
-  'Manage Student Records': <FolderOpenOutlined style={{ color: '#C68A00' }} />,
-  'Manage Enrollment': <FormOutlined style={{ color: '#C68A00' }} />,
-  'Manage Schedule': <ScheduleOutlined style={{ color: '#C68A00' }} />,
-  'Manage Program': <SettingOutlined style={{ color: '#C68A00' }} />,
-  'Manage Payments': <DollarOutlined style={{ color: '#C68A00' }} />,
-  'Manage Queue': <ScheduleOutlined style={{ color: '#C68A00' }} />,
-  'Overall System Logs': <FileTextOutlined style={{ color: '#C68A00' }} />,
-  'Create Announcements': <FileTextOutlined style={{ color: '#C68A00' }} />,
-  'Student Handbook': <BookOutlined style={{ color: '#C68A00' }} />,
-  'Certificate of Registration': <FileTextOutlined style={{ color: '#C68A00' }} />,
-  'Flowchart': <FormOutlined style={{ color: '#C68A00' }} />,
-  'Online Class Registration': <FormOutlined style={{ color: '#C68A00' }} />,
-  'Viewing of Grades': <FormOutlined style={{ color: '#C68A00' }} />,
-  'Online Teacher\'s Evaluation': <FormOutlined style={{ color: '#C68A00' }} />,
-  'Student Ledger': <DollarOutlined style={{ color: '#C68A00' }} />,
-  'Enrollment': <FormOutlined style={{ color: '#C68A00' }} />,
-  'Joining Queue': <ScheduleOutlined style={{ color: '#C68A00' }} />,
-  'Pay Bills': <DollarOutlined style={{ color: '#C68A00' }} />,
+'Class Information': <BookOutlined style={ { color: '#C68A00' } } />,
+'Handling of Grades': <FormOutlined style={ { color: '#C68A00' } } />,
+'Viewing of OTE': <LineChartOutlined style={ { color: '#C68A00' } } />,
+'Teacher Documents': <FileTextOutlined style={ { color: '#C68A00' } } />,
+'Manage Applications': <UsergroupAddOutlined style={ { color: '#C68A00' } } />,
+'Manage Accounts': <TeamOutlined style={ { color: '#C68A00' } } />,
+'Manage Student Records': <FolderOpenOutlined style={ { color: '#C68A00' } } />,
+'Manage Enrollment': <FormOutlined style={ { color: '#C68A00' } } />,
+'Manage Schedule': <ScheduleOutlined style={ { color: '#C68A00' } } />,
+'Manage Program': <SettingOutlined style={ { color: '#C68A00' } } />,
+'Manage Payments': <DollarOutlined style={ { color: '#C68A00' } } />,
+'Manage Queue': <ScheduleOutlined style={ { color: '#C68A00' } } />,
+'Overall System Logs': <FileTextOutlined style={ { color: '#C68A00' } } />,
+'Create Announcements': <FileTextOutlined style={ { color: '#C68A00' } } />,
+'Student Handbook': <BookOutlined style={ { color: '#C68A00' } } />,
+'Certificate of Registration': <FileTextOutlined style={ { color: '#C68A00' } } />,
+'Flowchart': <FormOutlined style={ { color: '#C68A00' } } />,
+'Online Class Registration': <FormOutlined style={ { color: '#C68A00' } } />,
+'Viewing of Grades': <FormOutlined style={ { color: '#C68A00' } } />,
+'Online Teacher\'s Evaluation': <FormOutlined style={ { color: '#C68A00' } } />,
+'Student Ledger': <DollarOutlined style={ { color: '#C68A00' } } />,
+'Enrollment': <FormOutlined style={ { color: '#C68A00' } } />,
+'Joining Queue': <ScheduleOutlined style={ { color: '#C68A00' } } />,
+'Pay Bills': <DollarOutlined style={ { color: '#C68A00' } } />,
 };
 
 // Custom Access Form component
@@ -475,6 +339,7 @@ const CreateAccount = () => {
   }, [role, form]);
 
   const handleSubmit = (values) => {
+    console.log("values", values)
     if (validateForm()) {
       setFormValues(values);
       setShowConfirmModal(true);
@@ -484,9 +349,11 @@ const CreateAccount = () => {
   const handleBack = () => navigate('/admin/manage-accounts');
 
   const confirmAccountCreation = async () => {
-    if (!formValues) return;
+    console.log("formValues", formValues)
 
-    setIsSubmitting(true);
+    /* if (!formValues) return;
+
+    setIsSubmitting(true); */
     try {
       // Trim string fields
       const trimmedValues = {
@@ -504,7 +371,9 @@ const CreateAccount = () => {
         customModules: hasCustomAccess ? selectedModules : [],
       };
 
-      // Generate user ID if not provided
+      console.log("tri,,ed", trimmedValues)
+
+    /*   // Generate user ID if not provided
       if (!formValues.userID || !formValues.userID.trim()) {
         const generatedID = await generateUserID(trimmedValues.role);
         if (!generatedID) {
@@ -578,7 +447,7 @@ const CreateAccount = () => {
           console.error('Failed to record system log:', error);
         });
 
-      navigate('/admin/manage-accounts');
+      navigate('/admin/manage-accounts'); */
     } catch (error) {
       console.error('Error with account operation:', error);
       message.error(error.message || 'Operation failed. Please try again.');

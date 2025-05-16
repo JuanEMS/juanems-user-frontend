@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
   faCompass,
@@ -15,35 +15,36 @@ import {
   faTicketAlt,
   faUserGraduate,
   faCalculator,
-  faSignOut
-} from '@fortawesome/free-solid-svg-icons';
-import '../../css/JuanScope/SideNavigation.css';
+  faSignOut,
+} from "@fortawesome/free-solid-svg-icons";
+import "../../css/JuanScope/SideNavigation.css";
 
 function SideNavigation({ userData, onNavigate, isOpen }) {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [statuses, setStatuses] = useState({
-    registrationStatus: 'Incomplete',
-    preferredExamAndInterviewApplicationStatus: 'Incomplete',
-    admissionRequirementsStatus: 'Incomplete',
-    admissionAdminFirstStatus: 'On-going',
-    admissionExamDetailsStatus: 'Incomplete',
-    approvedExamFeeStatus: 'Required',
-    approvedExamInterviewResult: 'Pending',
-    examInterviewResultStatus: 'Incomplete',
-    reservationFeePaymentStepStatus: 'Incomplete',
-    admissionApprovalStatus: 'Incomplete', // New
+    registrationStatus: "Incomplete",
+    preferredExamAndInterviewApplicationStatus: "Incomplete",
+    admissionRequirementsStatus: "Incomplete",
+    admissionAdminFirstStatus: "On-going",
+    admissionExamDetailsStatus: "Incomplete",
+    approvedExamFeeStatus: "Required",
+    approvedExamInterviewResult: "Pending",
+    examInterviewResultStatus: "Incomplete",
+    reservationFeePaymentStepStatus: "Incomplete",
+    admissionApprovalStatus: "Incomplete", // New
   });
 
   const formatEmail = (email) => {
-    if (!email) return '';
-    const [name, domain] = email.split('@');
+    if (!email) return "";
+    const [name, domain] = email.split("@");
     if (!name || !domain) return email;
-    const maskedName = name.length > 2
-      ? `${name.substring(0, 2)}${'*'.repeat(name.length - 2)}`
-      : '***';
+    const maskedName =
+      name.length > 2
+        ? `${name.substring(0, 2)}${"*".repeat(name.length - 2)}`
+        : "***";
     return `${maskedName}@${domain}`;
   };
 
@@ -58,42 +59,61 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
 
   const handleLogout = async () => {
     try {
-      const userEmail = localStorage.getItem('userEmail');
-      const createdAt = localStorage.getItem('createdAt');
+      // Get user email from localStorage before clearing it
+      const userEmail = localStorage.getItem("userEmail");
+      const createdAt = localStorage.getItem("createdAt");
 
       if (!userEmail) {
-        navigate('/scope-login');
+        navigate("/scope-login");
         return;
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          createdAt: createdAt
-        }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/logout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            createdAt: createdAt,
+          }),
+        }
+      );
 
       if (response.ok) {
-        localStorage.clear();
-        navigate('/scope-login');
+        // Clear all user data from localStorage
+        localStorage.removeItem("user"); // Remove the complete user object
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("firstName");
+        localStorage.removeItem("lastName");
+        localStorage.removeItem("studentID");
+        localStorage.removeItem("applicantID");
+        localStorage.removeItem("lastLogin");
+        localStorage.removeItem("lastLogout");
+        localStorage.removeItem("createdAt");
+        localStorage.removeItem("activityStatus");
+        localStorage.removeItem("loginAttempts");
+
+        // Navigate to login page
+        navigate("/scope-login");
       } else {
-        console.error('Failed to logout. Please try again.');
+        console.error("Failed to logout. Please try again.");
       }
     } catch (err) {
-      console.error('Error during logout process:', err);
+      console.error("Error during logout process:", err);
     } finally {
       setShowLogoutModal(false);
     }
   };
 
   useEffect(() => {
-    const userEmail = localStorage.getItem('userEmail');
+    const userEmail = localStorage.getItem("userEmail");
     if (!userEmail) {
-      navigate('/scope-login', { state: { error: 'No active session found. Please log in.' } });
+      navigate("/scope-login", {
+        state: { error: "No active session found. Please log in." },
+      });
       return;
     }
 
@@ -103,12 +123,18 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
           const response = await fetch(url);
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`HTTP error ${response.status}: ${errorData.error || 'Unknown error'}`);
+            throw new Error(
+              `HTTP error ${response.status}: ${
+                errorData.error || "Unknown error"
+              }`
+            );
           }
           return await response.json();
         } catch (error) {
           if (i === retries - 1) throw error;
-          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, delay * Math.pow(2, i))
+          );
         }
       }
     };
@@ -116,7 +142,7 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
     const fetchStatuses = async () => {
       try {
         setLoading(true);
-        setError('');
+        setError("");
 
         // Fetch registration status
         const registrationData = await fetchWithRetry(
@@ -130,8 +156,11 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/admission-requirements/${userEmail}`
           );
         } catch (err) {
-          console.error('Error fetching admission data:', err);
-          admissionData = { admissionRequirementsStatus: 'Incomplete', admissionAdminFirstStatus: 'On-going' };
+          console.error("Error fetching admission data:", err);
+          admissionData = {
+            admissionRequirementsStatus: "Incomplete",
+            admissionAdminFirstStatus: "On-going",
+          };
         }
 
         // Fetch exam and interview application status
@@ -141,8 +170,10 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-interview/${userEmail}`
           );
         } catch (err) {
-          console.error('Error fetching exam interview data:', err);
-          examInterviewData = { preferredExamAndInterviewApplicationStatus: 'Incomplete' };
+          console.error("Error fetching exam interview data:", err);
+          examInterviewData = {
+            preferredExamAndInterviewApplicationStatus: "Incomplete",
+          };
         }
 
         // Fetch exam details status
@@ -152,35 +183,51 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
             `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/exam-details/${userEmail}`
           );
         } catch (err) {
-          console.error('Error fetching exam details:', err);
+          console.error("Error fetching exam details:", err);
           examDetailsData = {
-            admissionExamDetailsStatus: 'Incomplete',
-            approvedExamFeeStatus: 'Required',
-            approvedExamInterviewResult: 'Pending',
-            examInterviewResultStatus: 'Incomplete',
-            reservationFeePaymentStepStatus: 'Incomplete',
-            admissionAdminFirstStatus: 'On-going',
-            admissionApprovalStatus: 'Incomplete', // New
+            admissionExamDetailsStatus: "Incomplete",
+            approvedExamFeeStatus: "Required",
+            approvedExamInterviewResult: "Pending",
+            examInterviewResultStatus: "Incomplete",
+            reservationFeePaymentStepStatus: "Incomplete",
+            admissionAdminFirstStatus: "On-going",
+            admissionApprovalStatus: "Incomplete", // New
           };
         }
 
         setStatuses({
-          registrationStatus: registrationData.registrationStatus || 'Incomplete',
-          preferredExamAndInterviewApplicationStatus: examInterviewData.preferredExamAndInterviewApplicationStatus || 'Incomplete',
-          admissionRequirementsStatus: admissionData.admissionRequirementsStatus || 'Incomplete',
-          admissionAdminFirstStatus: examDetailsData.admissionAdminFirstStatus || admissionData.admissionAdminFirstStatus || registrationData.admissionAdminFirstStatus || 'On-going',
-          admissionExamDetailsStatus: examDetailsData.admissionExamDetailsStatus || 'Incomplete',
-          approvedExamFeeStatus: examDetailsData.approvedExamFeeStatus || 'Required',
-          approvedExamInterviewResult: examDetailsData.approvedExamInterviewResult || 'Pending',
-          examInterviewResultStatus: examDetailsData.examInterviewResultStatus || 'Incomplete',
-          reservationFeePaymentStepStatus: examDetailsData.reservationFeePaymentStepStatus || 'Incomplete',
-          admissionApprovalStatus: examDetailsData.admissionApprovalStatus || 'Incomplete', // New
+          registrationStatus:
+            registrationData.registrationStatus || "Incomplete",
+          preferredExamAndInterviewApplicationStatus:
+            examInterviewData.preferredExamAndInterviewApplicationStatus ||
+            "Incomplete",
+          admissionRequirementsStatus:
+            admissionData.admissionRequirementsStatus || "Incomplete",
+          admissionAdminFirstStatus:
+            examDetailsData.admissionAdminFirstStatus ||
+            admissionData.admissionAdminFirstStatus ||
+            registrationData.admissionAdminFirstStatus ||
+            "On-going",
+          admissionExamDetailsStatus:
+            examDetailsData.admissionExamDetailsStatus || "Incomplete",
+          approvedExamFeeStatus:
+            examDetailsData.approvedExamFeeStatus || "Required",
+          approvedExamInterviewResult:
+            examDetailsData.approvedExamInterviewResult || "Pending",
+          examInterviewResultStatus:
+            examDetailsData.examInterviewResultStatus || "Incomplete",
+          reservationFeePaymentStepStatus:
+            examDetailsData.reservationFeePaymentStepStatus || "Incomplete",
+          admissionApprovalStatus:
+            examDetailsData.admissionApprovalStatus || "Incomplete", // New
         });
 
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching navigation statuses:', err);
-        setError('Failed to load navigation data. Some options may be unavailable.');
+        console.error("Error fetching navigation statuses:", err);
+        setError(
+          "Failed to load navigation data. Some options may be unavailable."
+        );
         setLoading(false);
       }
     };
@@ -192,93 +239,98 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
 
   const navItems = [
     {
-      path: '/scope-registration',
+      path: "/scope-registration",
       icon: faFileAlt,
-      label: '1. Registration',
+      label: "1. Registration",
       enabled: true,
     },
     {
-      path: '/scope-exam-interview-application',
+      path: "/scope-exam-interview-application",
       icon: faClipboardCheck,
-      label: '2. Exam & Interview Application',
-      enabled: statuses.registrationStatus === 'Complete',
+      label: "2. Exam & Interview Application",
+      enabled: statuses.registrationStatus === "Complete",
     },
     {
-      path: '/scope-admission-requirements',
+      path: "/scope-admission-requirements",
       icon: faBook,
-      label: '3. Admission Requirements',
-      enabled: statuses.preferredExamAndInterviewApplicationStatus === 'Complete',
+      label: "3. Admission Requirements",
+      enabled:
+        statuses.preferredExamAndInterviewApplicationStatus === "Complete",
     },
     {
-      path: '/scope-admission-exam-details',
+      path: "/scope-admission-exam-details",
       icon: faFileSignature,
-      label: '4. Admission Exam Details',
-      enabled: statuses.admissionAdminFirstStatus === 'Approved' || statuses.admissionAdminFirstStatus === 'Rejected',
+      label: "4. Admission Exam Details",
+      enabled:
+        statuses.admissionAdminFirstStatus === "Approved" ||
+        statuses.admissionAdminFirstStatus === "Rejected",
     },
     {
-      path: '/scope-exam-fee-payment',
+      path: "/scope-exam-fee-payment",
       icon: faMoneyBillWave,
-      label: '5. Exam Fee Payment',
-      enabled: statuses.admissionExamDetailsStatus === 'Complete',
+      label: "5. Exam Fee Payment",
+      enabled: statuses.admissionExamDetailsStatus === "Complete",
     },
     {
-      path: '/scope-exam-interview-result',
+      path: "/scope-exam-interview-result",
       icon: faChartBar,
-      label: '6. Exam & Interview Result',
-      enabled: statuses.approvedExamFeeStatus === 'Paid' || statuses.approvedExamFeeStatus === 'Waived',
+      label: "6. Exam & Interview Result",
+      enabled:
+        statuses.approvedExamFeeStatus === "Paid" ||
+        statuses.approvedExamFeeStatus === "Waived",
     },
     {
-      path: '/scope-reservation-payment',
+      path: "/scope-reservation-payment",
       icon: faMoneyBillWave,
-      label: '7. Reservation Payment',
-      enabled: statuses.approvedExamInterviewResult === 'Approved',
+      label: "7. Reservation Payment",
+      enabled: statuses.approvedExamInterviewResult === "Approved",
     },
     {
-      path: '/scope-admission-approval',
+      path: "/scope-admission-approval",
       icon: faCheckCircle,
-      label: '8. Admission Approval',
-      enabled: statuses.reservationFeePaymentStepStatus === 'Complete',
+      label: "8. Admission Approval",
+      enabled: statuses.reservationFeePaymentStepStatus === "Complete",
     },
     {
-      path: '/scope-enrollment-requirements',
+      path: "/scope-enrollment-requirements",
       icon: faClipboardList,
-      label: '9. Enrollment Requirements',
-      enabled: statuses.admissionApprovalStatus === 'Complete',
+      label: "9. Enrollment Requirements",
+      enabled: statuses.admissionApprovalStatus === "Complete",
     },
     {
-      path: '#',
+      path: "#",
       icon: faTicketAlt,
-      label: '10. Voucher Application',
+      label: "10. Voucher Application",
       enabled: false,
     },
     {
-      path: '#',
+      path: "#",
       icon: faCheckCircle,
-      label: '11. Enrollment Approval',
+      label: "11. Enrollment Approval",
       enabled: false,
     },
     {
-      path: '#',
+      path: "#",
       icon: faUserGraduate,
-      label: '12. Student Assessment',
+      label: "12. Student Assessment",
       enabled: false,
     },
     {
-      path: '#',
+      path: "#",
       icon: faMoneyBillWave,
-      label: '13. Tuition Payment',
+      label: "13. Tuition Payment",
       enabled: false,
     },
     {
-      path: '#',
+      path: "#",
       icon: faCalculator,
-      label: '14. Officially Enrolled',
+      label: "14. Officially Enrolled",
       enabled: false,
     },
   ];
 
   return (
-    <div className={`side-nav-container ${isOpen ? 'open' : ''}`}>
+    <div className={`side-nav-container ${isOpen ? "open" : ""}`}>
       <div className="side-nav-content">
         {loading ? (
           <div className="scope-loading">Loading navigation...</div>
@@ -300,7 +352,7 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
             </div>
             <button
               className="enrollment-process-button"
-              onClick={() => navigateToPage('/scope-dashboard')}
+              onClick={() => navigateToPage("/scope-dashboard")}
             >
               <FontAwesomeIcon icon={faCompass} className="enrollment-icon" />
               <span className="enrollment-text">Enrollment Process</span>
@@ -310,7 +362,9 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
               {navItems.slice(0, 7).map((item, index) => (
                 <button
                   key={index}
-                  className={`scope-nav-button ${!item.enabled ? 'disabled-nav-item' : ''}`}
+                  className={`scope-nav-button ${
+                    !item.enabled ? "disabled-nav-item" : ""
+                  }`}
                   onClick={() => item.enabled && navigateToPage(item.path)}
                   disabled={!item.enabled}
                 >
@@ -324,7 +378,9 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
               {navItems.slice(7).map((item, index) => (
                 <button
                   key={index}
-                  className={`scope-nav-button ${!item.enabled ? 'disabled-nav-item' : ''}`}
+                  className={`scope-nav-button ${
+                    !item.enabled ? "disabled-nav-item" : ""
+                  }`}
                   onClick={() => item.enabled && navigateToPage(item.path)}
                   disabled={!item.enabled}
                 >
@@ -358,10 +414,7 @@ function SideNavigation({ userData, onNavigate, isOpen }) {
               >
                 Cancel
               </button>
-              <button
-                className="scope-modal-confirm"
-                onClick={handleLogout}
-              >
+              <button className="scope-modal-confirm" onClick={handleLogout}>
                 Logout
               </button>
             </div>

@@ -6,6 +6,7 @@ import Register from './components/JuanScope/Register';
 import Register2 from './components/JuanScope/Register2';
 import Register3 from './components/JuanScope/Register3';
 import VerifyEmail from './components/JuanScope/VerifyEmail';
+import VerifyOTP from './components/JuanScope/VerifyOTP';
 import ScopeLogin from './components/JuanScope/ScopeLogin';
 import ScopeDashboard from './components/JuanScope/ScopeDashboard';
 import AboutPage from './components/JuanEMS/AboutPage';
@@ -72,6 +73,7 @@ function App() {
           <Route path="/register2" element={<Register2 />} />
           <Route path="/register3" element={<Register3 />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/scope-login" element={<ScopeLogin />} />
           <Route path="/scope-dashboard" element={<SessionManager><ScopeDashboard /></SessionManager>} />
           <Route path="/scope-announcements" element={<SessionManager><ScopeAnnouncement /></SessionManager>} />
