@@ -32,7 +32,7 @@ const ManageApplicationsPage = () => {
     },
     "Manage Exam and Interview Schedules": {
       description: "Schedule Coordination",
-      path: "",
+      path: "/admin/manage-exam-and-interview-schedule",
       icon: FaClock
     },
     "Manage Exam and Interview Results": {

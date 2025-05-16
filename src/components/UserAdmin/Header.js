@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { IoMdMenu } from "react-icons/io";
-import { IoSettingsOutline, IoLogOutOutline, IoPersonCircleOutline } from "react-icons/io5";
-import '../../css/UserAdmin/Header.css';
+import { IoLogOutOutline, IoPersonCircleOutline, IoSettingsOutline } from "react-icons/io5";
+import { useNavigate } from 'react-router-dom';
 import '../../css/UserAdmin/Global.css';
-import SJDEFILogo from '../../images/SJDEFILogo.png';
+import '../../css/UserAdmin/Header.css';
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -130,7 +129,7 @@ const Header = () => {
   }, [isDropdownOpen]);
   
   return (
-    <div className='header-container'>
+    <div className='header-container w-full'>
       <div className='header-blue'>
         <div className='header-section'>
           <IoMdMenu className="menu-icon" />

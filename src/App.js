@@ -54,6 +54,7 @@ import Admin_AccessControl from './components/UserAdmin/AccessControl';
 import Admin_VerifyEmail from './components/UserAdmin/VerifyEmail';
 import Admin_ForgotPassword from './components/UserAdmin/ForgotPassword';
 import Admin_QueueHistory from './components/UserAdmin/QueueHistory';
+import ManageExamAndInterviewScheduleSection from './components/JuanScope/ManageExamAndIntervewSchedule/ManageExamAndInterviewScheduleSection';
 
 function App() {
   return (
@@ -123,6 +124,7 @@ function App() {
           <Route path="/admin/manage-subjects/edit/:id" element={<Admin_CreateSubject />} />
           <Route path="/admin/access-control" element={<Admin_AccessControl />} />
           <Route path="/admin/verify-email" element={<Admin_VerifyEmail />} />
+          <Route path='/admin/manage-exam-and-interview-schedule' element={<ManageExamAndInterviewScheduleSection />} />
         </Routes>
       </div>
     </Router>
