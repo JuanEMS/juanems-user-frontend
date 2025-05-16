@@ -37,7 +37,7 @@ const ManageApplicationsPage = () => {
     },
     "Manage Exam and Interview Results": {
       description: "Result Processing",
-      path: "",
+      path: "/admin/manage-exam-and-interview-results",
       icon: BsFillFileEarmarkCheckFill
     },
     "Manage Enrollment Period": {

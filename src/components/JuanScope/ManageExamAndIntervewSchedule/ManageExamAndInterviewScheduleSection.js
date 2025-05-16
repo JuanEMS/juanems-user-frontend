@@ -62,27 +62,39 @@ const TableSkeleton = () => {
   return (
     <div className="skeleton-table">
       <div className="skeleton-header">
-        {Array(8).fill(null).map((_, index) => (
-          <div key={`header-${index}`} className="skeleton-cell">
-            <Skeleton.Button active style={{ width: "100%", height: 32 }} />
-          </div>
-        ))}
-      </div>
-      
-      {Array(5).fill(null).map((_, rowIndex) => (
-        <div key={`row-${rowIndex}`} className="skeleton-row">
-          {Array(8).fill(null).map((_, cellIndex) => (
-            <div key={`cell-${rowIndex}-${cellIndex}`} className="skeleton-cell">
-              <Skeleton.Button active style={{ width: "100%", height: 24 }} />
+        {Array(8)
+          .fill(null)
+          .map((_, index) => (
+            <div key={`header-${index}`} className="skeleton-cell">
+              <Skeleton.Button active style={{ width: "100%", height: 32 }} />
             </div>
           ))}
-        </div>
-      ))}
-      
+      </div>
+
+      {Array(5)
+        .fill(null)
+        .map((_, rowIndex) => (
+          <div key={`row-${rowIndex}`} className="skeleton-row">
+            {Array(8)
+              .fill(null)
+              .map((_, cellIndex) => (
+                <div
+                  key={`cell-${rowIndex}-${cellIndex}`}
+                  className="skeleton-cell"
+                >
+                  <Skeleton.Button
+                    active
+                    style={{ width: "100%", height: 24 }}
+                  />
+                </div>
+              ))}
+          </div>
+        ))}
+
       <div className="skeleton-pagination">
         <Skeleton.Button active style={{ width: 400, height: 32 }} />
       </div>
-      
+
       <style jsx>{`
         .skeleton-table {
           width: 100%;
@@ -91,7 +103,8 @@ const TableSkeleton = () => {
           border-radius: 2px;
           padding: 16px;
         }
-        .skeleton-header, .skeleton-row {
+        .skeleton-header,
+        .skeleton-row {
           display: grid;
           grid-template-columns: repeat(8, 1fr);
           gap: 16px;
@@ -134,7 +147,7 @@ const ManageExamAndInterviewScheduleSection = () => {
     try {
       // We're not passing filters to the API anymore as we'll filter locally
       const result = await getAllApplicantsOngoingExamAndInterviewSchedule(
-        1,  // Starting page
+        1, // Starting page
         1000 // Get a larger batch of records to filter locally
       );
 
@@ -168,43 +181,46 @@ const ManageExamAndInterviewScheduleSection = () => {
   // Apply filters to the data
   const applyFilters = useCallback(() => {
     setLoading(true);
-    
+
     // Start with all applicants
     let result = [...allApplicants];
-    
+
     // Apply search filter (case-insensitive) on firstName, lastName, or applicantID
     if (searchText) {
       const searchLower = searchText.toLowerCase();
       result = result.filter(
-        applicant => 
-          (applicant.firstName && applicant.firstName.toLowerCase().includes(searchLower)) ||
-          (applicant.lastName && applicant.lastName.toLowerCase().includes(searchLower)) ||
-          (applicant.applicantID && applicant.applicantID.toLowerCase().includes(searchLower))
+        (applicant) =>
+          (applicant.firstName &&
+            applicant.firstName.toLowerCase().includes(searchLower)) ||
+          (applicant.lastName &&
+            applicant.lastName.toLowerCase().includes(searchLower)) ||
+          (applicant.applicantID &&
+            applicant.applicantID.toLowerCase().includes(searchLower))
       );
     }
-    
+
     // Apply academic level filter
     if (academicLevelFilter) {
       result = result.filter(
-        applicant => applicant.academicLevel === academicLevelFilter
+        (applicant) => applicant.academicLevel === academicLevelFilter
       );
     }
-    
+
     // Apply academic strand filter
     if (academicStrandFilter) {
       result = result.filter(
-        applicant => applicant.academicStrand === academicStrandFilter
+        (applicant) => applicant.academicStrand === academicStrandFilter
       );
     }
-    
+
     // Update filtered applicants and pagination
     setFilteredApplicants(result);
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       current: 1, // Reset to first page when filters change
       total: result.length,
     }));
-    
+
     setLoading(false);
   }, [allApplicants, searchText, academicLevelFilter, academicStrandFilter]);
 
@@ -218,11 +234,17 @@ const ManageExamAndInterviewScheduleSection = () => {
     if (allApplicants.length > 0) {
       applyFilters();
     }
-  }, [allApplicants, searchText, academicLevelFilter, academicStrandFilter, applyFilters]);
+  }, [
+    allApplicants,
+    searchText,
+    academicLevelFilter,
+    academicStrandFilter,
+    applyFilters,
+  ]);
 
   // Handle table pagination change - this is now just local pagination
   const handleTableChange = (pagination) => {
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       current: pagination.current,
       pageSize: pagination.pageSize,
@@ -243,32 +265,35 @@ const ManageExamAndInterviewScheduleSection = () => {
   };
 
   // Open schedule modal
-  const handleScheduleClick = useCallback((applicant) => {
-    setCurrentApplicant(applicant);
+  const handleScheduleClick = useCallback(
+    (applicant) => {
+      setCurrentApplicant(applicant);
 
-    // Pre-fill the form with existing data if available
-    const prefDate = applicant.preferredExamAndInterviewDate
-      ? dayjs(applicant.preferredExamAndInterviewDate)
-      : null;
+      // Pre-fill the form with existing data if available
+      const prefDate = applicant.preferredExamAndInterviewDate
+        ? dayjs(applicant.preferredExamAndInterviewDate)
+        : null;
 
-    const approvedDate = applicant.approvedExamDate
-      ? dayjs(applicant.approvedExamDate)
-      : null;
+      const approvedDate = applicant.approvedExamDate
+        ? dayjs(applicant.approvedExamDate)
+        : null;
 
-    const approvedTime = applicant.approvedExamTime
-      ? dayjs(applicant.approvedExamTime, "HH:mm")
-      : null;
+      const approvedTime = applicant.approvedExamTime
+        ? dayjs(applicant.approvedExamTime, "HH:mm")
+        : null;
 
-    scheduleForm.setFieldsValue({
-      preferredDate: prefDate,
-      approvedDate: approvedDate,
-      approvedTime: approvedTime,
-      approvedRoom: applicant.approvedExamRoom || "",
-      approvedFeeAmount: applicant.approvedExamFeeAmount || 500,
-    });
+      scheduleForm.setFieldsValue({
+        preferredDate: prefDate,
+        approvedDate: approvedDate,
+        approvedTime: approvedTime,
+        approvedRoom: applicant.approvedExamRoom || "",
+        approvedFeeAmount: applicant.approvedExamFeeAmount || 500,
+      });
 
-    setIsScheduleModalVisible(true);
-  }, [scheduleForm]);
+      setIsScheduleModalVisible(true);
+    },
+    [scheduleForm]
+  );
 
   // Handle schedule form submission
   const handleScheduleSubmit = async () => {
@@ -283,6 +308,7 @@ const ManageExamAndInterviewScheduleSection = () => {
         approvedExamTime: values.approvedTime.format("HH:mm"),
         approvedExamRoom: values.approvedRoom,
         approvedExamFeeAmount: values.approvedFeeAmount,
+        approvedExamFeeStatus: values.approvedExamFeeStatus,
       };
 
       // Add preferred date if it's set in the form and applicant doesn't have one
@@ -313,7 +339,7 @@ const ManageExamAndInterviewScheduleSection = () => {
             ? { ...app, ...scheduleData, admissionAdminFirstStatus: "Approved" }
             : app
         );
-        
+
         const updatedFilteredApplicants = filteredApplicants.map((app) =>
           app._id === currentApplicant._id
             ? { ...app, ...scheduleData, admissionAdminFirstStatus: "Approved" }
@@ -345,154 +371,159 @@ const ManageExamAndInterviewScheduleSection = () => {
   }, []);
 
   // Memoize table columns to prevent recreation on each render
-  const columns = useMemo(() => [
-    {
-      title: "Applicant ID",
-      dataIndex: "applicantID",
-      key: "applicantID",
-      width: 120,
-      fixed: "left",
-      render: (text) => <strong>{text}</strong>,
-      sorter: (a, b) => a.applicantID.localeCompare(b.applicantID),
-    },
-    {
-      title: "Name",
-      key: "name",
-      fixed: "left",
-      width: 200,
-      render: (_, record) => (
-        <span>
-          {`${record.lastName}, ${record.firstName} ${
-            record.middleName ? record.middleName.charAt(0) + "." : ""
-          }`}
-        </span>
-      ),
-      sorter: (a, b) => a.lastName.localeCompare(b.lastName),
-    },
-    {
-      title: "Contact Information",
-      children: [
-        {
-          title: "Email",
-          dataIndex: "email",
-          key: "email",
-          width: 220,
-        },
-        {
-          title: "Mobile",
-          dataIndex: "mobile",
-          key: "mobile",
-          width: 150,
-        },
-      ],
-    },
-    {
-      title: "Academic Details",
-      children: [
-        {
-          title: "Level",
-          dataIndex: "academicLevel",
-          key: "academicLevel",
-          width: 120,
-        },
-        {
-          title: "Strand",
-          dataIndex: "academicStrand",
-          key: "academicStrand",
-          width: 100,
-        },
-        {
-          title: "Year",
-          dataIndex: "academicYear",
-          key: "academicYear",
-          width: 120,
-        },
-      ],
-    },
-    {
-      title: "Application Status",
-      children: [
-        {
-          title: "Registration",
-          dataIndex: "registrationStatus",
-          key: "registrationStatus",
-          width: 130,
-          render: renderStatusTag,
-        },
-        {
-          title: "Exam & Interview",
-          dataIndex: "preferredExamAndInterviewApplicationStatus",
-          key: "preferredExamAndInterviewApplicationStatus",
-          width: 150,
-          render: renderStatusTag,
-        },
-        {
-          title: "Admin First Status",
-          dataIndex: "admissionAdminFirstStatus",
-          key: "admissionAdminFirstStatus",
-          width: 150,
-          render: renderStatusTag,
-        },
-        {
-          title: "Exam Details",
-          dataIndex: "admissionExamDetailsStatus",
-          key: "admissionExamDetailsStatus",
-          width: 130,
-          render: renderStatusTag,
-        },
-      ],
-    },
-    {
-      title: "Exam Schedule",
-      children: [
-        {
-          title: "Preferred Date",
-          key: "preferredDate",
-          width: 150,
-          render: (_, record) =>
-            record.preferredExamAndInterviewDate ? (
-              dayjs(record.preferredExamAndInterviewDate).format("MMM DD, YYYY")
-            ) : (
-              <span className="text-red-500">Not Set</span>
-            ),
-        },
-        {
-          title: "Approved Date",
-          key: "approvedDate",
-          width: 150,
-          render: (_, record) =>
-            record.approvedExamDate
-              ? dayjs(record.approvedExamDate).format("MMM DD, YYYY")
-              : "Not Set",
-        },
-        {
-          title: "Approved Time",
-          dataIndex: "approvedExamTime",
-          key: "approvedExamTime",
-          width: 120,
-        },
-        {
-          title: "Room",
-          dataIndex: "approvedExamRoom",
-          key: "approvedExamRoom",
-          width: 120,
-        },
-      ],
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      fixed: "right",
-      width: 120,
-      render: (_, record) => (
-        <Space>
-          <Button type="primary" onClick={() => handleScheduleClick(record)}>
-            {record.preferredExamAndInterviewDate ? "Edit" : "Set Schedule"}
-          </Button>
-        </Space>
-      ),
-    },
-  ], [renderStatusTag, handleScheduleClick]);
+  const columns = useMemo(
+    () => [
+      {
+        title: "Applicant ID",
+        dataIndex: "applicantID",
+        key: "applicantID",
+        width: 120,
+        fixed: "left",
+        render: (text) => <strong>{text}</strong>,
+        sorter: (a, b) => a.applicantID.localeCompare(b.applicantID),
+      },
+      {
+        title: "Name",
+        key: "name",
+        fixed: "left",
+        width: 200,
+        render: (_, record) => (
+          <span>
+            {`${record.lastName}, ${record.firstName} ${
+              record.middleName ? record.middleName.charAt(0) + "." : ""
+            }`}
+          </span>
+        ),
+        sorter: (a, b) => a.lastName.localeCompare(b.lastName),
+      },
+      {
+        title: "Contact Information",
+        children: [
+          {
+            title: "Email",
+            dataIndex: "email",
+            key: "email",
+            width: 220,
+          },
+          {
+            title: "Mobile",
+            dataIndex: "mobile",
+            key: "mobile",
+            width: 150,
+          },
+        ],
+      },
+      {
+        title: "Academic Details",
+        children: [
+          {
+            title: "Level",
+            dataIndex: "academicLevel",
+            key: "academicLevel",
+            width: 120,
+          },
+          {
+            title: "Strand",
+            dataIndex: "academicStrand",
+            key: "academicStrand",
+            width: 100,
+          },
+          {
+            title: "Year",
+            dataIndex: "academicYear",
+            key: "academicYear",
+            width: 120,
+          },
+        ],
+      },
+      {
+        title: "Application Status",
+        children: [
+          {
+            title: "Registration",
+            dataIndex: "registrationStatus",
+            key: "registrationStatus",
+            width: 130,
+            render: renderStatusTag,
+          },
+          {
+            title: "Exam & Interview",
+            dataIndex: "preferredExamAndInterviewApplicationStatus",
+            key: "preferredExamAndInterviewApplicationStatus",
+            width: 150,
+            render: renderStatusTag,
+          },
+          {
+            title: "Admin First Status",
+            dataIndex: "admissionAdminFirstStatus",
+            key: "admissionAdminFirstStatus",
+            width: 150,
+            render: renderStatusTag,
+          },
+          {
+            title: "Exam Details",
+            dataIndex: "admissionExamDetailsStatus",
+            key: "admissionExamDetailsStatus",
+            width: 130,
+            render: renderStatusTag,
+          },
+        ],
+      },
+      {
+        title: "Exam Schedule",
+        children: [
+          {
+            title: "Preferred Date",
+            key: "preferredDate",
+            width: 150,
+            render: (_, record) =>
+              record.preferredExamAndInterviewDate ? (
+                dayjs(record.preferredExamAndInterviewDate).format(
+                  "MMM DD, YYYY"
+                )
+              ) : (
+                <span className="text-red-500">Not Set</span>
+              ),
+          },
+          {
+            title: "Approved Date",
+            key: "approvedDate",
+            width: 150,
+            render: (_, record) =>
+              record.approvedExamDate
+                ? dayjs(record.approvedExamDate).format("MMM DD, YYYY")
+                : "Not Set",
+          },
+          {
+            title: "Approved Time",
+            dataIndex: "approvedExamTime",
+            key: "approvedExamTime",
+            width: 120,
+          },
+          {
+            title: "Room",
+            dataIndex: "approvedExamRoom",
+            key: "approvedExamRoom",
+            width: 120,
+          },
+        ],
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        fixed: "right",
+        width: 120,
+        render: (_, record) => (
+          <Space>
+            <Button type="primary" onClick={() => handleScheduleClick(record)}>
+              {record.preferredExamAndInterviewDate ? "Edit" : "Set Schedule"}
+            </Button>
+          </Space>
+        ),
+      },
+    ],
+    [renderStatusTag, handleScheduleClick]
+  );
 
   return (
     <div className="flex flex-col min-h-screen w-full">
@@ -534,8 +565,10 @@ const ManageExamAndInterviewScheduleSection = () => {
                       value={academicLevelFilter}
                       onChange={(value) => setAcademicLevelFilter(value)}
                     >
-                      {ACADEMIC_LEVEL_OPTIONS.map(option => (
-                        <Option key={option.value} value={option.value}>{option.text}</Option>
+                      {ACADEMIC_LEVEL_OPTIONS.map((option) => (
+                        <Option key={option.value} value={option.value}>
+                          {option.text}
+                        </Option>
                       ))}
                     </Select>
                   </Col>
@@ -547,8 +580,10 @@ const ManageExamAndInterviewScheduleSection = () => {
                       value={academicStrandFilter}
                       onChange={(value) => setAcademicStrandFilter(value)}
                     >
-                      {ACADEMIC_STRAND_OPTIONS.map(option => (
-                        <Option key={option.value} value={option.value}>{option.label}</Option>
+                      {ACADEMIC_STRAND_OPTIONS.map((option) => (
+                        <Option key={option.value} value={option.value}>
+                          {option.label}
+                        </Option>
                       ))}
                     </Select>
                   </Col>
@@ -562,8 +597,8 @@ const ManageExamAndInterviewScheduleSection = () => {
                       >
                         Apply Filters
                       </Button>
-                      <Button 
-                        icon={<ReloadOutlined />} 
+                      <Button
+                        icon={<ReloadOutlined />}
                         onClick={handleRefresh}
                         disabled={loading}
                       >

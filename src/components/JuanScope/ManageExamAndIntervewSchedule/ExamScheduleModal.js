@@ -9,12 +9,14 @@ import {
     InputNumber,
     Modal,
     Row,
+    Select,
     TimePicker,
     Typography,
 } from "antd";
 import React from "react";
 
 const { Text } = Typography;
+const { Option } = Select;
 
 const ExamScheduleModal = ({
     visible,
@@ -127,6 +129,7 @@ const ExamScheduleModal = ({
                         layout="vertical"
                         initialValues={{
                             approvedFeeAmount: 500,
+                            approvedExamFeeStatus: 'Required'
                         }}
                     >
                         <Row gutter={16}>
@@ -212,6 +215,24 @@ const ExamScheduleModal = ({
                                         parser={(value) => value.replace(/₱\s?|(,*)/g, "")}
                                         min={0}
                                     />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="approvedExamFeeStatus"
+                                    label="Exam Fee Status"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: "Please select the fee status",
+                                        },
+                                    ]}
+                                >
+                                    <Select>
+                                        <Option value="Required">Required</Option>
+                                        <Option value="Paid">Paid</Option>
+                                        <Option value="Waived">Waived</Option>
+                                    </Select>
                                 </Form.Item>
                             </Col>
                         </Row>
