@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { faEnvelopeOpen, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt, faPhone, faEnvelope, faClock, faEnvelopeOpen, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { faFacebookSquare } from '@fortawesome/free-brands-svg-icons';
-import SJDEFILogo from '../../images/SJDEFILogo.png';
-import JuanEMSLogo from '../../images/JuanEMSlogo.png';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../../css/JuanScope/Register.css';
+import SJDEFILogo from '../../images/SJDEFILogo.png';
 
-import Footer from './Footer';
 import '../../css/UserAdmin/Global.css';
+import Footer from './Footer';
 
 function VerifyEmail() {
   const location = useLocation();

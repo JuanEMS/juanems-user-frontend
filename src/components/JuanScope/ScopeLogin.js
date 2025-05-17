@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEnvelope,
-  faLock,
   faEye,
   faEyeSlash,
+  faLock,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
-import PasswordNotification from "../JuanScope/PasswordNotification";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useLocation, useNavigate } from "react-router-dom";
+import { z } from "zod";
 import "../../css/JuanScope/ScopeLogin.css";
-import SJDEFILogo from "../../images/SJDEFILogo.png";
 import JuanEMSLogo from "../../images/JuanEMSlogo.png";
+import SJDEFILogo from "../../images/SJDEFILogo.png";
 import ScopeImage from "../../images/scope.png";
+import PasswordNotification from "../JuanScope/PasswordNotification";
 
 // Form validation schema
 const loginSchema = z.object({
@@ -220,26 +220,7 @@ function ScopeLogin() {
     }
   };
 
-  // Handle forgot password request
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setValue("email", "", { shouldValidate: true });
-      return;
-    }
 
-    const now = new Date();
-    if (
-      lastResetRequest &&
-      now - new Date(lastResetRequest) < 24 * 60 * 60 * 1000
-    ) {
-      setLoginError(
-        "You can only request a password reset once per day. Please try again later."
-      );
-      return;
-    }
-
-    setShowResetConfirmation(true);
-  };
 
   // Handle confirmed password reset
   const handleConfirmedForgotPassword = async () => {
@@ -417,14 +398,13 @@ function ScopeLogin() {
                 <button
                   type="button"
                   className="scope-login-forgot-password-btn"
-                  onClick={handleForgotPassword}
-                  disabled={isSubmitting}
+                  onClick={() => navigate("/scope-forgot-password")}
                 >
                   Forgot Password?
                 </button>
               </div>
 
-              <button
+              <button 
                 type="submit"
                 className={`scope-login-login-button ${
                   isSubmitting ? "scope-login-button-loading" : ""

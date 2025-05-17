@@ -5,43 +5,22 @@ import {
   faEnvelopeOpen,
   faMapMarkerAlt,
   faPhone,
-  faSpinner,
+  faSpinner
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { forgotPasswordApplicantApiRequest, verifyResetPasswordOtp } from "../../api/applicant";
 import "../../css/JuanScope/VerifyEmail.css";
 import JuanEMSLogo from "../../images/JuanEMSlogo.png";
-import SJDEFILogo from "../../images/SJDEFILogo.png";
 
 // Constants
 const OTP_EXPIRY_TIME = 180; // 3 minutes in seconds
-const LOCKOUT_TIME = 300; // 5 minutes in seconds
-const MAX_ATTEMPTS = 3;
+const LOCKOUT_TIME = 3; // 5 minutes in seconds
+const MAX_ATTEMPTS = 10;
 
-/**
- * OTP Input component
- */
-const OtpInput = ({ otp, handleChange, handleKeyDown, handlePaste, disabled, inputRefs }) => (
-  <div className="juan-otp-inputs" onPaste={handlePaste}>
-    {otp.map((digit, index) => (
-      <input
-        key={index}
-        type="text"
-        maxLength="1"
-        value={digit}
-        onChange={(e) => handleChange(index, e.target.value)}
-        onKeyDown={(e) => handleKeyDown(index, e)}
-        ref={(el) => (inputRefs.current[index] = el)}
-        className="juan-otp-input"
-        disabled={disabled}
-        autoFocus={index === 0}
-      />
-    ))}
-  </div>
-);
 
 /**
  * Header component
@@ -117,53 +96,33 @@ const Footer = () => (
   </footer>
 );
 
+
 /**
- * Main component for OTP verification during registration
+ * Custom hook for OTP verification state management
  */
-function VerifyOTP() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const inputsRef = useRef([]);
+const useOtpVerification = (email) => {
+  const storageKey = `otpVerification_forgotPassword_${email}`;
+  const [otpCountdown, setOtpCountdown] = useState(0);
+  const [lockoutCountdown, setLockoutCountdown] = useState(0);
+  const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
+  const [isLockedOut, setIsLockedOut] = useState(false);
+  const [canResend, setCanResend] = useState(false);
   const timerRef = useRef(null);
   const lockoutTimerRef = useRef(null);
 
-  // State variables
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [otpCountdown, setOtpCountdown] = useState(0);
-  const [lockoutCountdown, setLockoutCountdown] = useState(0);
-  const [canResend, setCanResend] = useState(false);
-  const [isLockedOut, setIsLockedOut] = useState(false);
-  const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
-
-  // Get data from location state
-  const email = location.state?.email || "";
-  const firstName = location.state?.firstName || "";
-  const lastName = location.state?.lastName || "";
-  const registrationData = location.state?.registrationData || null;
-
-  // Local storage key for OTP verification
-  const storageKey = `otpVerification_signup_${email}`;
-
-  // Function to save verification state to localStorage
+  // Save verification state to localStorage
   const saveVerificationState = (state) => {
     const verificationState = {
       email,
-      otpExpiry: state.otpExpiry || Date.now() + otpCountdown * 1000,
-      lockoutExpiry: state.lockoutExpiry ||
-        (isLockedOut ? Date.now() + lockoutCountdown * 1000 : 0),
+      otpExpiry: state.otpExpiry,
+      lockoutExpiry: state.lockoutExpiry,
       attemptsLeft: state.attemptsLeft !== undefined ? state.attemptsLeft : attemptsLeft,
       isLockedOut: state.isLockedOut !== undefined ? state.isLockedOut : isLockedOut,
-      firstName,
-      lastName,
     };
     localStorage.setItem(storageKey, JSON.stringify(verificationState));
   };
 
-  // Function to load verification state from localStorage
+  // Load verification state from localStorage
   const loadVerificationState = () => {
     const storedState = localStorage.getItem(storageKey);
     if (!storedState) return null;
@@ -192,20 +151,8 @@ function VerifyOTP() {
     }
   };
 
-  // Format time from seconds to MM:SS
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Initialize state from localStorage or set default values
+  // Initialize state
   useEffect(() => {
-    if (!email) {
-      navigate("/register");
-      return;
-    }
-
     const localState = loadVerificationState();
 
     if (localState) {
@@ -229,7 +176,7 @@ function VerifyOTP() {
       if (timerRef.current) clearInterval(timerRef.current);
       if (lockoutTimerRef.current) clearInterval(lockoutTimerRef.current);
     };
-  }, [email, navigate]);
+  }, [email]);
 
   // OTP countdown timer
   useEffect(() => {
@@ -300,6 +247,132 @@ function VerifyOTP() {
     };
   }, [isLockedOut, lockoutCountdown]);
 
+  // Handle failed verification attempt
+  const handleFailedAttempt = () => {
+    const newAttemptsLeft = attemptsLeft - 1;
+    setAttemptsLeft(newAttemptsLeft);
+
+    if (newAttemptsLeft <= 0) {
+      setIsLockedOut(true);
+      setLockoutCountdown(LOCKOUT_TIME);
+      setCanResend(false);
+
+      saveVerificationState({
+        attemptsLeft: 0,
+        isLockedOut: true,
+        lockoutExpiry: Date.now() + LOCKOUT_TIME * 1000,
+      });
+
+      return "Too many failed attempts. Please try again after the lockout period.";
+    } else {
+      saveVerificationState({
+        attemptsLeft: newAttemptsLeft,
+      });
+
+      return `Invalid OTP code. ${newAttemptsLeft} attempts remaining.`;
+    }
+  };
+
+  // Reset verification state after successful OTP verification
+  const resetVerificationState = () => {
+    localStorage.removeItem(storageKey);
+  };
+
+  // Reset OTP state for resend
+  const resetForResend = () => {
+    setOtpCountdown(OTP_EXPIRY_TIME);
+    setCanResend(false);
+    setAttemptsLeft(MAX_ATTEMPTS);
+
+    saveVerificationState({
+      otpExpiry: Date.now() + OTP_EXPIRY_TIME * 1000,
+      attemptsLeft: MAX_ATTEMPTS,
+      isLockedOut: false,
+      lockoutExpiry: 0,
+    });
+  };
+
+  // Format time from seconds to MM:SS
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  return {
+    otpCountdown,
+    lockoutCountdown,
+    attemptsLeft,
+    isLockedOut,
+    canResend,
+    handleFailedAttempt,
+    resetVerificationState,
+    resetForResend,
+    formatTime,
+  };
+};
+
+/**
+ * OTP Input component
+ */
+const OtpInput = ({ otp, handleChange, handleKeyDown, handlePaste, disabled, inputRefs }) => (
+  <div className="juan-otp-inputs" onPaste={handlePaste}>
+    {otp.map((digit, index) => (
+      <input
+        key={index}
+        type="text"
+        maxLength="1"
+        value={digit}
+        onChange={(e) => handleChange(index, e.target.value)}
+        onKeyDown={(e) => handleKeyDown(index, e)}
+        ref={(el) => (inputRefs.current[index] = el)}
+        className="juan-otp-input"
+        disabled={disabled}
+        autoFocus={index === 0}
+      />
+    ))}
+  </div>
+);
+
+/**
+ * Main component for OTP verification in forgot password flow
+ */
+function VerifyOTPForgotPassword() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const inputsRef = useRef([]);
+
+  // Get email from location state
+  const email = location.state?.email || "";
+  const fromForgotPassword = location.state?.fromForgotPassword || false;
+
+  // OTP state
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  // Use custom hook for OTP verification
+  const {
+    otpCountdown,
+    lockoutCountdown,
+    attemptsLeft,
+    isLockedOut,
+    canResend,
+    handleFailedAttempt,
+    resetVerificationState,
+    resetForResend,
+    formatTime,
+  } = useOtpVerification(email);
+
+  // Redirect if no email or not coming from forgot password page
+  useEffect(() => {
+    if (!email || !fromForgotPassword) {
+      navigate("/scope-forgot-password");
+    }
+  }, [email, navigate, fromForgotPassword]);
+
   // Handle OTP input change
   const handleChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
@@ -335,7 +408,7 @@ function VerifyOTP() {
     }
   };
 
-  // Handle submit - verify OTP and create account
+  // Handle submit - verify OTP for password reset
   const handleSubmit = async (e) => {
     e.preventDefault();
     const otpString = otp.join("");
@@ -350,120 +423,30 @@ function VerifyOTP() {
     setError("");
 
     try {
-      console.log("Verifying OTP with data:", { email, otp: otpString });
+      // Verify the OTP using the API function from applicant.js
+      const response = await verifyResetPasswordOtp(email, otpString);
 
-      const verifyResponse = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/verify-signup-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+      if (response.success) {
+        // OTP is verified successfully
+        resetVerificationState();
+
+        // Navigate to reset password page with email and OTP
+        navigate("/reset-password", {
+          state: {
             email,
             otp: otpString,
-          }),
-        }
-      );
-
-      const verifyData = await verifyResponse.json();
-      console.log("OTP Verification Response:", verifyData);
-
-      if (!verifyResponse.ok) {
-        // Decrement attempts counter
-        const newAttemptsLeft = attemptsLeft - 1;
-        setAttemptsLeft(newAttemptsLeft);
-
-        // Check if we need to lock the user out
-        if (newAttemptsLeft <= 0) {
-          setIsLockedOut(true);
-          setLockoutCountdown(LOCKOUT_TIME);
-          setCanResend(false);
-
-          // Save lockout state
-          saveVerificationState({
-            attemptsLeft: 0,
-            isLockedOut: true,
-            lockoutExpiry: Date.now() + LOCKOUT_TIME * 1000,
-          });
-
-          throw new Error(
-            "Too many failed attempts. Please try again after the lockout period."
-          );
-        } else {
-          // Just update attempts
-          saveVerificationState({ attemptsLeft: newAttemptsLeft });
-          throw new Error(verifyData.error || "Invalid OTP code");
-        }
+            otpVerified: true,
+          },
+        });
+      } else {
+        // Handle failed verification
+        const errorMessage = handleFailedAttempt();
+        setError(errorMessage || response.message || "Failed to verify OTP");
       }
-
-      // OTP is verified successfully, now create the account
-      if (!registrationData) {
-        throw new Error("Registration data not found");
-      }
-
-      console.log("Creating account with registration data:", registrationData);
-      const registrationResponse = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/signup-applicant`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(registrationData),
-        }
-      );
-
-      const registrationData2 = await registrationResponse.json();
-      console.log("Registration Response:", registrationData2);
-
-      if (!registrationResponse.ok) {
-        throw new Error(registrationData2.error || "Failed to create account");
-      }
-
-      // Account created successfully - store user data
-      const userData = {
-        userEmail: registrationData2.email,
-        firstName: registrationData2.firstName,
-        studentID: registrationData2.studentID,
-        applicantID: registrationData2.applicantID,
-        lastLogin: registrationData2.lastLogin,
-        lastLogout: registrationData2.lastLogout,
-        createdAt: registrationData2.createdAt,
-        activityStatus: registrationData2.activityStatus,
-        loginAttempts: "0"
-      };
-      
-      // Store user data in localStorage
-      Object.entries(userData).forEach(([key, value]) => {
-        localStorage.setItem(key, value);
-      });
-
-      // Clear OTP verification data
-      localStorage.removeItem(storageKey);
-
-      // Show success message and toast notification about credentials
-      setSuccess(
-        registrationData2.message ||
-        "Account created successfully! Redirecting to dashboard..."
-      );
-
-      // Display toast notification about credentials sent to email
-      toast.success(
-        "Your login credentials have been sent to your email address. Please check your inbox to proceed with login.",
-        {
-          position: "top-center",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        }
-      );
-
-      // Navigate to dashboard after delay
-      setTimeout(() => {
-        navigate("/scope-dashboard");
-      }, 5000);
     } catch (err) {
       console.error("OTP verification error:", err);
-      setError(err.message || "Failed to verify OTP");
+      const errorMessage = handleFailedAttempt();
+      setError(errorMessage || err.message || "Failed to verify OTP");
     } finally {
       setLoading(false);
     }
@@ -471,52 +454,23 @@ function VerifyOTP() {
 
   // Handle resend OTP
   const handleResend = async () => {
-    if (!canResend || isLockedOut) return;
+    if (!canResend) return;
 
     setResendLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      console.log("Resending OTP to:", email);
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/enrollee-applicants/send-signup-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            firstName,
-            lastName,
-          }),
-        }
-      );
+      const response = await forgotPasswordApplicantApiRequest(email);
 
-      const data = await response.json();
-      console.log("Resend OTP Response:", data);
-
-      if (data.success) {
-        // Reset OTP state
-        setOtpCountdown(OTP_EXPIRY_TIME);
-        setCanResend(false);
-        setAttemptsLeft(MAX_ATTEMPTS);
+      if (response.success) {
+        resetForResend();
         setSuccess("New verification code sent to your email");
-
-        // Clear OTP inputs
         setOtp(["", "", "", "", "", ""]);
         inputsRef.current[0].focus();
-
-        // Save new state to localStorage
-        saveVerificationState({
-          otpExpiry: Date.now() + OTP_EXPIRY_TIME * 1000,
-          attemptsLeft: MAX_ATTEMPTS,
-          isLockedOut: false,
-          lockoutExpiry: 0,
-        });
-
         setTimeout(() => setSuccess(""), 3000);
       } else {
-        setError(data.message || "Failed to resend verification code");
+        setError(response.message || "Failed to resend verification code");
       }
     } catch (err) {
       console.error("Resend OTP error:", err);
@@ -529,15 +483,14 @@ function VerifyOTP() {
   return (
     <div className="juan-verify-container">
       <ToastContainer />
-      <Header logo={SJDEFILogo} altText="SJDEFI Logo" />
+     <Header logo={JuanEMSLogo} altText="JuanEMS Logo" />
 
       <div className="juan-verify-main">
         <div className="juan-verify-card">
           <FontAwesomeIcon icon={faEnvelopeOpen} size="3x" className="juan-verify-icon" />
-          <h2>Verify Your Registration</h2>
+          <h2>Verify Your Identity</h2>
           <p className="juan-verify-description">
-            Hi {firstName}! Please enter the 6-digit verification code sent to {email}
-            to verify your account.
+            Please enter the 6-digit verification code sent to {email} to reset your password.
           </p>
 
           <form onSubmit={handleSubmit} className="juan-otp-form">
@@ -592,9 +545,9 @@ function VerifyOTP() {
         </div>
       </div>
 
-      <Footer />
+    <Footer />
     </div>
   );
 }
 
-export default VerifyOTP;
+export default VerifyOTPForgotPassword;

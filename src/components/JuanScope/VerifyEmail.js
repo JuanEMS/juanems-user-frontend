@@ -1,24 +1,37 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFacebookSquare } from "@fortawesome/free-brands-svg-icons";
 import {
+  faClock,
+  faEnvelope,
+  faEnvelopeOpen,
   faMapMarkerAlt,
   faPhone,
-  faEnvelope,
-  faClock,
-  faEnvelopeOpen,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
-import { faFacebookSquare } from "@fortawesome/free-brands-svg-icons";
-import SJDEFILogo from "../../images/SJDEFILogo.png";
-import JuanEMSLogo from "../../images/JuanEMSlogo.png";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  getVerificationStatus,
+  sendSigninOTP,
+  verifySigninOTP,
+} from "../../authService";
 import "../../css/JuanScope/VerifyEmail.css";
-import { getVerificationStatus, sendSigninOTP, verifySigninOTP } from "../../authService";
+import JuanEMSLogo from "../../images/JuanEMSlogo.png";
+import SJDEFILogo from "../../images/SJDEFILogo.png";
+
+// Constants
+const OTP_EXPIRY_TIME = 180; // 3 minutes in seconds
+const LOCKOUT_TIME = 300; // 5 minutes in seconds
+const MAX_ATTEMPTS = 3;
 
 function VerifyEmail() {
   const location = useLocation();
   const navigate = useNavigate();
   const inputsRef = useRef([]);
+  const timerRef = useRef(null);
+  const lockoutTimerRef = useRef(null);
 
   // State variables
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -26,23 +39,189 @@ function VerifyEmail() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [otpCountdown, setOtpCountdown] = useState(180);
+  const [otpCountdown, setOtpCountdown] = useState(0);
   const [lockoutCountdown, setLockoutCountdown] = useState(0);
   const [canResend, setCanResend] = useState(false);
   const [isLockedOut, setIsLockedOut] = useState(false);
-  const [attemptsLeft, setAttemptsLeft] = useState(3);
-  const [firstName, setFirstName] = useState(location.state?.firstName || "");
+  const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
+  const [firstName, setFirstName] = useState("");
+  const [isOtpExpired, setIsOtpExpired] = useState(false);
 
   // Get data from location state
   const email = location.state?.email || "";
-  const studentID = location.state?.studentID || "";
   const isPasswordReset = location.state?.isPasswordReset || false;
   const isLoginOtp = location.state?.isLoginOtp || false;
-  console.log("isPasswordReset", isPasswordReset);
-  console.log("email", email);
-  console.log("firstName", firstName);
-  console.log("studentID", studentID);
-  console.log("isLoginOtp", isLoginOtp);
+
+  // Function to display toast notifications
+  const showSuccessToast = (message) => {
+    toast.success(message, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      className: "juan-toast-success",
+      icon: <FontAwesomeIcon icon={faEnvelope} />,
+    });
+  };
+
+  const showErrorToast = (message) => {
+    toast.error(message, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      className: "juan-toast-error",
+    });
+  };
+
+  // Function to save verification state to localStorage with absolute timestamps
+  const saveVerificationState = (state) => {
+    const now = Date.now();
+    const verificationState = {
+      email,
+      createdAt: state.createdAt || now,
+      otpExpiry:
+        state.otpExpiry || (otpCountdown > 0 ? now + otpCountdown * 1000 : 0),
+      lockoutExpiry:
+        state.lockoutExpiry ||
+        (isLockedOut ? now + lockoutCountdown * 1000 : 0),
+      attemptsLeft:
+        state.attemptsLeft !== undefined ? state.attemptsLeft : attemptsLeft,
+      isLockedOut:
+        state.isLockedOut !== undefined ? state.isLockedOut : isLockedOut,
+      firstName: state.firstName || firstName,
+      isOtpExpired:
+        state.isOtpExpired !== undefined ? state.isOtpExpired : isOtpExpired,
+    };
+    localStorage.setItem(
+      `otpVerification_${email}`,
+      JSON.stringify(verificationState)
+    );
+  };
+
+  // Function to load verification state from localStorage
+  const loadVerificationState = () => {
+    const storedState = localStorage.getItem(`otpVerification_${email}`);
+    if (!storedState) return null;
+
+    try {
+      const parsedState = JSON.parse(storedState);
+
+      // Only use stored state if it's for the current email
+      if (parsedState.email !== email) return null;
+
+      const now = Date.now();
+
+      // Calculate remaining time
+      const otpTimeLeft = parsedState.otpExpiry
+        ? Math.max(0, Math.floor((parsedState.otpExpiry - now) / 1000))
+        : 0;
+      const lockoutTimeLeft = parsedState.lockoutExpiry
+        ? Math.max(0, Math.floor((parsedState.lockoutExpiry - now) / 1000))
+        : 0;
+
+      const otpExpired = otpTimeLeft <= 0;
+
+      return {
+        otpTimeLeft,
+        lockoutTimeLeft,
+        attemptsLeft: parsedState.attemptsLeft,
+        isLockedOut: parsedState.lockoutExpiry > now,
+        isOtpExpired: otpExpired,
+        firstName: parsedState.firstName || "",
+        createdAt: parsedState.createdAt,
+      };
+    } catch (error) {
+      console.error("Error parsing verification state:", error);
+      return null;
+    }
+  };
+
+  // Initialize state from localStorage or fetch from server
+  useEffect(() => {
+    const initVerificationState = async () => {
+      if (!email) {
+        navigate("/scope-login", { replace: true });
+        return;
+      }
+
+      // First try to load from localStorage
+      const localState = loadVerificationState();
+
+      if (localState) {
+        // Use local state if available
+        setOtpCountdown(localState.otpTimeLeft);
+        setLockoutCountdown(localState.lockoutTimeLeft);
+        setAttemptsLeft(localState.attemptsLeft);
+        setIsLockedOut(localState.isLockedOut);
+        setIsOtpExpired(localState.isOtpExpired);
+        setCanResend(
+          !localState.isLockedOut &&
+            (localState.isOtpExpired || localState.otpTimeLeft <= 0)
+        );
+
+        if (localState.firstName) {
+          setFirstName(localState.firstName);
+        }
+      } else {
+        // Fetch from server if local state not available
+        try {
+          const data = await getVerificationStatus(
+            email,
+            isPasswordReset,
+            isLoginOtp
+          );
+
+          const isOtpExp = data.otpTimeLeft <= 0;
+
+          setIsLockedOut(data.isLockedOut);
+          setLockoutCountdown(data.isLockedOut ? data.lockoutTimeLeft : 0);
+          setOtpCountdown(data.isLockedOut ? 0 : Math.max(0, data.otpTimeLeft));
+          setCanResend(!data.isLockedOut && isOtpExp);
+          setAttemptsLeft(data.attemptsLeft);
+          setIsOtpExpired(isOtpExp);
+
+          if (data.firstName) {
+            setFirstName(data.firstName);
+          }
+
+          // Save to localStorage
+          saveVerificationState({
+            createdAt: Date.now(),
+            otpExpiry: Date.now() + data.otpTimeLeft * 1000,
+            lockoutExpiry: data.isLockedOut
+              ? Date.now() + data.lockoutTimeLeft * 1000
+              : 0,
+            attemptsLeft: data.attemptsLeft,
+            isLockedOut: data.isLockedOut,
+            isOtpExpired: isOtpExp,
+            firstName: data.firstName,
+          });
+        } catch (error) {
+          console.error("Error fetching verification status:", error);
+          showErrorToast(
+            "Failed to load verification status. Please try again."
+          );
+          setError("Failed to load verification status. Please try again.");
+        }
+      }
+    };
+
+    initVerificationState();
+
+    // Clean up timers on unmount
+    return () => {
+      clearInterval(timerRef.current);
+      clearInterval(lockoutTimerRef.current);
+    };
+  }, [email, isPasswordReset, isLoginOtp, navigate]);
+
   // Fetch user details for password reset
   useEffect(() => {
     if (isPasswordReset && email && !firstName) {
@@ -55,6 +234,7 @@ function VerifyEmail() {
           );
           if (response.firstName) {
             setFirstName(response.firstName);
+            saveVerificationState({ firstName: response.firstName });
           }
         } catch (error) {
           console.error("Error fetching user details:", error);
@@ -62,77 +242,65 @@ function VerifyEmail() {
       };
       fetchUserDetails();
     }
-  }, [email, firstName, isPasswordReset]);
+  }, [email, firstName, isPasswordReset, isLoginOtp]);
 
   // OTP countdown timer
   useEffect(() => {
-    let timer;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
     if (!isLockedOut && otpCountdown > 0) {
-      timer = setTimeout(() => {
+      timerRef.current = setInterval(() => {
         setOtpCountdown((prev) => {
-          if (prev <= 1) {
+          const newValue = prev - 1;
+          if (newValue <= 0) {
+            clearInterval(timerRef.current);
             setCanResend(true);
+            setIsOtpExpired(true);
+            saveVerificationState({
+              otpExpiry: 0,
+              isOtpExpired: true,
+            });
             return 0;
           }
-          return prev - 1;
+          return newValue;
         });
       }, 1000);
     }
-    return () => clearTimeout(timer);
+
+    return () => clearInterval(timerRef.current);
   }, [otpCountdown, isLockedOut]);
 
   // Lockout countdown timer
   useEffect(() => {
-    let timer;
+    if (lockoutTimerRef.current) {
+      clearInterval(lockoutTimerRef.current);
+    }
+
     if (isLockedOut && lockoutCountdown > 0) {
-      timer = setTimeout(() => {
+      lockoutTimerRef.current = setInterval(() => {
         setLockoutCountdown((prev) => {
-          if (prev <= 1) {
+          const newValue = prev - 1;
+          if (newValue <= 0) {
+            clearInterval(lockoutTimerRef.current);
             setIsLockedOut(false);
             setCanResend(true);
+            setAttemptsLeft(MAX_ATTEMPTS);
+            saveVerificationState({
+              lockoutExpiry: 0,
+              isLockedOut: false,
+              attemptsLeft: MAX_ATTEMPTS,
+            });
             return 0;
           }
-          return prev - 1;
+          return newValue;
         });
       }, 1000);
     }
-    return () => clearTimeout(timer);
+
+    return () => clearInterval(lockoutTimerRef.current);
   }, [lockoutCountdown, isLockedOut]);
-
-  // Fetch verification status
-  useEffect(() => {
-    const fetchVerificationStatus = async () => {
-      try {
-        if (!email) return;
-
-        const data = await getVerificationStatus(
-          email,
-          isPasswordReset,
-          isLoginOtp
-        );
-
-        setIsLockedOut(data.isLockedOut);
-
-        if (data.isLockedOut) {
-          setLockoutCountdown(data.lockoutTimeLeft);
-          setOtpCountdown(0);
-        } else {
-          setOtpCountdown(Math.max(0, data.otpTimeLeft));
-          setCanResend(data.otpTimeLeft <= 0);
-        }
-
-        setAttemptsLeft(data.attemptsLeft);
-
-        if (data.firstName && !firstName) {
-          setFirstName(data.firstName);
-        }
-      } catch (error) {
-        console.error("Error fetching verification status:", error);
-      }
-    };
-
-    fetchVerificationStatus();
-  }, [email, firstName, isPasswordReset, isLoginOtp]);
 
   // Format time from seconds to MM:SS
   const formatTime = (seconds) => {
@@ -178,77 +346,131 @@ function VerifyEmail() {
     }
   };
 
- // Handle form submission
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const otpString = otp.join("");
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const otpString = otp.join("");
 
-  if (otpString.length !== 6) {
-    setError("Please enter the complete 6-digit code");
-    return;
-  }
+    if (otpString.length !== 6) {
+      setError("Please enter the complete 6-digit code");
+      showErrorToast("Please enter the complete 6-digit code");
+      return;
+    }
 
-  setLoading(true);
-  try {
-    const response = await verifySigninOTP(email, otpString, isLoginOtp);
+    // Allow submission even if OTP is expired - the server will validate
+    setLoading(true);
+    try {
+      const response = await verifySigninOTP(email, otpString, isLoginOtp);
 
-    if (isLoginOtp) {
-      setSuccess("Login verified successfully!");
+      if (isLoginOtp) {
+        setSuccess("Login verified successfully!");
+        showSuccessToast("Login verified successfully!");
 
-      // Store the complete user object in localStorage
-      if (response.user) {
-        // Store entire user object as JSON string
-        localStorage.setItem("user", JSON.stringify(response.user));
-        
-        // For backward compatibility or quick access, also store commonly used fields individually
-        localStorage.setItem("userEmail", response.user.email);
-        localStorage.setItem("firstName", response.user.firstName || "");
-        localStorage.setItem("lastName", response.user.lastName || "");
-        localStorage.setItem("studentID", response.user.studentID || "");
-        localStorage.setItem("applicantID", response.user.applicantID || "");
-        localStorage.setItem("lastLogin", response.user.lastLogin || "");
-        localStorage.setItem("lastLogout", response.user.lastLogout || "");
-        localStorage.setItem("createdAt", response.user.createdAt || "");
-        localStorage.setItem("activityStatus", response.user.activityStatus || "");
-        localStorage.setItem("loginAttempts", 
-          (response.user.loginAttempts?.toString() || "0")
-        );
+        // Store the complete user object in localStorage
+        if (response.user) {
+          // Store entire user object as JSON string
+          localStorage.setItem("user", JSON.stringify(response.user));
+
+          // For backward compatibility or quick access, also store commonly used fields individually
+          localStorage.setItem("userEmail", response.user.email);
+          localStorage.setItem("firstName", response.user.firstName || "");
+          localStorage.setItem("lastName", response.user.lastName || "");
+          localStorage.setItem("studentID", response.user.studentID || "");
+          localStorage.setItem("applicantID", response.user.applicantID || "");
+          localStorage.setItem("lastLogin", response.user.lastLogin || "");
+          localStorage.setItem("lastLogout", response.user.lastLogout || "");
+          localStorage.setItem("createdAt", response.user.createdAt || "");
+          localStorage.setItem(
+            "activityStatus",
+            response.user.activityStatus || ""
+          );
+          localStorage.setItem(
+            "loginAttempts",
+            response.user.loginAttempts?.toString() || "0"
+          );
+        }
+
+        // Clear OTP verification data from localStorage
+        localStorage.removeItem(`otpVerification_${email}`);
+
+        // Store navigation target to show toast after navigation
+        sessionStorage.setItem("showLoginSuccessToast", "true");
+
+        setTimeout(() => {
+          navigate("/scope-dashboard");
+        }, 2000);
+      } else {
+        setSuccess("Email verified successfully!");
+        showSuccessToast("Email verified successfully!");
+
+        // Clear OTP verification data from localStorage
+        localStorage.removeItem(`otpVerification_${email}`);
+
+        // Store navigation target to show toast after navigation
+        sessionStorage.setItem("showCredentialsSentToast", "true");
+
+        setTimeout(() => {
+          navigate("/scope-login", {
+            state: {
+              fromVerification: true,
+              email: email,
+            },
+          });
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Error in handleSubmit:", {
+        error: err.message,
+        email: email,
+      });
+
+      // Handle expired OTP with clear message
+      if (err.message === "OTP has expired. Please request a new one.") {
+        setCanResend(true);
+        setOtpCountdown(0);
+        setIsOtpExpired(true);
+        saveVerificationState({
+          otpExpiry: 0,
+          isOtpExpired: true,
+        });
+        showErrorToast("OTP has expired. Please request a new one.");
       }
 
-      setTimeout(() => {
-        navigate("/scope-dashboard");
-      }, 2000);
-    } else {
-      setSuccess("Email verified successfully!");
-      setTimeout(() => {
-        navigate("/scope-login", {
-          state: {
-            fromVerification: true,
-            email: email,
-          },
-        });
-      }, 2000);
-    }
-  } catch (err) {
-    console.error("Error in handleSubmit:", {
-      error: err.message,
-      email: email,
-    });
+      // Update attempts left
+      if (err.attemptsLeft !== undefined) {
+        const newAttemptsLeft = err.attemptsLeft;
+        setAttemptsLeft(newAttemptsLeft);
 
-    if (err.message === "OTP has expired. Please request a new one.") {
-      setCanResend(true);
-      setOtpCountdown(0);
-    }
+        // Handle lockout after exceeding max attempts
+        if (newAttemptsLeft <= 0) {
+          setIsLockedOut(true);
+          setLockoutCountdown(LOCKOUT_TIME);
+          setCanResend(false);
 
-    if (err.attemptsLeft !== undefined) {
-      setAttemptsLeft(err.attemptsLeft);
-    }
+          // Save lockout state
+          saveVerificationState({
+            attemptsLeft: 0,
+            isLockedOut: true,
+            lockoutExpiry: Date.now() + LOCKOUT_TIME * 1000,
+          });
 
-    setError(err.message || "Verification failed. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+          showErrorToast(
+            `Too many failed attempts. Please try again in ${formatTime(
+              LOCKOUT_TIME
+            )}.`
+          );
+        } else {
+          // Just update attempts
+          saveVerificationState({ attemptsLeft: newAttemptsLeft });
+        }
+      }
+
+      setError(err.message || "Verification failed. Please try again.");
+      showErrorToast(err.message || "Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle resend OTP
   const handleResend = async () => {
@@ -261,21 +483,34 @@ const handleSubmit = async (e) => {
     try {
       await sendSigninOTP(email, isPasswordReset, isLoginOtp);
 
-      setOtpCountdown(180);
-      setLockoutCountdown(0);
-      setIsLockedOut(false);
+      // Reset OTP state
+      setOtpCountdown(OTP_EXPIRY_TIME);
       setCanResend(false);
-      setAttemptsLeft(3);
+      setAttemptsLeft(MAX_ATTEMPTS);
+      setIsOtpExpired(false);
       setSuccess("New verification code sent to your email");
+      showSuccessToast("New verification code sent to your email");
 
+      // Clear OTP inputs
       setOtp(["", "", "", "", "", ""]);
       inputsRef.current[0].focus();
 
+      // Save new state to localStorage
+      saveVerificationState({
+        createdAt: Date.now(),
+        otpExpiry: Date.now() + OTP_EXPIRY_TIME * 1000,
+        attemptsLeft: MAX_ATTEMPTS,
+        isLockedOut: false,
+        lockoutExpiry: 0,
+        isOtpExpired: false,
+      });
+
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(
-        err.message || "Failed to resend verification code. Please try again."
-      );
+      const errorMessage =
+        err.message || "Failed to resend verification code. Please try again.";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setResendLoading(false);
     }
@@ -298,6 +533,19 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="juan-verify-container">
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
       <header className="juan-register-header">
         <div className="juan-header-left">
           <img
@@ -341,7 +589,7 @@ const handleSubmit = async (e) => {
               ))}
             </div>
 
-            {attemptsLeft < 3 && !isLockedOut && (
+            {attemptsLeft < MAX_ATTEMPTS && !isLockedOut && (
               <p className="juan-otp-attempts">
                 Attempts remaining: {attemptsLeft}
               </p>
@@ -350,6 +598,13 @@ const handleSubmit = async (e) => {
             {otpCountdown > 0 && (
               <p className="juan-otp-timer">
                 Code expires in: {formatTime(otpCountdown)}
+              </p>
+            )}
+
+            {isOtpExpired && otpCountdown <= 0 && !isLockedOut && (
+              <p className="juan-otp-warning">
+                This code has expired. You can still try to verify, but you may
+                need to request a new code.
               </p>
             )}
 
